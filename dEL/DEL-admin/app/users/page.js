@@ -1,0 +1,1 @@
+export default function AdminUsers(){ return <div className="mx-auto max-w-6xl px-6 py-10"><h1 className="text-3xl font-bold">Utilisateurs</h1><div className="card mt-6"><p>Structure prête pour gérer propriétaires, entreprises et admins.</p></div></div>; }
