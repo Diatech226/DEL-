@@ -58,3 +58,21 @@ Suivre le scénario complet décrit dans `DEL-api/README.md` : validation des en
 
 ### Limites actuelles
 Le CMS ne gère pas encore une négociation détaillée ni une édition avancée de la proposition générée depuis le matching.
+
+## Module Contrats CMS
+
+Le CMS expose une page `/contracts` listant les contrats numériques simples et une page `/contracts/[id]` pour le détail. Les contrats sont créés depuis `/proposals` pour les propositions `SENT` ou `ACCEPTED` avec dates, durée, modalités de paiement, commission DEL, conditions et responsabilités.
+
+Le dashboard affiche désormais le total contrats, les contrats actifs, en attente de signature et terminés. Les actions de statut disponibles sont `DRAFT`, `PENDING_SIGNATURE`, `ACTIVE`, `COMPLETED` et `CANCELLED`.
+
+### Workflow et test
+
+1. Créer ou identifier une proposition `SENT`/`ACCEPTED`.
+2. Cliquer sur “Créer contrat” dans `/proposals`.
+3. Remplir le formulaire inline et valider.
+4. Ouvrir `/contracts`, vérifier la ligne créée et consulter le détail.
+5. Passer le contrat en `ACTIVE`, puis `COMPLETED` pour vérifier les transitions côté API.
+
+### Limites actuelles
+
+Le CMS affiche un contrat numérique simple uniquement. La signature électronique, le paiement et les PDF complexes ne sont pas encore implémentés.
