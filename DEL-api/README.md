@@ -67,3 +67,28 @@ Les erreurs retournent `{ "success": false, "message": "..." }`.
 ### Limites actuelles
 - Le matching reste volontairement simple : pas de distance géographique, de disponibilité calendaire ni de conversion devise.
 - La réservation est appliquée immédiatement à tous les engins sélectionnés lors de l’envoi de proposition.
+
+## Module Contrats
+
+Le modèle `Contract` représente un contrat numérique simple créé depuis une proposition. Il contient la proposition, la demande, les engins concernés, l'entreprise, les propriétaires, le numéro unique `DEL-CTR-YYYYMMDD-XXXX`, les dates, la durée, le montant, la commission DEL, le montant propriétaire, les conditions, les responsabilités et le statut (`DRAFT`, `PENDING_SIGNATURE`, `ACTIVE`, `COMPLETED`, `CANCELLED`).
+
+### Routes contrats
+
+- `POST /api/proposals/:id/contracts` : crée un contrat depuis une proposition `SENT` ou `ACCEPTED`.
+- `GET /api/contracts` : liste les contrats.
+- `GET /api/contracts/:id` : détail d'un contrat.
+- `PATCH /api/contracts/:id` : met à jour les informations contractuelles.
+- `PATCH /api/contracts/:id/status` : change le statut du contrat.
+- `DELETE /api/contracts/:id` : supprime un contrat.
+
+### Workflow
+
+Après matching, l'admin crée une proposition. Une proposition `SENT` ou `ACCEPTED` peut générer un contrat en `DRAFT`. La création passe la demande en `CONTRACT_PENDING` et les engins en `RESERVED`. Quand le contrat devient `ACTIVE`, la demande passe `ACTIVE` et les engins `PLACED`. Quand le contrat devient `COMPLETED` ou `CANCELLED`, les engins redeviennent `AVAILABLE` et la demande prend le statut correspondant.
+
+### Scénario de test manuel
+
+Démarrer l'API, le site web et le CMS. Créer un engin, le rendre `AVAILABLE`, créer une demande, faire le matching, créer une proposition, accepter ou utiliser une proposition envoyée, créer le contrat depuis `/proposals`, vérifier `/contracts`, passer le contrat `ACTIVE`, puis `COMPLETED`.
+
+### Limites actuelles
+
+Pas de signature électronique réelle, pas de paiement, pas de GPS, pas de financement, pas de dividendes et pas de génération PDF complexe.

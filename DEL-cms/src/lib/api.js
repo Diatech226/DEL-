@@ -10,4 +10,11 @@ export const updateRequestStatus = (id, status) => request(`/api/requests/${id}/
 export const getProposalList = () => request('/api/proposals');
 export const createProposal = (payload) => request('/api/proposals', { method: 'POST', body: JSON.stringify(payload) });
 export const updateProposalStatus = (id, status) => request(`/api/proposals/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
-export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus };
+
+export const getContractList = () => request('/api/contracts');
+export const getContractById = (id) => request(`/api/contracts/${id}`);
+export const createContractFromProposal = (proposalId, payload) => request(`/api/proposals/${proposalId}/contracts`, { method: 'POST', body: JSON.stringify(payload) });
+export const updateContractStatus = (id, status) => request(`/api/contracts/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const updateContract = (id, payload) => request(`/api/contracts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+
+export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract };
