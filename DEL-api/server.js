@@ -19,6 +19,8 @@ app.use('/api/proposals', require('./src/routes/proposal.routes'));
 app.use('/api/documents', require('./src/routes/document.routes'));
 app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
 app.use('/api', require('./src/routes/contract.routes'));
+app.use('/api', require('./src/routes/invoice.routes'));
+app.use('/api', require('./src/routes/payment.routes'));
 app.use(notFound);
 app.use(errorMiddleware);
 

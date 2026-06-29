@@ -106,16 +106,17 @@ Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un doc
 
 Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
 
-## Maintenance et réparations
+## Module facturation CMS
 
-Le CMS expose un module `/maintenance` pour suivre les tickets créés sur les engins. Les administrateurs peuvent consulter la liste, ouvrir le détail d'un ticket, changer son statut, renseigner le diagnostic, les coûts, les heures d'immobilisation, les URLs de devis/facture et les pièces sous forme de lignes `Nom,quantité,coût unitaire`.
+Le CMS ajoute les écrans `/invoices`, `/invoices/[id]` et `/payments` pour suivre les factures et paiements manuels. Le détail contrat contient un formulaire de création de facture. Le dashboard calcule côté frontend les indicateurs financiers : total factures, factures payées/en attente/en retard, total facturé, encaissé, solde restant et commission DEL estimée.
 
-La fiche engin `/equipment/[id]` affiche les tickets liés et propose un formulaire simple de création. Le dashboard calcule côté frontend les statistiques maintenance : total tickets, ouverts, en réparation, critiques, terminés, coûts estimés/finals et heures d'immobilisation estimées.
+### Scénario de test manuel
+1. Créer un contrat actif depuis une proposition.
+2. Depuis le détail contrat, créer une facture.
+3. Vérifier la facture dans `/invoices`, puis ouvrir son détail.
+4. Enregistrer un paiement partiel : la facture passe `PARTIALLY_PAID`.
+5. Enregistrer un second paiement : la facture passe `PAID` et le solde vaut 0.
+6. Rejeter ou annuler un paiement : la facture est recalculée à partir des paiements `CONFIRMED`.
 
-### Workflow opérationnel
-
-Créer un ticket de gravité `HIGH` ou `CRITICAL` immobilise l'engin côté API. Les statuts de diagnostic/réparation maintiennent l'engin en maintenance. Quand le ticket est terminé, l'API remet l'engin `PLACED` s'il est lié à une mission active, sinon `AVAILABLE`.
-
-### Limites actuelles
-
-La saisie est volontairement simple et manuelle. Le CMS ne fournit pas encore d'application technicien, de gestion avancée du stock de pièces, de paiement automatique, d'IoT ni de maintenance prédictive.
+### Limites
+Le CMS ne déclenche aucun paiement réel : il sert uniquement au suivi administratif manuel avec référence et URL de preuve.

@@ -71,6 +71,6 @@ La page `/equipment/[id]` appelle `GET /api/documents/entity/EQUIPMENT/:id` et a
 
 Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par exemple `https://example.com/document.pdf`.
 
-## Information maintenance utilisateur
+## Information facturation utilisateur
 
-Le dashboard utilisateur contient une section informative "Maintenance et réparations". Elle explique que DEL suit les pannes, diagnostics, devis, réparations, pièces, coûts et immobilisations des engins. Les vrais tickets ne sont pas encore exposés côté propriétaire ou entreprise ; ils restent administrés dans le CMS pour cette version.
+Le dashboard utilisateur affiche une section informative indiquant que les factures et paiements sont actuellement suivis par l'équipe DEL. Les vraies factures, reçus et paiements en ligne ne sont pas encore exposés côté utilisateur.

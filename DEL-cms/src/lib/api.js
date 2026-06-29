@@ -17,15 +17,18 @@ export const createContractFromProposal = (proposalId, payload) => request(`/api
 export const updateContractStatus = (id, status) => request(`/api/contracts/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const updateContract = (id, payload) => request(`/api/contracts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 
-export const getMaintenanceTicketList = () => request('/api/maintenance');
-export const getMaintenanceTicketById = (id) => request(`/api/maintenance/${id}`);
-export const getMaintenanceTicketsByEquipment = (equipmentId) => request(`/api/maintenance/equipment/${equipmentId}`);
-export const getMaintenanceTicketsByMission = (missionId) => request(`/api/maintenance/mission/${missionId}`);
-export const createMaintenanceTicket = (payload) => request('/api/maintenance', { method: 'POST', body: JSON.stringify(payload) });
-export const updateMaintenanceTicket = (id, payload) => request(`/api/maintenance/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-export const updateMaintenanceTicketStatus = (id, status) => request(`/api/maintenance/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const getInvoiceList = () => request('/api/invoices');
+export const getInvoiceById = (id) => request(`/api/invoices/${id}`);
+export const createInvoiceFromContract = (contractId, payload) => request(`/api/contracts/${contractId}/invoices`, { method: 'POST', body: JSON.stringify(payload) });
+export const updateInvoiceStatus = (id, status, force = false) => request(`/api/invoices/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, force }) });
+export const updateInvoice = (id, payload) => request(`/api/invoices/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const getPaymentList = () => request('/api/payments');
+export const getPaymentById = (id) => request(`/api/payments/${id}`);
+export const getPaymentsByInvoice = (invoiceId) => request(`/api/payments/invoice/${invoiceId}`);
+export const createPayment = (payload) => request('/api/payments', { method: 'POST', body: JSON.stringify(payload) });
+export const updatePaymentStatus = (id, status) => request(`/api/payments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 
-export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract, maintenance:getMaintenanceTicketList, getMaintenanceTicketById, createMaintenanceTicket, updateMaintenanceTicket, updateMaintenanceTicketStatus };
+export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract, getInvoiceList, getInvoiceById, createInvoiceFromContract, updateInvoiceStatus, updateInvoice, getPaymentList, getPaymentById, getPaymentsByInvoice, createPayment, updatePaymentStatus };
 export const getEquipmentById = (id) => request(`/api/equipment/${id}`);
 export const getDocumentList = () => request('/api/documents');
 export const getDocumentById = (id) => request(`/api/documents/${id}`);
