@@ -84,3 +84,13 @@ La page détail d’un engin affiche uniquement le statut actuel et un message i
 La page `/onboarding` permet de soumettre trois types de profils : propriétaire d’engin, entreprise et technicien/atelier. Après création d’un profil propriétaire ou entreprise, l’utilisateur peut ajouter un document KYC/KYB par URL. Les documents sont créés via le module Documents avec `entityType=OWNER` ou `entityType=COMPANY` et `entityId` égal à l’identifiant du profil créé.
 
 Le dashboard utilisateur rappelle que la vérification d’identité, d’entreprise ou d’atelier est effectuée par l’administration DEL. Limites : pas d’authentification Clerk réelle, pas de paiement et pas d’espace multi-utilisateur complet.
+
+## Authentification web temporaire
+
+DEL-web utilise les routes `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PATCH /api/auth/me` et `POST /api/auth/logout` de DEL-api.
+
+Le token JWT est stocké dans `localStorage` côté client sous `del_token`. Les pages `/login` et `/register` redirigent vers `/dashboard` après succès. Le dashboard appelle `getMe()` et affiche des sections différentes pour `OWNER`, `COMPANY`, `TECHNICIAN`, `INVESTOR` et `ADMIN`.
+
+Les formulaires onboarding, dépôt d’engin et demande d’engins restent utilisables sans compte, mais ils préremplissent et envoient `userId`, `ownerUserId` ou `companyUserId` quand un utilisateur est connecté.
+
+Limite actuelle : cette auth est volontairement simple et pourra être remplacée par Clerk/OAuth/OTP plus tard.

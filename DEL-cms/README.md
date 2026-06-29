@@ -132,3 +132,19 @@ Le CMS ajoute les sections `/users`, `/owners`, `/companies` et `/technicians`. 
 Les détails `/owners/:id` et `/companies/:id` affichent toutes les informations du profil, les documents liés via le module Documents (`OWNER/:id` ou `COMPANY/:id`) et les actions de vérification/rejet des documents et profils. Le détail `/technicians/:id` affiche les spécialités, zones d’intervention, statut et notes.
 
 Le dashboard calcule côté frontend les statistiques profils : utilisateurs, propriétaires/entreprises/techniciens en attente, profils vérifiés/rejetés et documents KYC/KYB en attente. Limites actuelles : pas de permissions serveur complexes ni d’espace multi-utilisateur complet.
+
+## Authentification CMS admin
+
+DEL-cms possède une page `/login` qui appelle `POST /api/auth/login`. Après connexion, le CMS vérifie que `user.role === 'ADMIN'`; sinon le token est supprimé et l’accès est refusé.
+
+Le token admin est stocké côté client sous `del_cms_token` et ajouté aux appels PATCH de changement de statut via `Authorization: Bearer <token>`. `AdminGuard` protège les pages principales et affiche un message clair en cas de session expirée ou d’accès refusé.
+
+Pour créer un admin dans DEL-api :
+
+```bash
+ADMIN_EMAILS=diaexpressofficial@gmail.com npm run seed:admin
+```
+
+Mot de passe temporaire : `changer-moi-123`.
+
+Limite actuelle : le logout supprime simplement le token local car le JWT est stateless.

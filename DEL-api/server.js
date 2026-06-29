@@ -13,6 +13,7 @@ app.use(cors({ origin: (origin, cb) => (!origin || env.corsOrigins.includes(orig
 app.use(express.json());
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use('/api/health', require('./src/routes/health.routes'));
+app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/equipment', require('./src/routes/equipment.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/owner-profiles', require('./src/routes/ownerProfile.routes'));
