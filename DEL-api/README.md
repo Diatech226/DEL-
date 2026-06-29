@@ -126,3 +126,30 @@ Un propriétaire peut déposer un engin puis ajouter des documents via URL. Une 
 ### Limites actuelles documents
 
 Les fichiers ne sont pas téléversés : `fileUrl` pointe vers une URL fournie manuellement. Pas de S3/Cloudinary, signature électronique, paiement, GPS, dividendes, financement ou stockage avancé.
+
+## Module Maintenance et réparations
+
+Le modèle `MaintenanceTicket` structure la maintenance manuelle des engins. Il contient un numéro unique `DEL-MTN-YYYYMMDD-XXXX`, les liens métier (`equipmentId`, `missionId`, `contractId`, `missionReportId`), les informations de contexte (`companyName`, `ownerName`, `equipmentTitle`), le type de panne (`BREAKDOWN`, `PREVENTIVE`, `CORRECTIVE`, `INSPECTION`, `ACCIDENT`, `OTHER`), la gravité (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), le diagnostic, l'atelier ou technicien, les coûts, la durée d'immobilisation, les pièces, les URL de devis/facture, les photos/documents et le statut (`OPEN`, `DIAGNOSIS`, `QUOTATION_PENDING`, `APPROVED`, `IN_REPAIR`, `COMPLETED`, `CANCELLED`, `REJECTED`).
+
+### Routes maintenance
+
+- `POST /api/maintenance` : crée un ticket. Champs obligatoires : `equipmentId`, `title`, `issueType`, `severity`.
+- `GET /api/maintenance` : liste tous les tickets.
+- `GET /api/maintenance/:id` : détail d'un ticket.
+- `GET /api/maintenance/equipment/:equipmentId` : tickets liés à un engin.
+- `GET /api/maintenance/mission/:missionId` : tickets liés à une mission.
+- `PATCH /api/maintenance/:id` : met à jour diagnostic, coûts, pièces, dates, URLs, documents, photos et statut.
+- `PATCH /api/maintenance/:id/status` : change le statut avec effets métier sur l'engin.
+- `DELETE /api/maintenance/:id` : supprime un ticket.
+
+### Workflow maintenance
+
+À la création, l'API vérifie que l'engin existe, recopie son titre et son propriétaire, génère le numéro de ticket et crée le ticket en `OPEN`. Une gravité `HIGH` ou `CRITICAL` passe l'engin en `UNDER_MAINTENANCE`. Les statuts `DIAGNOSIS`, `QUOTATION_PENDING`, `APPROVED` et `IN_REPAIR` maintiennent aussi l'engin en `UNDER_MAINTENANCE`. En `COMPLETED`, la date de fin est renseignée si elle est vide et l'engin revient `PLACED` si le ticket est lié à une mission active, sinon `AVAILABLE`. En `CANCELLED` ou `REJECTED`, un engin immobilisé est remis `PLACED` en contexte mission active ou `AVAILABLE` hors mission.
+
+### Scénario de test manuel recommandé
+
+Démarrer `DEL-api`, `DEL-web` et `DEL-cms`. Créer un engin depuis le web, le rendre `AVAILABLE` dans le CMS, créer une demande, faire le matching, créer/accepter une proposition, créer un contrat, le passer `ACTIVE`, puis créer un ticket maintenance de gravité `HIGH` depuis la fiche engin ou mission. Vérifier que le ticket apparaît dans `/maintenance`, que l'engin passe `UNDER_MAINTENANCE`, ajouter diagnostic, pièces et coûts, passer `IN_REPAIR`, puis `COMPLETED`. L'engin doit revenir `PLACED` si une mission active est liée, sinon `AVAILABLE`.
+
+### Limites actuelles
+
+La maintenance reste manuelle : pas de maintenance prédictive, IoT, GPS réel, stock de pièces avancé, paiement automatique ni application technicien séparée. Les pièces sont saisies directement dans le ticket et ne décrémentent aucun stock.

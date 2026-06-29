@@ -105,3 +105,17 @@ Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un doc
 ### Limites
 
 Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
+
+## Maintenance et réparations
+
+Le CMS expose un module `/maintenance` pour suivre les tickets créés sur les engins. Les administrateurs peuvent consulter la liste, ouvrir le détail d'un ticket, changer son statut, renseigner le diagnostic, les coûts, les heures d'immobilisation, les URLs de devis/facture et les pièces sous forme de lignes `Nom,quantité,coût unitaire`.
+
+La fiche engin `/equipment/[id]` affiche les tickets liés et propose un formulaire simple de création. Le dashboard calcule côté frontend les statistiques maintenance : total tickets, ouverts, en réparation, critiques, terminés, coûts estimés/finals et heures d'immobilisation estimées.
+
+### Workflow opérationnel
+
+Créer un ticket de gravité `HIGH` ou `CRITICAL` immobilise l'engin côté API. Les statuts de diagnostic/réparation maintiennent l'engin en maintenance. Quand le ticket est terminé, l'API remet l'engin `PLACED` s'il est lié à une mission active, sinon `AVAILABLE`.
+
+### Limites actuelles
+
+La saisie est volontairement simple et manuelle. Le CMS ne fournit pas encore d'application technicien, de gestion avancée du stock de pièces, de paiement automatique, d'IoT ni de maintenance prédictive.

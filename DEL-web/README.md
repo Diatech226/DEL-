@@ -70,3 +70,7 @@ La page `/equipment/[id]` appelle `GET /api/documents/entity/EQUIPMENT/:id` et a
 ### Limites
 
 Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par exemple `https://example.com/document.pdf`.
+
+## Information maintenance utilisateur
+
+Le dashboard utilisateur contient une section informative "Maintenance et réparations". Elle explique que DEL suit les pannes, diagnostics, devis, réparations, pièces, coûts et immobilisations des engins. Les vrais tickets ne sont pas encore exposés côté propriétaire ou entreprise ; ils restent administrés dans le CMS pour cette version.
