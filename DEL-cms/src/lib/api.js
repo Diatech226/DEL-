@@ -1,5 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-async function request(path, options = {}) { try { const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, cache: 'no-store' }); const json = await res.json().catch(() => ({})); if (!res.ok || json.success === false) throw new Error(json.message || `Erreur API (${res.status})`); return json.data ?? json; } catch (error) { throw new Error(error.message || 'Impossible de contacter DEL-api.'); } }
+async function request(path, options = {}) { try { const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, cache: 'no-store' }); const json = await res.json().catch(() => ({})); if (!res.ok || json.success === false) { const err = new Error(json.message || `Erreur API (${res.status})`); err.status = res.status; err.conflicts = json.conflicts; throw err; } return json.data ?? json; } catch (error) { throw new Error(error.message || 'Impossible de contacter DEL-api.'); } }
 export const getEquipmentList = () => request('/api/equipment');
 export const updateEquipmentStatus = (id, status) => request(`/api/equipment/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const getRequestList = () => request('/api/requests');
@@ -36,3 +36,22 @@ export const getDocumentsByEntity = (entityType, entityId) => request(`/api/docu
 export const createDocument = (payload) => request('/api/documents', { method: 'POST', body: JSON.stringify(payload) });
 export const updateDocumentStatus = (id, status, rejectionReason = '') => request(`/api/documents/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
 export const deleteDocument = (id) => request(`/api/documents/${id}`, { method: 'DELETE' });
+export const getMissionList = () => request('/api/missions');
+export const getMaintenanceTicketList = () => request('/api/maintenance');
+export const getMaintenanceTicketsByEquipment = (equipmentId) => request(`/api/maintenance/equipment/${equipmentId}`);
+export const createMaintenanceTicket = (payload) => request('/api/maintenance', { method: 'POST', body: JSON.stringify(payload) });
+export const getEquipmentScheduleList = () => request('/api/equipment-schedules');
+export const getSchedulesByEquipment = (equipmentId) => request(`/api/equipment-schedules/equipment/${equipmentId}`);
+export const getEquipmentAvailability = (equipmentId, startDate, endDate) => request(`/api/equipment-schedules/equipment/${equipmentId}/availability?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
+export const checkEquipmentAvailability = (payload) => request('/api/equipment-schedules/check-availability', { method: 'POST', body: JSON.stringify(payload) });
+export const createEquipmentSchedule = (payload) => request('/api/equipment-schedules', { method: 'POST', body: JSON.stringify(payload) });
+export const updateEquipmentScheduleStatus = (id, status) => request(`/api/equipment-schedules/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const deleteEquipmentSchedule = (id) => request(`/api/equipment-schedules/${id}`, { method: 'DELETE' });
+export const getMissionById = (id) => request(`/api/missions/${id}`);
+export const updateMissionStatus = (id, status) => request(`/api/missions/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const getMissionReportsByMission = (missionId) => request(`/api/mission-reports/mission/${missionId}`);
+export const createMissionReport = (payload) => request('/api/mission-reports', { method: 'POST', body: JSON.stringify(payload) });
+export const updateMissionReportStatus = (id, status) => request(`/api/mission-reports/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const getMaintenanceTicketById = (id) => request(`/api/maintenance/${id}`);
+export const updateMaintenanceTicket = (id, payload) => request(`/api/maintenance/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const updateMaintenanceTicketStatus = (id, status) => request(`/api/maintenance/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });

@@ -1,6 +1,7 @@
 const { z } = require('zod');
 const Proposal = require('../models/Proposal');
 const asyncHandler = require('../utils/asyncHandler');
+const { updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
 
 const proposalSchema = z.object({
   requestId: z.string().min(1, 'requestId est obligatoire'), equipmentIds: z.array(z.string()).optional(), companyName: z.string().optional(), ownerNames: z.array(z.string()).optional(),
@@ -13,5 +14,5 @@ exports.createProposal = asyncHandler(async (req, res) => { const data = proposa
 exports.getProposals = asyncHandler(async (req, res) => { const items = await Proposal.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getProposalById = asyncHandler(async (req, res) => { const item = await Proposal.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Proposition introuvable' }); res.json({ success: true, data: item }); });
 exports.updateProposal = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await Proposal.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Proposition introuvable' }); res.json({ success: true, data: item }); });
-exports.updateProposalStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const item = await Proposal.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Proposition introuvable' }); res.json({ success: true, data: item }); });
+exports.updateProposalStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const item = await Proposal.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Proposition introuvable' }); if (['REJECTED','EXPIRED'].includes(status)) await updateSchedulesStatus('PROPOSAL', item._id, 'RESERVED', 'CANCELLED'); res.json({ success: true, data: item }); });
 exports.deleteProposal = asyncHandler(async (req, res) => { const item = await Proposal.findByIdAndDelete(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Proposition introuvable' }); res.json({ success: true, data: item }); });

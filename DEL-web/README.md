@@ -74,3 +74,7 @@ Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par
 ## Information facturation utilisateur
 
 Le dashboard utilisateur affiche une section informative indiquant que les factures et paiements sont actuellement suivis par l'équipe DEL. Les vraies factures, reçus et paiements en ligne ne sont pas encore exposés côté utilisateur.
+
+## Disponibilité publique
+
+La page détail d’un engin affiche uniquement le statut actuel et un message indiquant que l’équipe DEL confirme la disponibilité exacte avant proposition. Le planning complet reste réservé au CMS. Le formulaire `/demander-des-engins` inclut `startDate`, `endDate` et `durationMonths` pour permettre la vérification automatique côté API.

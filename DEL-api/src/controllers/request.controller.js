@@ -3,6 +3,7 @@ const EquipmentRequest = require('../models/EquipmentRequest');
 const Equipment = require('../models/Equipment');
 const Proposal = require('../models/Proposal');
 const asyncHandler = require('../utils/asyncHandler');
+const { hasScheduleConflict, createScheduleForEquipment, normalizePeriod } = require('../utils/equipmentSchedule.service');
 
 const statuses = ['OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED'];
 const requestSchema = z.object({
@@ -43,7 +44,18 @@ exports.getRequestMatches = asyncHandler(async (req, res) => {
   const query = { category: request.equipmentCategory, status: 'AVAILABLE' };
   if (request.country) query.country = new RegExp(`^${request.country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
   const equipment = await Equipment.find(query).sort({ createdAt: -1 });
-  const data = equipment.map((item) => ({ equipment: item, ...scoreEquipment(item, request) })).sort((a, b) => b.score - a.score);
+  const period = normalizePeriod(request.startDate, request.endDate, request.durationMonths);
+  const matches = [];
+  for (const item of equipment) {
+    // eslint-disable-next-line no-await-in-loop
+    const conflicts = await hasScheduleConflict(item._id, period.start, period.end);
+    if (conflicts.length) continue;
+    const scored = scoreEquipment(item, request);
+    scored.score += 15;
+    scored.reasons.push('Disponible sur la période demandée');
+    matches.push({ equipment: item, available: true, conflicts: [], ...scored });
+  }
+  const data = matches.sort((a, b) => b.score - a.score);
   res.json({ success: true, request, count: data.length, data });
 });
 exports.createProposalFromRequest = asyncHandler(async (req, res) => {
@@ -52,7 +64,16 @@ exports.createProposalFromRequest = asyncHandler(async (req, res) => {
   const data = proposalFromRequestSchema.parse(req.body);
   const equipment = await Equipment.find({ _id: { $in: data.equipmentIds } });
   if (equipment.length !== data.equipmentIds.length) return res.status(400).json({ success: false, message: 'Un ou plusieurs engins sont introuvables' });
+  const period = normalizePeriod(request.startDate, request.endDate, data.durationMonths || request.durationMonths);
+  const conflictsByEquipment = [];
+  for (const item of equipment) {
+    // eslint-disable-next-line no-await-in-loop
+    const conflicts = await hasScheduleConflict(item._id, period.start, period.end);
+    if (conflicts.length) conflictsByEquipment.push({ equipmentId: item._id, equipmentTitle: item.title, conflicts });
+  }
+  if (conflictsByEquipment.length) return res.status(409).json({ success: false, message: 'Conflit de planning détecté', conflicts: conflictsByEquipment });
   const proposal = await Proposal.create({ ...data, requestId: request._id, companyName: request.companyName, ownerNames: [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))], status: 'SENT' });
+  await Promise.all(equipment.map((item) => createScheduleForEquipment(item, { type: 'RESERVED', title: 'Réservation proposition', description: data.conditions, startDate: period.start, endDate: period.end, relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, createdBy: 'DEL-api' })));
   await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'PROPOSAL_SENT' }, { runValidators: true });
   await Equipment.updateMany({ _id: { $in: data.equipmentIds } }, { status: 'RESERVED' }, { runValidators: true });
   res.status(201).json({ success: true, data: proposal });
