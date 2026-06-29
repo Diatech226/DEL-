@@ -4,6 +4,7 @@ const MaintenanceTicket = require('../models/MaintenanceTicket');
 const Equipment = require('../models/Equipment');
 const Contract = require('../models/Contract');
 const generateMaintenanceTicketNumber = require('../utils/generateMaintenanceTicketNumber');
+const { addHours, createScheduleForEquipment, hasScheduleConflict, updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
 
 const statuses = MaintenanceTicket.statuses;
 const maintenanceStatuses = ['DIAGNOSIS', 'QUOTATION_PENDING', 'APPROVED', 'IN_REPAIR'];
@@ -76,7 +77,15 @@ exports.createMaintenanceTicket = asyncHandler(async (req, res) => {
     await Equipment.findByIdAndUpdate(equipment._id, { status: 'UNDER_MAINTENANCE' }, { runValidators: true });
   }
 
-  res.status(201).json({ success: true, data: ticket });
+  let warning = '';
+  if (ticket.estimatedDowntimeHours || ticket.repairStartDate) {
+    const start = ticket.repairStartDate || ticket.reportedAt || new Date();
+    const end = ticket.repairEndDate || addHours(start, ticket.estimatedDowntimeHours || 24);
+    const conflicts = await hasScheduleConflict(equipment._id, start, end);
+    if (conflicts.some((c) => c.type === 'MISSION')) warning = 'Attention : maintenance créée pendant une mission active.';
+    await createScheduleForEquipment(equipment, { type: 'MAINTENANCE', title: 'Maintenance / réparation', description: ticket.description, startDate: start, endDate: end, relatedEntityType: 'MAINTENANCE', relatedEntityId: ticket._id, createdBy: req.body.createdBy || 'DEL-api', notes: warning });
+  }
+  res.status(201).json({ success: true, data: ticket, warning });
 });
 
 exports.getMaintenanceTickets = asyncHandler(async (req, res) => {
@@ -109,8 +118,9 @@ exports.updateMaintenanceTicketStatus = asyncHandler(async (req, res) => {
   const item = await MaintenanceTicket.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
   if (!item) return res.status(404).json({ success: false, message: 'Ticket maintenance introuvable' });
   if (maintenanceStatuses.includes(status)) await Equipment.findByIdAndUpdate(item.equipmentId, { status: 'UNDER_MAINTENANCE' }, { runValidators: true });
-  if (status === 'COMPLETED') await restoreEquipmentStatus(item);
+  if (status === 'COMPLETED') { await restoreEquipmentStatus(item); await updateSchedulesStatus('MAINTENANCE', item._id, 'MAINTENANCE', 'COMPLETED'); }
   if (['CANCELLED', 'REJECTED'].includes(status)) {
+    await updateSchedulesStatus('MAINTENANCE', item._id, 'MAINTENANCE', 'CANCELLED');
     const equipment = await Equipment.findById(item.equipmentId);
     if (equipment?.status === 'UNDER_MAINTENANCE') await restoreEquipmentStatus(item);
   }

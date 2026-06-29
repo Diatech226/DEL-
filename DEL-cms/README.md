@@ -120,3 +120,7 @@ Le CMS ajoute les écrans `/invoices`, `/invoices/[id]` et `/payments` pour suiv
 
 ### Limites
 Le CMS ne déclenche aucun paiement réel : il sert uniquement au suivi administratif manuel avec référence et URL de preuve.
+
+## Planning des engins
+
+Le CMS ajoute `/planning` pour consulter les périodes `EquipmentSchedule`, filtrer par type/statut/engin/période, bloquer manuellement un engin et gérer les statuts `ACTIVE`, `CANCELLED`, `COMPLETED`. La fiche engin affiche son planning et un mini-formulaire de vérification de disponibilité. La fiche demande affiche la disponibilité issue du matching et un message dédié quand aucun engin n’est disponible sur la période.

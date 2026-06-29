@@ -155,3 +155,45 @@ Un contrat créé depuis une proposition peut recevoir une facture. La facture c
 
 ### Limites actuelles
 Pas de paiement réel en ligne, Mobile Money automatisé, banque, crypto opérationnelle, DiaPay, wallet, dividendes, investissement fractionné ou automatisation bancaire.
+
+## Module planning et disponibilité des engins
+
+DEL-api expose le modèle `EquipmentSchedule` pour représenter une période pendant laquelle un engin est disponible, réservé, contractualisé, en mission, en maintenance, indisponible ou bloqué manuellement. Les champs principaux sont `equipmentId`, `equipmentTitle`, `ownerName`, `type`, `title`, `description`, `startDate`, `endDate`, `relatedEntityType`, `relatedEntityId`, `status`, `createdBy` et `notes`.
+
+### Routes planning
+
+- `POST /api/equipment-schedules` : créer un blocage ou une période manuelle.
+- `GET /api/equipment-schedules` : lister les périodes, avec filtres simples par query string.
+- `GET /api/equipment-schedules/:id` : détail d’une période.
+- `GET /api/equipment-schedules/equipment/:equipmentId` : planning d’un engin.
+- `GET /api/equipment-schedules/equipment/:equipmentId/availability?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` : disponibilité d’un engin.
+- `POST /api/equipment-schedules/check-availability` : disponibilité de plusieurs engins.
+- `PATCH /api/equipment-schedules/:id` : modifier une période.
+- `PATCH /api/equipment-schedules/:id/status` : passer une période `ACTIVE`, `CANCELLED` ou `COMPLETED`.
+- `DELETE /api/equipment-schedules/:id` : supprimer une période.
+
+### Logique de conflit
+
+Un conflit existe pour un même `equipmentId` si une période `ACTIVE`, non `AVAILABLE`, chevauche la période demandée avec la règle : `startDate <= existingEndDate` et `endDate >= existingStartDate`. Les conflits bloquent les réservations manuelles et les propositions, avec une réponse HTTP `409`.
+
+### Intégrations métier
+
+- Création d’une proposition depuis une demande : vérifie la disponibilité, puis crée des schedules `RESERVED`.
+- Création d’un contrat : crée des schedules `CONTRACT`.
+- Création d’une mission : crée des schedules `MISSION`.
+- Création d’un ticket maintenance : crée un schedule `MAINTENANCE` si une immobilisation est renseignée. Une maintenance peut chevaucher une mission, mais la réponse contient un avertissement.
+- Changement de statut : les schedules liés passent `CANCELLED` ou `COMPLETED` selon les statuts des propositions, contrats, missions et tickets maintenance.
+- Matching : les engins en conflit sur la période de la demande sont exclus ; les engins disponibles gagnent un bonus de score avec la raison `Disponible sur la période demandée`.
+
+### Scénario de test conseillé
+
+1. Créer un engin et le passer `AVAILABLE`.
+2. Bloquer l’engin dans `/api/equipment-schedules` du 10 au 15 juillet.
+3. Créer une demande sur cette même période et vérifier que le matching l’exclut.
+4. Créer une demande du 20 au 25 juillet et vérifier que l’engin apparaît.
+5. Créer une proposition, un contrat, une mission et un ticket maintenance, puis vérifier les schedules `RESERVED`, `CONTRACT`, `MISSION` et `MAINTENANCE`.
+6. Passer mission et maintenance à `COMPLETED` et vérifier que les schedules liés passent `COMPLETED`.
+
+### Limites actuelles
+
+Pas de calendrier graphique complexe, pas de drag and drop, pas de GPS temps réel, pas d’optimisation IA et pas d’application mobile chauffeur.
