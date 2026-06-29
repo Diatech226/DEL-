@@ -1,0 +1,2 @@
+'use client';import {useEffect,useState} from 'react';import {api} from '../../lib/api';import EquipmentTable from '../../components/EquipmentTable';
+export default function Page(){const [items,setItems]=useState([]);const load=()=>api.equipment().then(setItems);useEffect(()=>{load()},[]);async function onStatus(id,status){await api.updateEquipment(id,{status});load()}return <section><h1 className="text-3xl font-black">Engins</h1><div className="mt-6"><EquipmentTable items={items} onStatus={onStatus}/></div></section>}

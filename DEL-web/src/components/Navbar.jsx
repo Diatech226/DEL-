@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Navbar(){return <nav className="bg-coal text-white"><div className="mx-auto flex max-w-7xl items-center justify-between p-5"><Link href="/" className="text-2xl font-black text-gold">DEL</Link><div className="flex gap-5 text-sm"><Link href="/equipment">Engins</Link><Link href="/deposer-un-engin">Déposer</Link><Link href="/demander-des-engins">Demander</Link><Link href="/dashboard">Dashboard</Link></div></div></nav>}

@@ -1,0 +1,3 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+async function request(path, options = {}) { const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, cache: 'no-store' }); const json = await res.json(); if (!res.ok) throw new Error(json.message || 'Erreur API'); return json.data ?? json; }
+export const api = { getEquipment: () => request('/api/equipment'), getEquipmentById: (id) => request(`/api/equipment/${id}`), createEquipment: (data) => request('/api/equipment', { method: 'POST', body: JSON.stringify(data) }), createRequest: (data) => request('/api/requests', { method: 'POST', body: JSON.stringify(data) }) };
