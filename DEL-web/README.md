@@ -42,3 +42,12 @@ L'application est disponible sur `http://localhost:3000`.
 - Vérifier sa présence dans `/equipment`.
 - Ouvrir son détail via `/equipment/:id`.
 - Publier une demande via `/demander-des-engins`.
+
+## Visibilité utilisateur du processus DEL
+
+- `/dashboard` explique que les propositions sont préparées par l’équipe DEL après étude des engins disponibles et des demandes.
+- `/demander-des-engins` confirme après succès que l’équipe DEL analysera les engins disponibles et fera une proposition.
+- `/deposer-un-engin` confirme après succès que l’équipe DEL vérifiera les informations avant placement ou mise en relation.
+
+### Limite actuelle
+Aucun espace proposition côté client n’est créé dans cette étape ; le suivi des propositions reste côté `DEL-cms`.

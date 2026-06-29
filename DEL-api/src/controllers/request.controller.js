@@ -1,18 +1,62 @@
 const { z } = require('zod');
 const EquipmentRequest = require('../models/EquipmentRequest');
+const Equipment = require('../models/Equipment');
+const Proposal = require('../models/Proposal');
 const asyncHandler = require('../utils/asyncHandler');
 
+const statuses = ['OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED'];
 const requestSchema = z.object({
   companyName: z.string().trim().min(1, 'companyName est obligatoire'), contactName: z.string().trim().min(1, 'contactName est obligatoire'), contactPhone: z.string().trim().min(1, 'contactPhone est obligatoire'),
   equipmentCategory: z.string().trim().min(1, 'equipmentCategory est obligatoire'), quantity: z.coerce.number().min(1, 'quantity doit être supérieur à 0'), country: z.string().trim().min(1, 'country est obligatoire'), city: z.string().trim().min(1, 'city est obligatoire'),
   title: z.string().optional(), workSiteLocation: z.string().optional(), durationMonths: z.coerce.number().optional(), proposedPrice: z.coerce.number().optional(), currency: z.enum(['XOF','USD','EUR']).optional(), priceUnit: z.enum(['DAY','MONTH','PROJECT']).optional(),
-  description: z.string().optional(), driverRequired: z.boolean().optional(), fuelIncluded: z.boolean().optional(), maintenanceIncluded: z.boolean().optional(), insuranceRequired: z.boolean().optional(), status: z.string().optional(),
+  description: z.string().optional(), driverRequired: z.boolean().optional(), fuelIncluded: z.boolean().optional(), maintenanceIncluded: z.boolean().optional(), insuranceRequired: z.boolean().optional(), status: z.enum(statuses).optional(),
 }).passthrough();
 const updateSchema = requestSchema.partial();
-const statusSchema = z.object({ status: z.enum(['OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED']) });
+const statusSchema = z.object({ status: z.enum(statuses) });
+const proposalFromRequestSchema = z.object({
+  equipmentIds: z.array(z.string().min(1)).min(1, 'equipmentIds ne doit pas être vide'),
+  title: z.string().trim().min(1, 'title est obligatoire'),
+  finalPrice: z.coerce.number({ invalid_type_error: 'finalPrice est obligatoire' }),
+  currency: z.enum(['XOF','USD','EUR']).default('XOF'),
+  durationMonths: z.coerce.number().optional(),
+  conditions: z.string().optional(),
+});
+
+const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+function scoreEquipment(equipment, request) {
+  let score = 0;
+  const reasons = [];
+  if (same(equipment.category, request.equipmentCategory)) { score += 40; reasons.push('Catégorie compatible'); }
+  if (equipment.status === 'AVAILABLE') { score += 20; reasons.push('Engin disponible'); }
+  if (request.country && same(equipment.country, request.country)) { score += 15; reasons.push('Même pays'); }
+  if (request.city && same(equipment.city, request.city)) { score += 15; reasons.push('Même ville'); }
+  if (request.proposedPrice && equipment.rentalPricePerMonth && equipment.rentalPricePerMonth <= request.proposedPrice) { score += 10; reasons.push('Prix compatible'); }
+  return { score, reasons };
+}
+
 exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); const item = await EquipmentRequest.create(data); res.status(201).json({ success: true, data: item }); });
 exports.getRequests = asyncHandler(async (req, res) => { const items = await EquipmentRequest.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getRequestById = asyncHandler(async (req, res) => { const item = await EquipmentRequest.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
+exports.getRequestMatches = asyncHandler(async (req, res) => {
+  const request = await EquipmentRequest.findById(req.params.id);
+  if (!request) return res.status(404).json({ success: false, message: 'Demande introuvable pour le matching' });
+  const query = { category: request.equipmentCategory, status: 'AVAILABLE' };
+  if (request.country) query.country = new RegExp(`^${request.country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+  const equipment = await Equipment.find(query).sort({ createdAt: -1 });
+  const data = equipment.map((item) => ({ equipment: item, ...scoreEquipment(item, request) })).sort((a, b) => b.score - a.score);
+  res.json({ success: true, request, count: data.length, data });
+});
+exports.createProposalFromRequest = asyncHandler(async (req, res) => {
+  const request = await EquipmentRequest.findById(req.params.id);
+  if (!request) return res.status(404).json({ success: false, message: 'Demande introuvable pour créer une proposition' });
+  const data = proposalFromRequestSchema.parse(req.body);
+  const equipment = await Equipment.find({ _id: { $in: data.equipmentIds } });
+  if (equipment.length !== data.equipmentIds.length) return res.status(400).json({ success: false, message: 'Un ou plusieurs engins sont introuvables' });
+  const proposal = await Proposal.create({ ...data, requestId: request._id, companyName: request.companyName, ownerNames: [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))], status: 'SENT' });
+  await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'PROPOSAL_SENT' }, { runValidators: true });
+  await Equipment.updateMany({ _id: { $in: data.equipmentIds } }, { status: 'RESERVED' }, { runValidators: true });
+  res.status(201).json({ success: true, data: proposal });
+});
 exports.updateRequest = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await EquipmentRequest.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
 exports.updateRequestStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const item = await EquipmentRequest.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
 exports.deleteRequest = asyncHandler(async (req, res) => { const item = await EquipmentRequest.findByIdAndDelete(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
