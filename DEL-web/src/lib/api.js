@@ -18,3 +18,10 @@ export const createEquipmentRequest = (payload) => request('/api/requests', { me
 export const createDocument = (payload) => request('/api/documents', { method: 'POST', body: JSON.stringify(payload) });
 export const getDocumentsByEntity = (entityType, entityId) => request(`/api/documents/entity/${entityType}/${entityId}`);
 export const api = { getEquipment: getEquipmentList, getEquipmentById, createEquipment, getRequests: getRequestList, createRequest: createEquipmentRequest, createDocument, getDocumentsByEntity };
+export const createUser = (payload) => request('/api/users', { method: 'POST', body: JSON.stringify(payload) });
+export const getUserById = (id) => request(`/api/users/${id}`);
+export const createOwnerProfile = (payload) => request('/api/owner-profiles', { method: 'POST', body: JSON.stringify(payload) });
+export const getOwnerProfileById = (id) => request(`/api/owner-profiles/${id}`);
+export const createCompanyProfile = (payload) => request('/api/company-profiles', { method: 'POST', body: JSON.stringify(payload) });
+export const getCompanyProfileById = (id) => request(`/api/company-profiles/${id}`);
+export const createTechnicianProfile = (payload) => request('/api/technician-profiles', { method: 'POST', body: JSON.stringify(payload) });

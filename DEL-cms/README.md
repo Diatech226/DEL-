@@ -124,3 +124,11 @@ Le CMS ne déclenche aucun paiement réel : il sert uniquement au suivi administ
 ## Planning des engins
 
 Le CMS ajoute `/planning` pour consulter les périodes `EquipmentSchedule`, filtrer par type/statut/engin/période, bloquer manuellement un engin et gérer les statuts `ACTIVE`, `CANCELLED`, `COMPLETED`. La fiche engin affiche son planning et un mini-formulaire de vérification de disponibilité. La fiche demande affiche la disponibilité issue du matching et un message dédié quand aucun engin n’est disponible sur la période.
+
+## Administration profils et KYC/KYB
+
+Le CMS ajoute les sections `/users`, `/owners`, `/companies` et `/technicians`. Les listes affichent les profils, leurs badges de rôle/statut et des actions rapides `VERIFIED`, `REJECTED` et `SUSPENDED`.
+
+Les détails `/owners/:id` et `/companies/:id` affichent toutes les informations du profil, les documents liés via le module Documents (`OWNER/:id` ou `COMPANY/:id`) et les actions de vérification/rejet des documents et profils. Le détail `/technicians/:id` affiche les spécialités, zones d’intervention, statut et notes.
+
+Le dashboard calcule côté frontend les statistiques profils : utilisateurs, propriétaires/entreprises/techniciens en attente, profils vérifiés/rejetés et documents KYC/KYB en attente. Limites actuelles : pas de permissions serveur complexes ni d’espace multi-utilisateur complet.
