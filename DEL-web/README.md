@@ -57,3 +57,16 @@ Aucun espace proposition côté client n’est créé dans cette étape ; le sui
 Le dashboard utilisateur contient une section informative “Contrats”. Elle explique qu'après acceptation d'une proposition, l'équipe DEL prépare un contrat numérique avec conditions, durée, prix, responsabilités et modalités de paiement.
 
 Les vrais contrats ne sont pas encore affichés côté utilisateur. La signature électronique et le paiement seront ajoutés dans de prochaines versions.
+
+## Documents liés aux engins et aux demandes
+
+`DEL-web` permet maintenant d'ajouter des documents par URL après deux actions utilisateur :
+
+- après le dépôt d'un engin sur `/deposer-un-engin`, un formulaire facultatif crée un document `entityType=EQUIPMENT`, `entityId=<id engin>`, `status=PENDING` ;
+- après la publication d'une demande sur `/demander-des-engins`, un formulaire facultatif crée un document `entityType=REQUEST`, `entityId=<id demande>`, `status=PENDING`.
+
+La page `/equipment/[id]` appelle `GET /api/documents/entity/EQUIPMENT/:id` et affiche les documents disponibles avec titre, type, statut et lien `Voir document`.
+
+### Limites
+
+Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par exemple `https://example.com/document.pdf`.

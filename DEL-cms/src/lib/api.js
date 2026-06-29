@@ -18,3 +18,10 @@ export const updateContractStatus = (id, status) => request(`/api/contracts/${id
 export const updateContract = (id, payload) => request(`/api/contracts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 
 export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract };
+export const getEquipmentById = (id) => request(`/api/equipment/${id}`);
+export const getDocumentList = () => request('/api/documents');
+export const getDocumentById = (id) => request(`/api/documents/${id}`);
+export const getDocumentsByEntity = (entityType, entityId) => request(`/api/documents/entity/${entityType}/${entityId}`);
+export const createDocument = (payload) => request('/api/documents', { method: 'POST', body: JSON.stringify(payload) });
+export const updateDocumentStatus = (id, status, rejectionReason = '') => request(`/api/documents/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
+export const deleteDocument = (id) => request(`/api/documents/${id}`, { method: 'DELETE' });
