@@ -10,6 +10,12 @@ const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  jwtSecret: process.env.JWT_SECRET || 'change-me-in-production',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  adminEmails: (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean),
 };
 
 module.exports = env;

@@ -234,3 +234,47 @@ Les fichiers ne sont pas dupliqués dans les profils. Les documents KYC/KYB rest
 ### Limites actuelles
 
 L’authentification Clerk réelle, les permissions serveur complexes, le paiement, le scoring financier et l’investissement fractionné ne sont pas encore implémentés.
+
+## Authentification temporaire JWT
+
+DEL-api expose une base d’authentification simple email/téléphone + mot de passe, destinée à être remplacée plus tard par Clerk, OAuth, OTP ou un JWT avancé.
+
+### Variables d’environnement
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+JWT_SECRET=change-me-in-production
+JWT_EXPIRES_IN=7d
+ADMIN_EMAILS=
+```
+
+### Routes auth
+
+- `POST /api/auth/register` : inscription publique pour `OWNER`, `COMPANY`, `INVESTOR`, `TECHNICIAN` uniquement.
+- `POST /api/auth/login` : connexion avec `identifier` email ou téléphone.
+- `GET /api/auth/me` : utilisateur connecté, protégé par `Authorization: Bearer <token>`.
+- `PATCH /api/auth/me` : mise à jour du profil connecté sans changement de rôle/statut.
+- `POST /api/auth/logout` : placeholder, le frontend supprime le token localement.
+
+Les réponses utilisateur ne retournent jamais `passwordHash`.
+
+### Seed admin
+
+Définir `ADMIN_EMAILS=admin@del.com,diaexpressofficial@gmail.com`, puis lancer :
+
+```bash
+npm run seed:admin
+```
+
+Chaque email reçoit un compte `ADMIN` vérifié avec le mot de passe temporaire `changer-moi-123`.
+
+### Routes protégées
+
+Les changements de statut `PATCH .../:id/status` des modules sensibles sont protégés par `requireAdmin` et nécessitent un token admin. Les lectures `GET` restent publiques pour faciliter les tests de cette étape.
+
+### Limites actuelles
+
+Cette implémentation ne gère pas encore refresh tokens, rotation de secret, révocation serveur, OTP, OAuth, paiement, ni politiques avancées. Le logout est côté client car le JWT est stateless.
