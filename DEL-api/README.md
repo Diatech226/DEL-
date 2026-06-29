@@ -1,37 +1,44 @@
 # DEL-api
 
-API Express.js autonome pour DEL, connectée à MongoDB via Mongoose.
+API centrale du projet DEL. Elle expose les données utilisées par `DEL-web` et `DEL-cms`.
 
 ## Installation
 
 ```bash
 npm install
-cp .env.example .env
 ```
 
-## Variables d’environnement
+## Variables d'environnement
+
+Copier `.env.example` vers `.env` puis renseigner :
 
 - `PORT=5000`
-- `NODE_ENV=development`
-- `MONGODB_URI=` URL MongoDB locale ou Atlas.
+- `MONGODB_URI=<url MongoDB>`
 - `CORS_ORIGINS=http://localhost:3000,http://localhost:3001`
 
-## Commandes
+## Lancement
 
 ```bash
 npm run dev
-npm start
 ```
 
-## Développement local
+L'API doit être lancée avant les deux applications Next.js.
 
-Lancer MongoDB, renseigner `MONGODB_URI`, puis démarrer l’API avec `npm run dev`.
-La route santé est disponible sur `GET /api/health`.
+## Endpoints
 
-## Build
+- `GET /api/health`
+- `POST /api/equipment`, `GET /api/equipment`, `GET /api/equipment/:id`, `PATCH /api/equipment/:id`, `PATCH /api/equipment/:id/status`, `DELETE /api/equipment/:id`
+- `POST /api/requests`, `GET /api/requests`, `GET /api/requests/:id`, `PATCH /api/requests/:id`, `PATCH /api/requests/:id/status`, `DELETE /api/requests/:id`
+- `POST /api/proposals`, `GET /api/proposals`, `GET /api/proposals/:id`, `PATCH /api/proposals/:id`, `PATCH /api/proposals/:id/status`, `DELETE /api/proposals/:id`
 
-Aucun build n’est nécessaire pour cette API Node.js. Utiliser `npm start` en production.
+## Réponses JSON
 
-## Déploiement recommandé
+Les listes retournent `{ "success": true, "count": 0, "data": [] }`.
+Les détails et mutations retournent `{ "success": true, "data": {} }`.
+Les erreurs retournent `{ "success": false, "message": "..." }`.
 
-Déployer sur Render avec MongoDB Atlas.
+## Notes de test
+
+1. Lancer MongoDB et `npm run dev`.
+2. Vérifier `http://localhost:5000/api/health`.
+3. Créer un engin depuis `DEL-web`, puis changer son statut depuis `DEL-cms`.

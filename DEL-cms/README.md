@@ -1,25 +1,43 @@
 # DEL-cms
 
-Back-office administrateur Next.js autonome pour DEL.
+Back-office DEL connecté à `DEL-api` pour administrer les engins, demandes et propositions.
 
 ## Installation
+
 ```bash
 npm install
-cp .env.example .env
 ```
-## Variables d’environnement
-- `NEXT_PUBLIC_API_URL=http://localhost:5000`
-## Commandes
+
+## Variables d'environnement
+
+Créer `.env.local` si nécessaire :
+
 ```bash
-npm run dev
-npm run build
-npm start
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
-## Développement local
-Démarrer `DEL-api`, puis lancer `npm run dev`. L’application écoute sur le port 3001.
-## Build
+
+## Ordre de lancement
+
+1. Lancer `DEL-api` sur le port `5000`.
+2. Lancer le CMS sur le port `3001` :
+
 ```bash
-npm run build
+npm run dev -- -p 3001
 ```
-## Déploiement recommandé
-Déployer sur Vercel avec `NEXT_PUBLIC_API_URL` pointant vers l’API Render.
+
+## Endpoints utilisés
+
+- `GET /api/equipment`
+- `PATCH /api/equipment/:id/status`
+- `GET /api/requests`
+- `PATCH /api/requests/:id/status`
+- `GET /api/proposals`
+- `POST /api/proposals`
+- `PATCH /api/proposals/:id/status`
+
+## Notes de test
+
+- Ouvrir `http://localhost:3001` et vérifier les statistiques.
+- Aller dans `/equipment` et changer un statut d'engin.
+- Aller dans `/requests` et changer un statut de demande.
+- Aller dans `/proposals`, créer une proposition puis changer son statut.

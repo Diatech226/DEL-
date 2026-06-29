@@ -1,25 +1,44 @@
 # DEL-web
 
-Site public et espace utilisateur Next.js autonome de DEL.
+Application publique DEL connectée à `DEL-api` pour créer et consulter les engins et demandes.
 
 ## Installation
+
 ```bash
 npm install
-cp .env.example .env
 ```
-## Variables d’environnement
-- `NEXT_PUBLIC_API_URL=http://localhost:5000`
-## Commandes
+
+## Variables d'environnement
+
+Créer `.env.local` si nécessaire :
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+## Ordre de lancement
+
+1. Lancer `DEL-api` sur le port `5000`.
+2. Lancer l'application web :
+
 ```bash
 npm run dev
-npm run build
-npm start
 ```
-## Développement local
-Démarrer `DEL-api`, puis lancer `npm run dev`. L’application écoute sur le port 3000.
-## Build
-```bash
-npm run build
-```
-## Déploiement recommandé
-Déployer sur Vercel avec `NEXT_PUBLIC_API_URL` pointant vers l’API Render.
+
+L'application est disponible sur `http://localhost:3000`.
+
+## Endpoints utilisés
+
+- `GET /api/equipment`
+- `GET /api/equipment/:id`
+- `POST /api/equipment`
+- `GET /api/requests`
+- `POST /api/requests`
+
+## Notes de test
+
+- Ouvrir `http://localhost:3000`.
+- Déposer un engin via `/deposer-un-engin`.
+- Vérifier sa présence dans `/equipment`.
+- Ouvrir son détail via `/equipment/:id`.
+- Publier une demande via `/demander-des-engins`.
