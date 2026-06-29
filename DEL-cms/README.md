@@ -106,14 +106,17 @@ Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un doc
 
 Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
 
-## Suivi opérationnel des missions
+## Module facturation CMS
 
-Le CMS ajoute une entrée `Missions`, un dashboard enrichi et un formulaire de création de mission depuis le détail contrat.
+Le CMS ajoute les écrans `/invoices`, `/invoices/[id]` et `/payments` pour suivre les factures et paiements manuels. Le détail contrat contient un formulaire de création de facture. Le dashboard calcule côté frontend les indicateurs financiers : total factures, factures payées/en attente/en retard, total facturé, encaissé, solde restant et commission DEL estimée.
 
-- `/missions` liste les missions, les compteurs opérationnels et les actions de statut.
-- `/missions/:id` affiche le détail mission, les engins concernés, les dates, les totaux, les rapports liés et le formulaire d'ajout de rapport.
-- `/contracts/:id` permet de créer une mission opérationnelle liée au contrat.
+### Scénario de test manuel
+1. Créer un contrat actif depuis une proposition.
+2. Depuis le détail contrat, créer une facture.
+3. Vérifier la facture dans `/invoices`, puis ouvrir son détail.
+4. Enregistrer un paiement partiel : la facture passe `PARTIALLY_PAID`.
+5. Enregistrer un second paiement : la facture passe `PAID` et le solde vaut 0.
+6. Rejeter ou annuler un paiement : la facture est recalculée à partir des paiements `CONFIRMED`.
 
-Les statistiques du dashboard sont calculées côté frontend à partir de `GET /api/missions` : total missions, missions planifiées, en transit, sur site, terminées, kilomètres, heures moteur et carburant.
-
-Limites actuelles : suivi manuel uniquement, pas de GPS temps réel, caméra, IoT, application chauffeur, maintenance prédictive, paiement automatique, dividendes ou financement.
+### Limites
+Le CMS ne déclenche aucun paiement réel : il sert uniquement au suivi administratif manuel avec référence et URL de preuve.

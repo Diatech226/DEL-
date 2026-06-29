@@ -18,8 +18,8 @@ app.use('/api/requests', require('./src/routes/request.routes'));
 app.use('/api/proposals', require('./src/routes/proposal.routes'));
 app.use('/api/documents', require('./src/routes/document.routes'));
 app.use('/api', require('./src/routes/contract.routes'));
-app.use('/api', require('./src/routes/mission.routes'));
-app.use('/api', require('./src/routes/missionReport.routes'));
+app.use('/api', require('./src/routes/invoice.routes'));
+app.use('/api', require('./src/routes/payment.routes'));
 app.use(notFound);
 app.use(errorMiddleware);
 
