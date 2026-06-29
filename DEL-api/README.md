@@ -92,3 +92,37 @@ Démarrer l'API, le site web et le CMS. Créer un engin, le rendre `AVAILABLE`, 
 ### Limites actuelles
 
 Pas de signature électronique réelle, pas de paiement, pas de GPS, pas de financement, pas de dividendes et pas de génération PDF complexe.
+
+## Module Documents et vérification des dossiers
+
+Le modèle `Document` permet de rattacher une URL de document à un dossier métier sans stockage cloud réel. Champs principaux : `title`, `type`, `entityType` (`EQUIPMENT`, `COMPANY`, `OWNER`, `REQUEST`, `CONTRACT`), `entityId`, `ownerName`, `uploadedBy`, `fileUrl`, `fileName`, `mimeType`, `notes`, `status` (`PENDING`, `VERIFIED`, `REJECTED`), `rejectionReason`, `verifiedAt`, `createdAt`, `updatedAt`.
+
+Types recommandés : documents engin (`VEHICLE_REGISTRATION`, `PURCHASE_INVOICE`, `INSURANCE`, `TECHNICAL_REPORT`, `MAINTENANCE_HISTORY`, `PHOTO`, `VIDEO`, `OWNERSHIP_PROOF`, `OTHER`), entreprise (`RCCM`, `IFU`, `BUSINESS_LICENSE`, `ID_CARD`, `TAX_DOCUMENT`, `CONTRACT_PROOF`, `OTHER`) et contrat (`SIGNED_CONTRACT`, `PAYMENT_PROOF`, `DELIVERY_REPORT`, `MISSION_REPORT`, `OTHER`).
+
+### Routes documents
+
+- `POST /api/documents` : crée un document. Champs obligatoires : `title`, `type`, `entityType`, `entityId`, `fileUrl`.
+- `GET /api/documents` : liste tous les documents.
+- `GET /api/documents/:id` : détail d'un document.
+- `GET /api/documents/entity/:entityType/:entityId` : documents rattachés à un engin, une demande, une entreprise, un propriétaire ou un contrat.
+- `PATCH /api/documents/:id` : mise à jour simple.
+- `PATCH /api/documents/:id/status` : validation ou rejet avec `{ "status": "VERIFIED", "rejectionReason": "" }` ou `{ "status": "REJECTED", "rejectionReason": "Document illisible" }`.
+- `DELETE /api/documents/:id` : suppression.
+
+### Workflow de vérification
+
+Un propriétaire peut déposer un engin puis ajouter des documents via URL. Une entreprise peut joindre des documents à sa demande. Le CMS liste tous les documents, permet à l'admin de les consulter, de les passer `VERIFIED` ou `REJECTED`, et de renseigner une raison de rejet.
+
+### Scénario de test documents
+
+1. Démarrer `DEL-api`, `DEL-web` et `DEL-cms`.
+2. Depuis `DEL-web/deposer-un-engin`, créer un engin puis ajouter un document URL.
+3. Ouvrir le détail de l'engin et vérifier que `GET /api/documents/entity/EQUIPMENT/:id` alimente la section documents.
+4. Depuis `DEL-cms/documents`, vérifier puis rejeter le document pour tester les deux statuts.
+5. Depuis `DEL-web/demander-des-engins`, créer une demande puis ajouter un document `RCCM` ou `IFU`.
+6. Depuis `DEL-cms/requests/:id`, vérifier que les documents de demande apparaissent.
+7. Depuis `DEL-cms/contracts/:id`, ajouter un document contrat et vérifier sa présence dans `/documents`.
+
+### Limites actuelles documents
+
+Les fichiers ne sont pas téléversés : `fileUrl` pointe vers une URL fournie manuellement. Pas de S3/Cloudinary, signature électronique, paiement, GPS, dividendes, financement ou stockage avancé.

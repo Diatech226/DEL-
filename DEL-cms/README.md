@@ -76,3 +76,32 @@ Le dashboard affiche désormais le total contrats, les contrats actifs, en atten
 ### Limites actuelles
 
 Le CMS affiche un contrat numérique simple uniquement. La signature électronique, le paiement et les PDF complexes ne sont pas encore implémentés.
+
+## Administration des documents
+
+Le CMS ajoute un module `/documents` pour consulter, vérifier, rejeter et supprimer les documents déposés par URL. La sidebar contient l'entrée `Documents`.
+
+Fonctions API utilisées :
+
+- `getDocumentList()` pour `GET /api/documents` ;
+- `getDocumentById(id)` pour `GET /api/documents/:id` ;
+- `getDocumentsByEntity(entityType, entityId)` pour les sections liées ;
+- `updateDocumentStatus(id, status, rejectionReason)` pour `PATCH /api/documents/:id/status` ;
+- `deleteDocument(id)` pour `DELETE /api/documents/:id`.
+
+### Workflow admin
+
+- `/documents` affiche un tableau complet avec titre, type, entité, propriétaire ou uploader, statut, date, lien document et actions.
+- `/documents/[id]` affiche toutes les métadonnées et les actions `VERIFIED`, `REJECTED`, `DELETE`.
+- `/requests/[id]` affiche les documents liés à une demande avec boutons vérifier/rejeter.
+- `/contracts/[id]` affiche les documents contrat et permet d'ajouter un document de type `SIGNED_CONTRACT`, `PAYMENT_PROOF`, `DELIVERY_REPORT`, `MISSION_REPORT` ou `OTHER`.
+- `/equipment/[id]` affiche les informations principales de l'engin, les documents liés et les actions de changement de statut.
+- Le dashboard ajoute les statistiques total documents, documents en attente, vérifiés et rejetés.
+
+### Scénario de test documents
+
+Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un document URL, vérifier sa présence dans `/documents`, le passer `VERIFIED`, puis tester `REJECTED` avec une raison. Publier une demande avec un document entreprise, vérifier la section documents de `/requests/[id]`. Ouvrir un contrat et ajouter un document contrat, puis vérifier son apparition dans `/documents`.
+
+### Limites
+
+Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
