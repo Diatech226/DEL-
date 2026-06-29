@@ -197,3 +197,40 @@ Un conflit existe pour un même `equipmentId` si une période `ACTIVE`, non `AVA
 ### Limites actuelles
 
 Pas de calendrier graphique complexe, pas de drag and drop, pas de GPS temps réel, pas d’optimisation IA et pas d’application mobile chauffeur.
+
+## Profils avancés et KYC/KYB
+
+DEL-api expose désormais une base métier pour les profils `User`, `OwnerProfile`, `CompanyProfile` et `TechnicianProfile`.
+
+### Modèles
+
+- `User` : identité de base, rôle (`OWNER`, `COMPANY`, `INVESTOR`, `TECHNICIAN`, `ADMIN`), type de compte, statut de vérification et coordonnées.
+- `OwnerProfile` : informations propriétaire individuel ou société, document d’identité, fiscalité, coordonnées de paiement et compteur d’engins.
+- `CompanyProfile` : entreprise minière, BTP, logistique, transport ou autre, contact, références RCCM/IFU/licence, budget et besoins engins.
+- `TechnicianProfile` : technicien, atelier ou société partenaire, spécialités, zones d’intervention et tarif horaire.
+
+### Routes profils
+
+- `POST|GET /api/users`, `GET|PATCH|DELETE /api/users/:id`, `PATCH /api/users/:id/status`
+- `POST|GET /api/owner-profiles`, `GET|PATCH|DELETE /api/owner-profiles/:id`, `PATCH /api/owner-profiles/:id/status`
+- `POST|GET /api/company-profiles`, `GET|PATCH|DELETE /api/company-profiles/:id`, `PATCH /api/company-profiles/:id/status`
+- `POST|GET /api/technician-profiles`, `GET|PATCH|DELETE /api/technician-profiles/:id`, `PATCH /api/technician-profiles/:id/status`
+
+Les statuts autorisés sont `PENDING`, `VERIFIED`, `REJECTED` et `SUSPENDED`. Lorsqu’un profil passe à `VERIFIED`, `verifiedAt` est renseigné et `rejectionReason` est vidé. Lorsqu’un profil passe à `REJECTED`, une raison de rejet peut être transmise.
+
+### Documents KYC/KYB
+
+Les fichiers ne sont pas dupliqués dans les profils. Les documents KYC/KYB restent gérés par le module Documents existant :
+
+- `GET /api/documents/entity/OWNER/:ownerProfileId`
+- `GET /api/documents/entity/COMPANY/:companyProfileId`
+
+### Scénario de test
+
+1. Créer un `OwnerProfile`, ajouter un document `OWNER`, vérifier le document puis le profil depuis le CMS.
+2. Créer un `CompanyProfile`, ajouter un document `COMPANY`, vérifier le document puis le profil depuis le CMS.
+3. Créer un `TechnicianProfile`, puis passer le profil à `VERIFIED` depuis le CMS.
+
+### Limites actuelles
+
+L’authentification Clerk réelle, les permissions serveur complexes, le paiement, le scoring financier et l’investissement fractionné ne sont pas encore implémentés.

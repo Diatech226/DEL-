@@ -14,6 +14,11 @@ app.use(express.json());
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use('/api/health', require('./src/routes/health.routes'));
 app.use('/api/equipment', require('./src/routes/equipment.routes'));
+app.use('/api/users', require('./src/routes/user.routes'));
+app.use('/api/owner-profiles', require('./src/routes/ownerProfile.routes'));
+app.use('/api/company-profiles', require('./src/routes/companyProfile.routes'));
+app.use('/api/technician-profiles', require('./src/routes/technicianProfile.routes'));
+
 app.use('/api/requests', require('./src/routes/request.routes'));
 app.use('/api/equipment-schedules', require('./src/routes/equipmentSchedule.routes'));
 app.use('/api/proposals', require('./src/routes/proposal.routes'));

@@ -78,3 +78,9 @@ Le dashboard utilisateur affiche une section informative indiquant que les factu
 ## Disponibilité publique
 
 La page détail d’un engin affiche uniquement le statut actuel et un message indiquant que l’équipe DEL confirme la disponibilité exacte avant proposition. Le planning complet reste réservé au CMS. Le formulaire `/demander-des-engins` inclut `startDate`, `endDate` et `durationMonths` pour permettre la vérification automatique côté API.
+
+## Onboarding profils DEL
+
+La page `/onboarding` permet de soumettre trois types de profils : propriétaire d’engin, entreprise et technicien/atelier. Après création d’un profil propriétaire ou entreprise, l’utilisateur peut ajouter un document KYC/KYB par URL. Les documents sont créés via le module Documents avec `entityType=OWNER` ou `entityType=COMPANY` et `entityId` égal à l’identifiant du profil créé.
+
+Le dashboard utilisateur rappelle que la vérification d’identité, d’entreprise ou d’atelier est effectuée par l’administration DEL. Limites : pas d’authentification Clerk réelle, pas de paiement et pas d’espace multi-utilisateur complet.

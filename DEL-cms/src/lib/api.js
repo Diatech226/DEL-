@@ -55,3 +55,15 @@ export const updateMissionReportStatus = (id, status) => request(`/api/mission-r
 export const getMaintenanceTicketById = (id) => request(`/api/maintenance/${id}`);
 export const updateMaintenanceTicket = (id, payload) => request(`/api/maintenance/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const updateMaintenanceTicketStatus = (id, status) => request(`/api/maintenance/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const getUserList = () => request('/api/users');
+export const getUserById = (id) => request(`/api/users/${id}`);
+export const updateUserStatus = (id, status, rejectionReason = '') => request(`/api/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
+export const getOwnerProfileList = () => request('/api/owner-profiles');
+export const getOwnerProfileById = (id) => request(`/api/owner-profiles/${id}`);
+export const updateOwnerProfileStatus = (id, status, rejectionReason = '') => request(`/api/owner-profiles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
+export const getCompanyProfileList = () => request('/api/company-profiles');
+export const getCompanyProfileById = (id) => request(`/api/company-profiles/${id}`);
+export const updateCompanyProfileStatus = (id, status, rejectionReason = '') => request(`/api/company-profiles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
+export const getTechnicianProfileList = () => request('/api/technician-profiles');
+export const getTechnicianProfileById = (id) => request(`/api/technician-profiles/${id}`);
+export const updateTechnicianProfileStatus = (id, status, rejectionReason = '') => request(`/api/technician-profiles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }) });
