@@ -41,3 +41,20 @@ npm run dev -- -p 3001
 - Aller dans `/equipment` et changer un statut d'engin.
 - Aller dans `/requests` et changer un statut de demande.
 - Aller dans `/proposals`, créer une proposition puis changer son statut.
+
+## Module matching admin
+
+- La liste `/requests` affiche un bouton `Voir matching` vers `/requests/[id]`.
+- La page `/requests/[id]` affiche le détail de la demande, les engins compatibles classés par score, une sélection multiple et un formulaire de création de proposition.
+- La page `/proposals` affiche le titre, l’entreprise, les propriétaires, le nombre d’engins, le prix final, la durée, le statut et les conditions, avec actions `SENT`, `ACCEPTED`, `REJECTED`, `EXPIRED`.
+
+### Client API ajouté
+- `getRequestById(id)` appelle `GET /api/requests/:id`.
+- `getRequestMatches(id)` appelle `GET /api/requests/:id/matches`.
+- `createProposalFromRequest(requestId, payload)` appelle `POST /api/requests/:id/proposals`.
+
+### Test fonctionnel
+Suivre le scénario complet décrit dans `DEL-api/README.md` : validation des engins, publication d’une demande, matching, création de proposition, puis vérification dans `/proposals`, `/requests` et `/equipment`.
+
+### Limites actuelles
+Le CMS ne gère pas encore une négociation détaillée ni une édition avancée de la proposition générée depuis le matching.
