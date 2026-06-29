@@ -126,3 +126,32 @@ Un propriétaire peut déposer un engin puis ajouter des documents via URL. Une 
 ### Limites actuelles documents
 
 Les fichiers ne sont pas téléversés : `fileUrl` pointe vers une URL fournie manuellement. Pas de S3/Cloudinary, signature électronique, paiement, GPS, dividendes, financement ou stockage avancé.
+
+## Facturation et paiements manuels
+
+### Modèles
+- `Invoice` : facture liée à un contrat, avec numéro unique `DEL-INV-YYYYMMDD-XXXX`, période, montants, commission DEL, montant propriétaire, conditions de paiement, solde et statut (`DRAFT`, `SENT`, `PARTIALLY_PAID`, `PAID`, `OVERDUE`, `CANCELLED`).
+- `Payment` : paiement manuel lié à une facture, avec numéro unique `DEL-PAY-YYYYMMDD-XXXX`, méthode, référence, URL de preuve et statut (`PENDING`, `CONFIRMED`, `REJECTED`, `CANCELLED`).
+
+### Routes factures
+- `POST /api/contracts/:id/invoices` : créer une facture brouillon depuis un contrat.
+- `GET /api/invoices` : lister les factures.
+- `GET /api/invoices/:id` : détail facture.
+- `PATCH /api/invoices/:id` : modifier une facture.
+- `PATCH /api/invoices/:id/status` : changer le statut.
+- `DELETE /api/invoices/:id` : supprimer une facture et ses paiements.
+
+### Routes paiements
+- `POST /api/payments` : enregistrer un paiement manuel confirmé par défaut.
+- `GET /api/payments` : lister les paiements.
+- `GET /api/payments/:id` : détail paiement.
+- `GET /api/payments/invoice/:invoiceId` : paiements d'une facture.
+- `PATCH /api/payments/:id` : modifier un paiement.
+- `PATCH /api/payments/:id/status` : changer le statut et recalculer la facture.
+- `DELETE /api/payments/:id` : supprimer un paiement et recalculer la facture.
+
+### Workflow
+Un contrat créé depuis une proposition peut recevoir une facture. La facture calcule automatiquement taxe, total, commission DEL, montant propriétaire, montant payé et solde. Les paiements confirmés alimentent `amountPaid`; les paiements en attente, rejetés ou annulés ne comptent pas. Le solde ne devient jamais négatif.
+
+### Limites actuelles
+Pas de paiement réel en ligne, Mobile Money automatisé, banque, crypto opérationnelle, DiaPay, wallet, dividendes, investissement fractionné ou automatisation bancaire.

@@ -70,3 +70,7 @@ La page `/equipment/[id]` appelle `GET /api/documents/entity/EQUIPMENT/:id` et a
 ### Limites
 
 Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par exemple `https://example.com/document.pdf`.
+
+## Information facturation utilisateur
+
+Le dashboard utilisateur affiche une section informative indiquant que les factures et paiements sont actuellement suivis par l'équipe DEL. Les vraies factures, reçus et paiements en ligne ne sont pas encore exposés côté utilisateur.

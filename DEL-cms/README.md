@@ -105,3 +105,18 @@ Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un doc
 ### Limites
 
 Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
+
+## Module facturation CMS
+
+Le CMS ajoute les écrans `/invoices`, `/invoices/[id]` et `/payments` pour suivre les factures et paiements manuels. Le détail contrat contient un formulaire de création de facture. Le dashboard calcule côté frontend les indicateurs financiers : total factures, factures payées/en attente/en retard, total facturé, encaissé, solde restant et commission DEL estimée.
+
+### Scénario de test manuel
+1. Créer un contrat actif depuis une proposition.
+2. Depuis le détail contrat, créer une facture.
+3. Vérifier la facture dans `/invoices`, puis ouvrir son détail.
+4. Enregistrer un paiement partiel : la facture passe `PARTIALLY_PAID`.
+5. Enregistrer un second paiement : la facture passe `PAID` et le solde vaut 0.
+6. Rejeter ou annuler un paiement : la facture est recalculée à partir des paiements `CONFIRMED`.
+
+### Limites
+Le CMS ne déclenche aucun paiement réel : il sert uniquement au suivi administratif manuel avec référence et URL de preuve.
