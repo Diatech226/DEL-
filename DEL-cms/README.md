@@ -105,3 +105,15 @@ Démarrer l'API, le web et le CMS. Déposer un engin dans le web, ajouter un doc
 ### Limites
 
 Pas d'upload cloud réel ni de signature électronique. Les documents sont des URL saisies manuellement et rattachées aux entités via `entityType` et `entityId`.
+
+## Suivi opérationnel des missions
+
+Le CMS ajoute une entrée `Missions`, un dashboard enrichi et un formulaire de création de mission depuis le détail contrat.
+
+- `/missions` liste les missions, les compteurs opérationnels et les actions de statut.
+- `/missions/:id` affiche le détail mission, les engins concernés, les dates, les totaux, les rapports liés et le formulaire d'ajout de rapport.
+- `/contracts/:id` permet de créer une mission opérationnelle liée au contrat.
+
+Les statistiques du dashboard sont calculées côté frontend à partir de `GET /api/missions` : total missions, missions planifiées, en transit, sur site, terminées, kilomètres, heures moteur et carburant.
+
+Limites actuelles : suivi manuel uniquement, pas de GPS temps réel, caméra, IoT, application chauffeur, maintenance prédictive, paiement automatique, dividendes ou financement.

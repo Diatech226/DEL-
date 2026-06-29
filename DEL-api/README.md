@@ -126,3 +126,35 @@ Un propriétaire peut déposer un engin puis ajouter des documents via URL. Une 
 ### Limites actuelles documents
 
 Les fichiers ne sont pas téléversés : `fileUrl` pointe vers une URL fournie manuellement. Pas de S3/Cloudinary, signature électronique, paiement, GPS, dividendes, financement ou stockage avancé.
+
+## Suivi opérationnel des missions
+
+DEL-api expose désormais un suivi manuel structuré des missions opérationnelles, sans GPS temps réel, caméra embarquée, IoT, application chauffeur, maintenance prédictive, paiement automatique, dividendes ou financement.
+
+### Modèles
+
+- `Mission` : mission liée à un contrat avec `missionNumber` unique au format `DEL-MIS-YYYYMMDD-XXXX`, contrat, demande, engins, entreprise, propriétaires, site, dates, compteurs cumulés, notes et statut `PLANNED`, `IN_TRANSIT`, `ON_SITE`, `PAUSED`, `COMPLETED` ou `CANCELLED`.
+- `MissionReport` : rapport lié à une mission avec date, engin, reporter, type `DAILY`, `INCIDENT`, `FUEL`, `MAINTENANCE`, `CHECKIN`, `CHECKOUT` ou `OTHER`, heures moteur, distance, carburant, état engin, incident, photos, documents, notes et statut `DRAFT`, `SUBMITTED`, `REVIEWED` ou `REJECTED`.
+
+### Routes missions
+
+- `POST /api/contracts/:id/missions` : crée une mission depuis un contrat `ACTIVE`, `PENDING_SIGNATURE` ou `DRAFT`.
+- `GET /api/missions` : liste les missions.
+- `GET /api/missions/:id` : détail mission.
+- `PATCH /api/missions/:id` : mise à jour mission.
+- `PATCH /api/missions/:id/status` : changement de statut mission. `COMPLETED` renseigne `actualEndDate` si nécessaire.
+- `DELETE /api/missions/:id` : suppression mission.
+
+### Routes mission-reports
+
+- `POST /api/mission-reports` : crée un rapport avec statut `SUBMITTED` par défaut et recalcule les totaux mission.
+- `GET /api/mission-reports` : liste les rapports.
+- `GET /api/mission-reports/:id` : détail rapport.
+- `GET /api/mission-reports/mission/:missionId` : rapports d'une mission.
+- `PATCH /api/mission-reports/:id` : mise à jour rapport et recalcul des totaux.
+- `PATCH /api/mission-reports/:id/status` : changement de statut et recalcul des totaux hors rapports `REJECTED`.
+- `DELETE /api/mission-reports/:id` : suppression rapport et recalcul.
+
+### Workflow et scénario de test
+
+Créer un engin, le valider, créer une demande, effectuer le matching, créer et accepter une proposition, créer un contrat, le passer `ACTIVE`, créer une mission depuis le contrat, passer la mission `IN_TRANSIT` puis `ON_SITE`, ajouter un rapport journalier, vérifier les totaux `totalEngineHours`, `totalDistanceKm`, `totalFuelLiters`, ajouter un rapport incident, passer un rapport `REVIEWED`, puis terminer la mission avec `COMPLETED`.

@@ -17,7 +17,17 @@ export const createContractFromProposal = (proposalId, payload) => request(`/api
 export const updateContractStatus = (id, status) => request(`/api/contracts/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const updateContract = (id, payload) => request(`/api/contracts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 
-export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract };
+export const getMissionList = () => request('/api/missions');
+export const getMissionById = (id) => request(`/api/missions/${id}`);
+export const createMissionFromContract = (contractId, payload) => request(`/api/contracts/${contractId}/missions`, { method: 'POST', body: JSON.stringify(payload) });
+export const updateMissionStatus = (id, status) => request(`/api/missions/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const updateMission = (id, payload) => request(`/api/missions/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const getMissionReportList = () => request('/api/mission-reports');
+export const getMissionReportsByMission = (missionId) => request(`/api/mission-reports/mission/${missionId}`);
+export const createMissionReport = (payload) => request('/api/mission-reports', { method: 'POST', body: JSON.stringify(payload) });
+export const updateMissionReportStatus = (id, status) => request(`/api/mission-reports/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+
+export const api = { equipment:getEquipmentList, requests:getRequestList, getRequestById, getRequestMatches, createProposalFromRequest, proposals:getProposalList, updateEquipmentStatus, updateRequestStatus, createProposal, updateProposalStatus, contracts:getContractList, getContractById, createContractFromProposal, updateContractStatus, updateContract, getMissionList, getMissionById, createMissionFromContract, updateMissionStatus, updateMission, getMissionReportList, getMissionReportsByMission, createMissionReport, updateMissionReportStatus };
 export const getEquipmentById = (id) => request(`/api/equipment/${id}`);
 export const getDocumentList = () => request('/api/documents');
 export const getDocumentById = (id) => request(`/api/documents/${id}`);

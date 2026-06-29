@@ -70,3 +70,7 @@ La page `/equipment/[id]` appelle `GET /api/documents/entity/EQUIPMENT/:id` et a
 ### Limites
 
 Le site ne fait pas d'upload réel. L'utilisateur saisit une URL de fichier, par exemple `https://example.com/document.pdf`.
+
+## Information utilisateur : suivi de mission
+
+Le dashboard utilisateur présente une section informative `Suivi de mission` expliquant que DEL suit manuellement les déplacements, la présence sur site, les rapports journaliers, les incidents, les heures moteur et l'état des engins. Les vraies missions ne sont pas encore affichées côté utilisateur ; GPS et caméras sont prévus pour des versions futures.
