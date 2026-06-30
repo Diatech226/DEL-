@@ -303,3 +303,18 @@ Les créations publiques restent possibles. Si un token est fourni sur `POST /ap
 ### Limites actuelles
 
 Les documents privés sont filtrés au minimum par `uploadedByUserId`. Les propositions, contrats, factures et permissions fines restent informatifs pour cette étape.
+
+## Routes privées utilisateur `/api/me`
+
+Toutes les routes ci-dessous nécessitent `Authorization: Bearer <token>` et ne retournent que les données liées à l’utilisateur connecté. Les administrateurs continuent d’utiliser DEL-cms pour la vision globale.
+
+- `GET /api/me/proposals` : propositions liées aux demandes de l’entreprise ou aux engins du propriétaire.
+- `GET /api/me/contracts` : contrats liés aux demandes de l’entreprise ou aux engins du propriétaire.
+- `GET /api/me/invoices` : factures des contrats accessibles à l’utilisateur.
+- `GET /api/me/payments` : paiements liés aux factures accessibles à l’utilisateur.
+- `GET /api/me/missions` : missions liées aux contrats/demandes de l’entreprise ou aux engins du propriétaire.
+- `GET /api/me/financial-summary` : résumé financier (facturé/payé/solde pour entreprise, revenus propriétaire pour owner).
+- `GET /api/me/operations-summary` : résumé opérationnel selon le rôle.
+- `GET /api/me/summary` inclut maintenant les compteurs équipements, demandes, documents, propositions, contrats, factures, paiements, missions et tickets de maintenance quand applicable.
+
+Limites actuelles : lecture seule côté DEL-web ; acceptation de proposition, signature électronique, paiement en ligne, PDF réel, messagerie, GPS temps réel, dividendes et investissement fractionné restent hors périmètre.

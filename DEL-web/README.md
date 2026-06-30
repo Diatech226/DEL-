@@ -118,3 +118,17 @@ Les formulaires `/deposer-un-engin` et `/demander-des-engins` préremplissent le
 ### Limites actuelles
 
 Pas de paiement en ligne, GPS réel, dividendes, investissement fractionné, messagerie avancée, mobile ou permissions complexes. L’admin reste dans DEL-cms.
+
+## Dashboard privé enrichi
+
+DEL-web consomme désormais les routes privées de DEL-api avec le jeton `Authorization: Bearer <token>` : propositions, contrats, factures, paiements, missions, résumé financier et résumé opérationnel.
+
+Pages ajoutées :
+
+- `/dashboard/proposals` : propositions préparées par DEL.
+- `/dashboard/contracts` : contrats gérés par DEL.
+- `/dashboard/invoices` : factures et revenus propriétaire.
+- `/dashboard/payments` : paiements suivis par DEL.
+- `/dashboard/missions` : missions liées aux contrats/engins.
+
+Le dashboard général affiche des cartes financières et opérationnelles selon le rôle OWNER ou COMPANY. Les pages restent en lecture seule : pas d’acceptation en ligne, signature électronique, paiement en ligne, PDF réel, messagerie, GPS temps réel, reversements automatiques, dividendes ou investissement fractionné dans cette étape.

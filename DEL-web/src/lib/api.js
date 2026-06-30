@@ -21,6 +21,14 @@ export const getMySummary = () => request('/api/me/summary', { auth:true });
 export const getMyEquipment = () => request('/api/me/equipment', { auth:true });
 export const getMyRequests = () => request('/api/me/requests', { auth:true });
 export const getMyDocuments = () => request('/api/me/documents', { auth:true });
+export const getMyProposals = () => request('/api/me/proposals', { auth:true });
+export const getMyContracts = () => request('/api/me/contracts', { auth:true });
+export const getMyInvoices = () => request('/api/me/invoices', { auth:true });
+export const getMyPayments = () => request('/api/me/payments', { auth:true });
+export const getMyMissions = () => request('/api/me/missions', { auth:true });
+export const getMyFinancialSummary = () => request('/api/me/financial-summary', { auth:true });
+export const getMyOperationsSummary = () => request('/api/me/operations-summary', { auth:true });
+
 export const getEquipmentList = () => request('/api/equipment');
 export const getEquipmentById = (id) => request(`/api/equipment/${id}`);
 export const createEquipment = (payload) => request('/api/equipment', { method: 'POST', body: JSON.stringify(payload), auth: true });
