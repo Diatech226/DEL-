@@ -160,3 +160,13 @@ Le bouton “Créer contrat” n’est affiché que si la proposition est `READY
 DEL-cms ajoute `/notifications` pour consulter toutes les notifications internes DEL-api, créer une notification manuelle et supprimer une notification. Le client API fournit `getNotificationList()`, `createNotificationManual(payload)` et `deleteNotification(id)` avec le token admin.
 
 Le dashboard admin affiche les statistiques : total notifications, non lues, priorité HIGH, priorité CRITICAL et notifications système. La sidebar contient le lien “Notifications”. Les notifications sont uniquement internes en base de données : aucun email, SMS, WhatsApp, push, WebSocket, Firebase ou cron n’est encore implémenté.
+
+## Appels d’offres multi-lots
+
+DEL-cms ajoute `/tenders` pour piloter les appels d’offres, `/tenders/[id]` pour consulter les détails et lots, et `/tender-lots/[id]` pour lancer le matching par lot et créer une proposition manuelle.
+
+Routes API utilisées : `GET /api/tenders`, `PATCH /api/tenders/:id/status`, `GET /api/tenders/:id/lots`, `GET /api/tender-lots/:id/matches`, `POST /api/tender-lots/:id/proposals`.
+
+Scénario de validation : créer un appel d’offres multi-lots dans DEL-web, vérifier sa présence dans `/tenders`, ouvrir le détail, consulter le matching d’un lot, sélectionner des engins compatibles, créer une proposition et vérifier `/proposals`.
+
+Limites actuelles : logique CMS manuelle, pas d’enchères temps réel, pas de scoring IA avancé, pas de signature électronique ni paiement en ligne.

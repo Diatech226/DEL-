@@ -353,3 +353,15 @@ Routes disponibles :
 Événements couverts : création et décisions de proposition, création de contrat, création/statut de facture, création/statut de paiement, vérification/rejet document, statut engin et statut demande. Les notifications restent internes : aucun email, SMS, WhatsApp, push, WebSocket, Firebase ou cron n’est déclenché.
 
 Scénario de test conseillé : lancer DEL-api, DEL-web et DEL-cms ; créer un OWNER avec un engin ; passer l’engin disponible depuis le CMS ; vérifier `/dashboard/notifications` ; créer une COMPANY, une demande, une proposition, accepter côté COMPANY puis OWNER, créer contrat/facture/paiement et vérifier les notifications utilisateur et `/notifications` côté CMS.
+
+## Appels d’offres multi-lots
+
+DEL distingue désormais les demandes simples (`EquipmentRequest`) et les appels d’offres complexes (`Tender`). Un `TenderLot` représente un lot spécifique rattaché à un appel d’offres. Une `Proposal` peut donc être liée soit à `requestId`, soit à `tenderId` / `tenderLotId`.
+
+Routes principales : `POST /api/tenders`, `GET /api/tenders`, `GET /api/tenders/:id/lots`, `POST /api/tenders/:id/lots`, `GET /api/tender-lots/:id/matches`, `POST /api/tender-lots/:id/proposals`, `GET /api/me/tenders`, `GET /api/me/tender-lots`.
+
+Le matching par lot compare catégorie, statut `AVAILABLE`, pays, ville, prix mensuel et disponibilité planning. La proposition depuis un lot réserve les engins, crée des schedules `RESERVED` si le planning est disponible, puis passe le lot et l’appel d’offres en `PROPOSAL_SENT`.
+
+Limites actuelles : pas d’enchères temps réel, pas de soumission publique propriétaire, pas de scoring IA, pas de signature électronique, pas de paiement en ligne, pas de financement et pas de dividendes.
+
+Scénario de test manuel : lancer DEL-api, DEL-web et DEL-cms, créer depuis DEL-web un appel d’offres avec deux lots, vérifier `/tenders` dans DEL-cms, ouvrir un lot, lancer le matching, sélectionner des engins `AVAILABLE`, créer une proposition et vérifier `/dashboard/tenders` puis `/dashboard/proposals` côté entreprise.

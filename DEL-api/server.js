@@ -25,6 +25,8 @@ app.use('/api/company-profiles', require('./src/routes/companyProfile.routes'));
 app.use('/api/technician-profiles', require('./src/routes/technicianProfile.routes'));
 
 app.use('/api/requests', require('./src/routes/request.routes'));
+app.use('/api/tenders', require('./src/routes/tender.routes'));
+app.use('/api/tender-lots', require('./src/routes/tenderLot.routes'));
 app.use('/api/equipment-schedules', require('./src/routes/equipmentSchedule.routes'));
 app.use('/api/proposals', require('./src/routes/proposal.routes'));
 app.use('/api/documents', require('./src/routes/document.routes'));
