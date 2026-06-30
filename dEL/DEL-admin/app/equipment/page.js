@@ -1,3 +1,0 @@
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-async function load(){ try { const res = await fetch(`${apiUrl}/equipment`, { cache:'no-store' }); return res.ok ? res.json() : []; } catch { return []; } }
-export default async function AdminEquipment(){ const items=await load(); return <div className="mx-auto max-w-6xl px-6 py-10"><h1 className="text-3xl font-bold">Validation des engins</h1><div className="mt-6 grid gap-4">{items.map((item)=><div className="card" key={item._id}><h2 className="font-bold">{item.title}</h2><p>{item.location} · {item.status}</p></div>)}{!items.length && <p>Aucun engin à afficher.</p>}</div></div>; }

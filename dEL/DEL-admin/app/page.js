@@ -1,3 +1,0 @@
-import Link from 'next/link';
-const cards = [['Engins','/equipment'],['Demandes','/requests'],['Propositions','/proposals'],['Utilisateurs','/users'],['Entreprises','/companies']];
-export default function AdminDashboard(){ return <div className="mx-auto max-w-6xl px-6 py-10"><p className="font-semibold text-gold">DEL Dia Admin</p><h1 className="text-4xl font-bold">Pilotage marketplace</h1><div className="mt-8 grid gap-6 md:grid-cols-3">{cards.map(([label,href])=><Link className="card" href={href} key={href}><h2 className="text-xl font-bold">{label}</h2><p className="mt-2 text-slate-600">Voir, valider et préparer les matchings.</p></Link>)}</div></div>; }
