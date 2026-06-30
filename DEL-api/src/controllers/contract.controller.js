@@ -33,11 +33,14 @@ async function uniqueContractNumber() {
 exports.createContractFromProposal = asyncHandler(async (req, res) => {
   const proposal = await Proposal.findById(req.params.id);
   if (!proposal) return res.status(404).json({ success: false, message: 'Proposition introuvable' });
-  if (!['ACCEPTED', 'SENT'].includes(proposal.status)) return res.status(400).json({ success: false, message: 'La proposition doit être SENT ou ACCEPTED' });
+  const data = createSchema.parse(req.body);
+  const forceAllowed = data.force === true && req.user?.role === 'ADMIN';
+  if (!forceAllowed && proposal.workflowStatus !== 'READY_FOR_CONTRACT' && proposal.status !== 'ACCEPTED') {
+    return res.status(400).json({ success: false, message: 'La proposition doit être acceptée par l’entreprise et les propriétaires avant création du contrat.' });
+  }
   const request = await EquipmentRequest.findById(proposal.requestId);
   if (!request) return res.status(404).json({ success: false, message: 'Demande liée introuvable' });
   const equipment = await Equipment.find({ _id: { $in: proposal.equipmentIds || [] } });
-  const data = createSchema.parse(req.body);
   const amount = Number(proposal.finalPrice || 0);
   const platformCommissionRate = Number(data.platformCommissionRate || 0);
   const platformCommissionAmount = amount * platformCommissionRate / 100;

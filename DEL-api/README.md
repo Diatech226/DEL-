@@ -318,3 +318,21 @@ Toutes les routes ci-dessous nécessitent `Authorization: Bearer <token>` et ne 
 - `GET /api/me/summary` inclut maintenant les compteurs équipements, demandes, documents, propositions, contrats, factures, paiements, missions et tickets de maintenance quand applicable.
 
 Limites actuelles : lecture seule côté DEL-web ; acceptation de proposition, signature électronique, paiement en ligne, PDF réel, messagerie, GPS temps réel, dividendes et investissement fractionné restent hors périmètre.
+
+## Workflow d’acceptation des propositions
+
+Le modèle `Proposal` conserve `status` (`DRAFT`, `SENT`, `ACCEPTED`, `REJECTED`, `EXPIRED`) et ajoute `workflowStatus` (`PENDING_COMPANY`, `PENDING_OWNERS`, `READY_FOR_CONTRACT`, `REJECTED_BY_COMPANY`, `REJECTED_BY_OWNER`, `CANCELLED`, `EXPIRED`). Une proposition envoyée démarre avec `status=SENT`, `workflowStatus=PENDING_COMPANY`, `companyDecision.status=PENDING` et des `ownerDecisions[].status=PENDING`.
+
+Nouveaux champs :
+- `companyDecision`: `status`, `decidedByUserId`, `decidedAt`, `rejectionReason`, `notes`.
+- `ownerDecisions[]`: `ownerUserId`, `ownerName`, `equipmentIds`, `status`, `decidedAt`, `rejectionReason`, `notes`.
+
+Routes :
+- `PATCH /api/me/proposals/:id/company-decision` : décision entreprise authentifiée.
+- `PATCH /api/me/proposals/:id/owner-decision` : décision propriétaire authentifié.
+- `PATCH /api/proposals/:id/company-decision` : décision entreprise forcée par admin.
+- `PATCH /api/proposals/:id/owner-decisions/:index` : décision propriétaire forcée par admin.
+
+La création de contrat via `POST /api/proposals/:id/contracts` exige maintenant `workflowStatus=READY_FOR_CONTRACT` ou `status=ACCEPTED`. En cas de refus, les réservations planning `RESERVED` liées à la proposition passent `CANCELLED` lorsque le module planning est disponible, et les engins encore `RESERVED` sont remis `AVAILABLE` si aucun autre contrat/proposition actif ne les bloque.
+
+Scénarios à valider : entreprise accepte puis propriétaires acceptent => `READY_FOR_CONTRACT`/`ACCEPTED`; entreprise refuse => `REJECTED_BY_COMPANY`; propriétaire refuse => `REJECTED_BY_OWNER`; un autre compte ne doit pas pouvoir décider hors périmètre.

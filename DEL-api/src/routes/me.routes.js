@@ -10,6 +10,7 @@ const Payment = require('../models/Payment');
 const Mission = require('../models/Mission');
 const MaintenanceTicket = require('../models/MaintenanceTicket');
 const asyncHandler = require('../utils/asyncHandler');
+const proposalController = require('../controllers/proposal.controller');
 
 const myDocumentsQuery = (userId) => ({ uploadedByUserId: userId });
 const list = (res, data) => res.json({ success: true, count: data.length, data });
@@ -84,6 +85,8 @@ router.get('/requests', asyncHandler(async (req, res) => list(res, await Equipme
 router.get('/documents', asyncHandler(async (req, res) => list(res, await Document.find(myDocumentsQuery(req.user._id)).sort({ createdAt: -1 }))));
 router.get('/proposals', asyncHandler(async (req, res) => list(res, await scopedProposals(req.user))));
 router.get('/contracts', asyncHandler(async (req, res) => list(res, await scopedContracts(req.user))));
+router.patch('/proposals/:id/company-decision', proposalController.submitMyCompanyDecision);
+router.patch('/proposals/:id/owner-decision', proposalController.submitMyOwnerDecision);
 router.get('/invoices', asyncHandler(async (req, res) => list(res, await scopedInvoices(req.user))));
 router.get('/payments', asyncHandler(async (req, res) => list(res, await scopedPayments(req.user))));
 router.get('/missions', asyncHandler(async (req, res) => list(res, await scopedMissions(req.user))));

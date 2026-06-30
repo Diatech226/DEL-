@@ -72,7 +72,23 @@ exports.createProposalFromRequest = asyncHandler(async (req, res) => {
     if (conflicts.length) conflictsByEquipment.push({ equipmentId: item._id, equipmentTitle: item.title, conflicts });
   }
   if (conflictsByEquipment.length) return res.status(409).json({ success: false, message: 'Conflit de planning détecté', conflicts: conflictsByEquipment });
-  const proposal = await Proposal.create({ ...data, requestId: request._id, companyName: request.companyName, ownerNames: [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))], status: 'SENT' });
+  const ownerGroups = new Map();
+  equipment.forEach((item) => {
+    const key = item.ownerUserId ? String(item.ownerUserId) : `name:${item.ownerName || 'Propriétaire'}`;
+    const current = ownerGroups.get(key) || { ownerUserId: item.ownerUserId || null, ownerName: item.ownerName || 'Propriétaire', equipmentIds: [], status: 'PENDING' };
+    current.equipmentIds.push(item._id);
+    ownerGroups.set(key, current);
+  });
+  const proposal = await Proposal.create({
+    ...data,
+    requestId: request._id,
+    companyName: request.companyName,
+    ownerNames: [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))],
+    status: 'SENT',
+    workflowStatus: 'PENDING_COMPANY',
+    companyDecision: { status: 'PENDING' },
+    ownerDecisions: [...ownerGroups.values()],
+  });
   await Promise.all(equipment.map((item) => createScheduleForEquipment(item, { type: 'RESERVED', title: 'Réservation proposition', description: data.conditions, startDate: period.start, endDate: period.end, relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, createdBy: 'DEL-api' })));
   await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'PROPOSAL_SENT' }, { runValidators: true });
   await Equipment.updateMany({ _id: { $in: data.equipmentIds } }, { status: 'RESERVED' }, { runValidators: true });
