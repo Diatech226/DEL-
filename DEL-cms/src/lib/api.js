@@ -18,6 +18,8 @@ export const updateRequestStatus = (id, status) => request(`/api/requests/${id}/
 export const getProposalList = () => request('/api/proposals');
 export const createProposal = (payload) => request('/api/proposals', { method: 'POST', body: JSON.stringify(payload) });
 export const updateProposalStatus = (id, status) => request(`/api/proposals/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
+export const submitAdminCompanyDecision = (proposalId, payload) => request(`/api/proposals/${proposalId}/company-decision`, { method:'PATCH', body:JSON.stringify(payload), auth:true });
+export const submitAdminOwnerDecision = (proposalId, index, payload) => request(`/api/proposals/${proposalId}/owner-decisions/${index}`, { method:'PATCH', body:JSON.stringify(payload), auth:true });
 
 export const getContractList = () => request('/api/contracts');
 export const getContractById = (id) => request(`/api/contracts/${id}`);

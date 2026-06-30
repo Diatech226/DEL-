@@ -22,6 +22,8 @@ export const getMyEquipment = () => request('/api/me/equipment', { auth:true });
 export const getMyRequests = () => request('/api/me/requests', { auth:true });
 export const getMyDocuments = () => request('/api/me/documents', { auth:true });
 export const getMyProposals = () => request('/api/me/proposals', { auth:true });
+export const submitCompanyProposalDecision = (proposalId, payload) => request(`/api/me/proposals/${proposalId}/company-decision`, { method:'PATCH', body:JSON.stringify(payload), auth:true });
+export const submitOwnerProposalDecision = (proposalId, payload) => request(`/api/me/proposals/${proposalId}/owner-decision`, { method:'PATCH', body:JSON.stringify(payload), auth:true });
 export const getMyContracts = () => request('/api/me/contracts', { auth:true });
 export const getMyInvoices = () => request('/api/me/invoices', { auth:true });
 export const getMyPayments = () => request('/api/me/payments', { auth:true });

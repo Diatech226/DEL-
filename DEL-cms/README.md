@@ -148,3 +148,9 @@ ADMIN_EMAILS=diaexpressofficial@gmail.com npm run seed:admin
 Mot de passe temporaire : `changer-moi-123`.
 
 Limite actuelle : le logout supprime simplement le token local car le JWT est stateless.
+
+## Administration des décisions de proposition
+
+La page propositions affiche `status`, `workflowStatus`, la décision entreprise et le résumé des décisions propriétaires. L’admin peut forcer une décision entreprise avec `PATCH /api/proposals/:id/company-decision` et une décision propriétaire avec `PATCH /api/proposals/:id/owner-decisions/:index`, notamment lorsque `ownerUserId` est absent.
+
+Le bouton “Créer contrat” n’est affiché que si la proposition est `READY_FOR_CONTRACT` ou `ACCEPTED`; sinon l’interface indique que les validations entreprise/propriétaire sont attendues. Après création depuis une demande, le message attendu est : “Proposition envoyée. En attente d’acceptation par l’entreprise et les propriétaires.”

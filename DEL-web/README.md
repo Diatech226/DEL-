@@ -132,3 +132,9 @@ Pages ajoutées :
 - `/dashboard/missions` : missions liées aux contrats/engins.
 
 Le dashboard général affiche des cartes financières et opérationnelles selon le rôle OWNER ou COMPANY. Les pages restent en lecture seule : pas d’acceptation en ligne, signature électronique, paiement en ligne, PDF réel, messagerie, GPS temps réel, reversements automatiques, dividendes ou investissement fractionné dans cette étape.
+
+## Propositions : acceptation/refus
+
+Le dashboard utilisateur affiche les propositions avec `status`, `workflowStatus`, `companyDecision` et `ownerDecisions`. Les entreprises peuvent accepter ou refuser via `PATCH /api/me/proposals/:id/company-decision`; les propriétaires peuvent confirmer ou refuser leur disponibilité via `PATCH /api/me/proposals/:id/owner-decision`.
+
+Les cartes `/dashboard` résument les propositions en attente, acceptées et refusées selon le rôle. Limites actuelles : pas de signature électronique, paiement en ligne, notifications email/SMS, messagerie avancée, wallet, dividendes ou GPS réel.
