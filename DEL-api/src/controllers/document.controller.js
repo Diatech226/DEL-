@@ -18,7 +18,7 @@ function validateRequired(body) {
 exports.createDocument = asyncHandler(async (req, res) => {
   const message = validateRequired(req.body);
   if (message) return res.status(400).json({ success: false, message });
-  const document = await Document.create({ ...req.body, status: req.body.status || 'PENDING' });
+  const document = await Document.create({ ...req.body, uploadedByUserId: req.body.uploadedByUserId || req.user?._id, status: req.body.status || 'PENDING' });
   res.status(201).json({ success: true, data: document });
 });
 

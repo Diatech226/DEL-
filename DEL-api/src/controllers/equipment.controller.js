@@ -17,7 +17,7 @@ const equipmentSchema = z.object({
 const updateSchema = equipmentSchema.partial();
 const statusSchema = z.object({ status: z.enum(['DRAFT','PENDING_REVIEW','AVAILABLE','RESERVED','PLACED','UNDER_MAINTENANCE','SOLD','REJECTED']) });
 
-exports.createEquipment = asyncHandler(async (req, res) => { const data = equipmentSchema.parse(req.body); const equipment = await Equipment.create(data); res.status(201).json({ success: true, data: equipment }); });
+exports.createEquipment = asyncHandler(async (req, res) => { const data = equipmentSchema.parse(req.body); if (req.user && !data.ownerUserId) data.ownerUserId = req.user._id; const equipment = await Equipment.create(data); res.status(201).json({ success: true, data: equipment }); });
 exports.getEquipment = asyncHandler(async (req, res) => { const items = await Equipment.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getEquipmentById = asyncHandler(async (req, res) => { const item = await Equipment.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); res.json({ success: true, data: item }); });
 exports.updateEquipment = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await Equipment.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); res.json({ success: true, data: item }); });

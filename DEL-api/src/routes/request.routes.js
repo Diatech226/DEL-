@@ -1,7 +1,7 @@
 const router = require('express').Router();
-const { requireAdmin } = require('../middlewares/auth.middleware');
+const { requireAdmin, optionalAuth } = require('../middlewares/auth.middleware');
 const c = require('../controllers/request.controller');
-router.route('/').post(c.createRequest).get(c.getRequests);
+router.route('/').post(optionalAuth, c.createRequest).get(c.getRequests);
 router.get('/:id/matches', c.getRequestMatches);
 router.post('/:id/proposals', c.createProposalFromRequest);
 router.patch('/:id/status', requireAdmin, c.updateRequestStatus);

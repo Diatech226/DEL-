@@ -29,4 +29,19 @@ function requireRole(...roles) {
 
 const requireAdmin = [requireAuth, requireRole('ADMIN')];
 
-module.exports = { requireAuth, requireRole, requireAdmin };
+async function optionalAuth(req, _res, next) {
+  try {
+    const header = req.headers.authorization || '';
+    const [scheme, token] = header.split(' ');
+    if (scheme === 'Bearer' && token) {
+      const payload = verifyToken(token);
+      const user = await User.findById(payload.userId);
+      if (user && user.status !== 'SUSPENDED') req.user = user;
+    }
+  } catch (error) {
+    // Token optionnel invalide : on continue en mode public.
+  }
+  return next();
+}
+
+module.exports = { requireAuth, optionalAuth, requireRole, requireAdmin };
