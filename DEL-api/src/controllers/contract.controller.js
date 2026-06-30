@@ -6,6 +6,7 @@ const Equipment = require('../models/Equipment');
 const asyncHandler = require('../utils/asyncHandler');
 const generateContractNumber = require('../utils/generateContractNumber');
 const { createScheduleForEquipment, normalizePeriod, updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
+const { notifyStakeholders } = require('../utils/createNotification');
 
 const statuses = ['DRAFT', 'PENDING_SIGNATURE', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
 const createSchema = z.object({
@@ -59,6 +60,7 @@ exports.createContractFromProposal = asyncHandler(async (req, res) => {
   if (proposal.status !== 'ACCEPTED') await Proposal.findByIdAndUpdate(proposal._id, { status: 'ACCEPTED' }, { runValidators: true });
   await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'CONTRACT_PENDING' }, { runValidators: true });
   await Equipment.updateMany({ _id: { $in: proposal.equipmentIds || [] } }, { status: 'RESERVED' }, { runValidators: true });
+  await notifyStakeholders({ request, equipment, title: 'Contrat créé', message: 'Un contrat a été créé pour votre proposition.', type: 'CONTRACT_CREATED', relatedEntityType: 'CONTRACT', relatedEntityId: contract._id, actionUrl: '/dashboard/contracts' });
   res.status(201).json({ success: true, data: contract });
 });
 exports.getContracts = asyncHandler(async (req, res) => { const items = await Contract.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });

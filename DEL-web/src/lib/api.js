@@ -9,7 +9,7 @@ async function request(path, options = {}) {
     const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.auth ? authHeaders() : {}), ...(options.headers || {}) }, cache: 'no-store' });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json.success === false) { const err = new Error((res.status===401) ? 'Veuillez vous connecter pour accéder à cet espace.' : (json.message || `Erreur API (${res.status})`)); err.status=res.status; throw err; }
-    return json.data ?? json;
+    if (Object.prototype.hasOwnProperty.call(json, 'unreadCount')) return json; return json.data ?? json;
   } catch (error) { throw new Error(error.message || 'Impossible de contacter DEL-api.'); }
 }
 export const register = (payload) => request('/api/auth/register', { method:'POST', body:JSON.stringify(payload) });
@@ -30,6 +30,9 @@ export const getMyPayments = () => request('/api/me/payments', { auth:true });
 export const getMyMissions = () => request('/api/me/missions', { auth:true });
 export const getMyFinancialSummary = () => request('/api/me/financial-summary', { auth:true });
 export const getMyOperationsSummary = () => request('/api/me/operations-summary', { auth:true });
+export const getMyNotifications = () => request('/api/me/notifications', { auth:true });
+export const markNotificationAsRead = (id) => request(`/api/me/notifications/${id}/read`, { method:'PATCH', auth:true });
+export const markAllNotificationsAsRead = () => request('/api/me/notifications/read-all', { method:'PATCH', auth:true });
 
 export const getEquipmentList = () => request('/api/equipment');
 export const getEquipmentById = (id) => request(`/api/equipment/${id}`);

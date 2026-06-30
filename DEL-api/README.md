@@ -336,3 +336,20 @@ Routes :
 La création de contrat via `POST /api/proposals/:id/contracts` exige maintenant `workflowStatus=READY_FOR_CONTRACT` ou `status=ACCEPTED`. En cas de refus, les réservations planning `RESERVED` liées à la proposition passent `CANCELLED` lorsque le module planning est disponible, et les engins encore `RESERVED` sont remis `AVAILABLE` si aucun autre contrat/proposition actif ne les bloque.
 
 Scénarios à valider : entreprise accepte puis propriétaires acceptent => `READY_FOR_CONTRACT`/`ACCEPTED`; entreprise refuse => `REJECTED_BY_COMPANY`; propriétaire refuse => `REJECTED_BY_OWNER`; un autre compte ne doit pas pouvoir décider hors périmètre.
+
+## Notifications internes
+
+DEL-api persiste les notifications internes dans `src/models/Notification.js`. Une notification cible un `recipientUserId` ou un destinataire `SYSTEM`, possède un rôle destinataire, un type métier, une entité liée, une priorité (`LOW`, `NORMAL`, `HIGH`, `CRITICAL`) et un état lu/non lu.
+
+Routes disponibles :
+- `POST /api/notifications` : création manuelle admin.
+- `GET /api/notifications` : liste admin avec `count` et `unreadCount`.
+- `GET /api/notifications/:id` : détail admin.
+- `DELETE /api/notifications/:id` : suppression admin.
+- `GET /api/me/notifications` : notifications de l’utilisateur connecté.
+- `PATCH /api/me/notifications/:id/read` : marquer une notification personnelle comme lue.
+- `PATCH /api/me/notifications/read-all` : marquer toutes ses notifications comme lues.
+
+Événements couverts : création et décisions de proposition, création de contrat, création/statut de facture, création/statut de paiement, vérification/rejet document, statut engin et statut demande. Les notifications restent internes : aucun email, SMS, WhatsApp, push, WebSocket, Firebase ou cron n’est déclenché.
+
+Scénario de test conseillé : lancer DEL-api, DEL-web et DEL-cms ; créer un OWNER avec un engin ; passer l’engin disponible depuis le CMS ; vérifier `/dashboard/notifications` ; créer une COMPANY, une demande, une proposition, accepter côté COMPANY puis OWNER, créer contrat/facture/paiement et vérifier les notifications utilisateur et `/notifications` côté CMS.

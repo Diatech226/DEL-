@@ -4,7 +4,7 @@ export function getToken(){ if(typeof window==='undefined') return null; return 
 export function setToken(token){ if(typeof window!=='undefined') localStorage.setItem(TOKEN_KEY, token);}
 export function clearToken(){ if(typeof window!=='undefined') localStorage.removeItem(TOKEN_KEY);}
 function authHeaders(){ const token=getToken(); return token ? { Authorization: `Bearer ${token}` } : {}; }
-async function request(path, options = {}) { try { const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.auth ? authHeaders() : {}), ...(options.headers || {}) }, cache: 'no-store' }); const json = await res.json().catch(() => ({})); if (!res.ok || json.success === false) { const err = new Error(json.message || `Erreur API (${res.status})`); err.status = res.status; err.conflicts = json.conflicts; throw err; } return json.data ?? json; } catch (error) { const err=new Error((error.status===401||error.status===403)?'Session expirée ou accès refusé. Veuillez vous reconnecter.':(error.message || 'Impossible de contacter DEL-api.')); err.status=error.status; throw err; } }
+async function request(path, options = {}) { try { const res = await fetch(`${API_URL}${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...(options.auth ? authHeaders() : {}), ...(options.headers || {}) }, cache: 'no-store' }); const json = await res.json().catch(() => ({})); if (!res.ok || json.success === false) { const err = new Error(json.message || `Erreur API (${res.status})`); err.status = res.status; err.conflicts = json.conflicts; throw err; } if (Object.prototype.hasOwnProperty.call(json, 'unreadCount')) return json; return json.data ?? json; } catch (error) { const err=new Error((error.status===401||error.status===403)?'Session expirée ou accès refusé. Veuillez vous reconnecter.':(error.message || 'Impossible de contacter DEL-api.')); err.status=error.status; throw err; } }
 export const login = (payload) => request('/api/auth/login', { method:'POST', body:JSON.stringify(payload) });
 export const getMe = () => request('/api/auth/me', { auth:true });
 export const logout = () => request('/api/auth/logout', { method:'POST', auth:true }).finally(clearToken);
@@ -77,3 +77,7 @@ export const updateCompanyProfileStatus = (id, status, rejectionReason = '') => 
 export const getTechnicianProfileList = () => request('/api/technician-profiles');
 export const getTechnicianProfileById = (id) => request(`/api/technician-profiles/${id}`);
 export const updateTechnicianProfileStatus = (id, status, rejectionReason = '') => request(`/api/technician-profiles/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, rejectionReason }), auth: true });
+
+export const getNotificationList = () => request('/api/notifications', { auth:true });
+export const createNotificationManual = (payload) => request('/api/notifications', { method:'POST', body:JSON.stringify(payload), auth:true });
+export const deleteNotification = (id) => request(`/api/notifications/${id}`, { method:'DELETE', auth:true });
