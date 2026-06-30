@@ -49,3 +49,8 @@ export const createCompanyProfile = (payload) => request('/api/company-profiles'
 export const getCompanyProfileById = (id) => request(`/api/company-profiles/${id}`);
 export const createTechnicianProfile = (payload) => request('/api/technician-profiles', { method: 'POST', body: JSON.stringify(payload) });
 export const api = { getEquipment: getEquipmentList, getEquipmentById, createEquipment, getRequests: getRequestList, createRequest: createEquipmentRequest, createDocument, getDocumentsByEntity };
+export const createTender = (payload) => request('/api/tenders', { method: 'POST', body: JSON.stringify(payload), auth: true });
+export const getMyTenders = () => request('/api/me/tenders', { auth: true });
+export const getMyTenderLots = () => request('/api/me/tender-lots', { auth: true });
+export const getTenderById = (id) => request(`/api/tenders/${id}`);
+export const getTenderLotsByTender = (id) => request(`/api/tenders/${id}/lots`);

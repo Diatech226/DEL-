@@ -9,6 +9,8 @@ const Invoice = require('../models/Invoice');
 const Payment = require('../models/Payment');
 const Mission = require('../models/Mission');
 const MaintenanceTicket = require('../models/MaintenanceTicket');
+const Tender = require('../models/Tender');
+const TenderLot = require('../models/TenderLot');
 const asyncHandler = require('../utils/asyncHandler');
 const proposalController = require('../controllers/proposal.controller');
 
@@ -27,10 +29,15 @@ async function getCompanyRequestIds(user) {
   const requests = await EquipmentRequest.find({ $or: [{ companyUserId: user._id }, { companyName: user.fullName }] }).select('_id');
   return requests.map((item) => item._id);
 }
+async function getCompanyTenderIds(user) {
+  const tenders = await Tender.find({ $or: [{ companyUserId: user._id }, { companyName: user.fullName }] }).select('_id');
+  return tenders.map((item) => item._id);
+}
 async function scopedProposals(user) {
   if (user.role === 'COMPANY') {
     const requestIds = await getCompanyRequestIds(user);
-    return Proposal.find({ $or: [{ requestId: { $in: requestIds } }, { companyName: user.fullName }] }).sort({ createdAt: -1 });
+    const tenderIds = await getCompanyTenderIds(user);
+    return Proposal.find({ $or: [{ requestId: { $in: requestIds } }, { tenderId: { $in: tenderIds } }, { companyName: user.fullName }] }).sort({ createdAt: -1 });
   }
   if (user.role === 'OWNER') {
     const equipmentIds = await getOwnerEquipmentIds(user._id);
@@ -82,6 +89,8 @@ async function scopedMissions(user) {
 
 router.get('/equipment', asyncHandler(async (req, res) => list(res, await Equipment.find({ ownerUserId: req.user._id }).sort({ createdAt: -1 }))));
 router.get('/requests', asyncHandler(async (req, res) => list(res, await EquipmentRequest.find({ companyUserId: req.user._id }).sort({ createdAt: -1 }))));
+router.get('/tenders', asyncHandler(async (req, res) => { if (req.user.role !== 'COMPANY') return list(res, []); return list(res, await Tender.find({ companyUserId: req.user._id }).sort({ createdAt: -1 })); }));
+router.get('/tender-lots', asyncHandler(async (req, res) => { if (req.user.role !== 'COMPANY') return list(res, []); const tenderIds = await getCompanyTenderIds(req.user); return list(res, await TenderLot.find({ tenderId: { $in: tenderIds } }).sort({ createdAt: -1 })); }));
 router.get('/documents', asyncHandler(async (req, res) => list(res, await Document.find(myDocumentsQuery(req.user._id)).sort({ createdAt: -1 }))));
 router.get('/proposals', asyncHandler(async (req, res) => list(res, await scopedProposals(req.user))));
 router.get('/contracts', asyncHandler(async (req, res) => list(res, await scopedContracts(req.user))));
@@ -115,10 +124,10 @@ router.get('/operations-summary', asyncHandler(async (req, res) => {
 }));
 
 router.get('/summary', asyncHandler(async (req, res) => {
-  const [equipment, requests, documents, pendingDocuments, verifiedDocuments, rejectedDocuments, proposals, contracts, invoices, payments, missions, maintenanceTickets] = await Promise.all([
-    Equipment.countDocuments({ ownerUserId: req.user._id }), EquipmentRequest.countDocuments({ companyUserId: req.user._id }), Document.countDocuments(myDocumentsQuery(req.user._id)), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'PENDING' }), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'VERIFIED' }), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'REJECTED' }), scopedProposals(req.user).then((d) => d.length), scopedContracts(req.user).then((d) => d.length), scopedInvoices(req.user).then((d) => d.length), scopedPayments(req.user).then((d) => d.length), scopedMissions(req.user).then((d) => d.length), req.user.role === 'OWNER' ? getOwnerEquipmentIds(req.user._id).then((ids) => MaintenanceTicket.countDocuments({ equipmentId: { $in: ids } })) : 0,
+  const [equipment, requests, tenders, tenderLots, documents, pendingDocuments, verifiedDocuments, rejectedDocuments, proposals, contracts, invoices, payments, missions, maintenanceTickets] = await Promise.all([
+    Equipment.countDocuments({ ownerUserId: req.user._id }), EquipmentRequest.countDocuments({ companyUserId: req.user._id }), Tender.countDocuments({ companyUserId: req.user._id }), getCompanyTenderIds(req.user).then((ids) => TenderLot.countDocuments({ tenderId: { $in: ids } })), Document.countDocuments(myDocumentsQuery(req.user._id)), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'PENDING' }), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'VERIFIED' }), Document.countDocuments({ ...myDocumentsQuery(req.user._id), status: 'REJECTED' }), scopedProposals(req.user).then((d) => d.length), scopedContracts(req.user).then((d) => d.length), scopedInvoices(req.user).then((d) => d.length), scopedPayments(req.user).then((d) => d.length), scopedMissions(req.user).then((d) => d.length), req.user.role === 'OWNER' ? getOwnerEquipmentIds(req.user._id).then((ids) => MaintenanceTicket.countDocuments({ equipmentId: { $in: ids } })) : 0,
   ]);
-  res.json({ success: true, data: { user: req.user.toJSON(), counts: { equipment, requests, documents, pendingDocuments, verifiedDocuments, rejectedDocuments, proposals, contracts, invoices, payments, missions, maintenanceTickets } } });
+  res.json({ success: true, data: { user: req.user.toJSON(), counts: { equipment, requests, tenders, tenderLots, documents, pendingDocuments, verifiedDocuments, rejectedDocuments, proposals, contracts, invoices, payments, missions, maintenanceTickets } } });
 }));
 
 module.exports = router;

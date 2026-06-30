@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const { requireAdmin, optionalAuth } = require('../middlewares/auth.middleware');
+const c = require('../controllers/tender.controller');
+const lots = require('../controllers/tenderLot.controller');
+router.route('/').post(optionalAuth, c.createTender).get(c.getTenders);
+router.post('/:id/lots', lots.createTenderLot);
+router.get('/:id/lots', lots.getTenderLotsByTender);
+router.patch('/:id/status', requireAdmin, c.updateTenderStatus);
+router.route('/:id').get(c.getTenderById).patch(c.updateTender).delete(c.deleteTender);
+module.exports = router;

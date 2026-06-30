@@ -144,3 +144,11 @@ Les cartes `/dashboard` résument les propositions en attente, acceptées et ref
 DEL-web expose une page `/dashboard/notifications` qui récupère `GET /api/me/notifications`, affiche le nombre de notifications non lues, les badges de type/priorité, les dates, le statut lu/non lu et les actions “Marquer comme lu”, “Tout marquer comme lu” et “Ouvrir” quand `actionUrl` est présent.
 
 Le client API fournit `getMyNotifications()`, `markNotificationAsRead(id)` et `markAllNotificationsAsRead()` avec le token Bearer utilisateur. La navigation du dashboard et la navbar pointent vers cette page. La vue générale affiche une carte “Notifications non lues”. Les limites actuelles restent volontaires : pas de temps réel, push, email, SMS ou WhatsApp.
+
+## Appels d’offres multi-lots
+
+DEL-web expose `/appels-offres/nouveau` pour créer un `Tender` avec plusieurs lots en une seule requête API. Le dashboard entreprise propose `/dashboard/tenders` et `/dashboard/tenders/[id]` pour suivre les appels d’offres et les lots analysés par DEL.
+
+Différence métier : `/demander-des-engins` reste la demande simple, tandis que `/appels-offres/nouveau` couvre les besoins complexes multi-lots. Les propositions liées à un appel d’offres affichent un badge dédié dans `/dashboard/proposals`.
+
+Limites actuelles : suivi manuel DEL, pas d’enchères, pas de soumission publique propriétaire, pas de signature ou paiement en ligne.

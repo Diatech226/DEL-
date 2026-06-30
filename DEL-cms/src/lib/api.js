@@ -81,3 +81,11 @@ export const updateTechnicianProfileStatus = (id, status, rejectionReason = '') 
 export const getNotificationList = () => request('/api/notifications', { auth:true });
 export const createNotificationManual = (payload) => request('/api/notifications', { method:'POST', body:JSON.stringify(payload), auth:true });
 export const deleteNotification = (id) => request(`/api/notifications/${id}`, { method:'DELETE', auth:true });
+export const getTenderList = () => request('/api/tenders');
+export const getTenderById = (id) => request(`/api/tenders/${id}`);
+export const updateTenderStatus = (id, status) => request(`/api/tenders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
+export const getTenderLotsByTender = (tenderId) => request(`/api/tenders/${tenderId}/lots`);
+export const getTenderLotById = (id) => request(`/api/tender-lots/${id}`);
+export const updateTenderLotStatus = (id, status) => request(`/api/tender-lots/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
+export const getTenderLotMatches = (id) => request(`/api/tender-lots/${id}/matches`);
+export const createProposalFromTenderLot = (lotId, payload) => request(`/api/tender-lots/${lotId}/proposals`, { method: 'POST', body: JSON.stringify(payload) });

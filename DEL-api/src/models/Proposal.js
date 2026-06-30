@@ -21,7 +21,9 @@ const ownerDecisionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const proposalSchema = new mongoose.Schema({
-  requestId: { type: mongoose.Schema.Types.ObjectId, ref: 'EquipmentRequest', required: true },
+  requestId: { type: mongoose.Schema.Types.ObjectId, ref: 'EquipmentRequest' },
+  tenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tender' },
+  tenderLotId: { type: mongoose.Schema.Types.ObjectId, ref: 'TenderLot' },
   equipmentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Equipment' }],
   companyName: { type: String, trim: true },
   ownerNames: [{ type: String, trim: true }],
