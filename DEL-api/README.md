@@ -278,3 +278,28 @@ Les changements de statut `PATCH .../:id/status` des modules sensibles sont prot
 ### Limites actuelles
 
 Cette implémentation ne gère pas encore refresh tokens, rotation de secret, révocation serveur, OTP, OAuth, paiement, ni politiques avancées. Le logout est côté client car le JWT est stateless.
+
+## Espaces privés utilisateur (`/api/me`)
+
+Les routes suivantes sont protégées par `Authorization: Bearer <token>` :
+
+- `GET /api/me/equipment` : retourne uniquement les engins dont `ownerUserId` correspond à l’utilisateur connecté.
+- `GET /api/me/requests` : retourne uniquement les demandes dont `companyUserId` correspond à l’utilisateur connecté.
+- `GET /api/me/documents` : retourne les documents téléversés par l’utilisateur via `uploadedByUserId`.
+- `GET /api/me/summary` : retourne l’utilisateur courant et les compteurs privés (`equipment`, `requests`, `documents`, `pendingDocuments`, `verifiedDocuments`, `rejectedDocuments`).
+
+Les modèles conservent des liens utilisateur optionnels pour compatibilité avec les anciens enregistrements : `Equipment.ownerUserId`, `EquipmentRequest.companyUserId` et `Document.uploadedByUserId`.
+
+Les créations publiques restent possibles. Si un token est fourni sur `POST /api/equipment`, `POST /api/requests` ou `POST /api/documents`, l’API rattache automatiquement la ressource à l’utilisateur connecté.
+
+### Scénario de test recommandé
+
+1. Créer un compte `OWNER`, se connecter, déposer un engin et ajouter un document.
+2. Vérifier `/api/me/equipment` et `/api/me/documents` avec le token OWNER.
+3. Créer un compte `COMPANY`, se connecter, publier une demande et ajouter un document.
+4. Vérifier `/api/me/requests` et `/api/me/documents` avec le token COMPANY.
+5. Confirmer qu’un compte COMPANY ne voit pas les engins privés du OWNER.
+
+### Limites actuelles
+
+Les documents privés sont filtrés au minimum par `uploadedByUserId`. Les propositions, contrats, factures et permissions fines restent informatifs pour cette étape.

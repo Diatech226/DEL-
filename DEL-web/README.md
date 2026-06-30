@@ -94,3 +94,27 @@ Le token JWT est stocké dans `localStorage` côté client sous `del_token`. Les
 Les formulaires onboarding, dépôt d’engin et demande d’engins restent utilisables sans compte, mais ils préremplissent et envoient `userId`, `ownerUserId` ou `companyUserId` quand un utilisateur est connecté.
 
 Limite actuelle : cette auth est volontairement simple et pourra être remplacée par Clerk/OAuth/OTP plus tard.
+
+## Dashboard privé DEL-web
+
+Le dashboard `/dashboard` utilise les routes privées DEL-api `/api/me/*` avec le token stocké côté client :
+
+- `/dashboard` : vue générale et compteurs par rôle.
+- `/dashboard/equipment` : engins du propriétaire connecté (`ownerUserId`).
+- `/dashboard/requests` : demandes de l’entreprise connectée (`companyUserId`).
+- `/dashboard/documents` : documents téléversés par l’utilisateur (`uploadedByUserId`).
+- `/dashboard/profile` : consultation et modification des champs profil autorisés (`fullName`, `phone`, `country`, `city`, `address`, `avatarUrl`, `preferredLanguage`).
+
+Les formulaires `/deposer-un-engin` et `/demander-des-engins` préremplissent les coordonnées si un utilisateur est connecté et envoient le token afin que l’API rattache automatiquement les données. Les documents ajoutés après un dépôt ou une demande sont liés à l’entité concernée et à l’utilisateur connecté.
+
+### Scénario de validation
+
+1. Lancer DEL-api, DEL-web et DEL-cms.
+2. Créer un compte OWNER, déposer un engin, ajouter un document, puis vérifier `/dashboard/equipment` et `/dashboard/documents`.
+3. Créer un compte COMPANY, publier une demande, ajouter un document, puis vérifier `/dashboard/requests` et `/dashboard/documents`.
+4. Se connecter avec COMPANY et confirmer que les engins du OWNER ne sont pas visibles dans l’espace privé.
+5. Modifier la ville ou le téléphone dans `/dashboard/profile` et vérifier le message “Profil mis à jour”.
+
+### Limites actuelles
+
+Pas de paiement en ligne, GPS réel, dividendes, investissement fractionné, messagerie avancée, mobile ou permissions complexes. L’admin reste dans DEL-cms.

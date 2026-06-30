@@ -4,6 +4,7 @@ const entityTypes = ['EQUIPMENT', 'COMPANY', 'OWNER', 'REQUEST', 'CONTRACT'];
 const statuses = ['PENDING', 'VERIFIED', 'REJECTED'];
 
 const documentSchema = new mongoose.Schema({
+  uploadedByUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
   title: { type: String, required: true, trim: true },
   type: { type: String, required: true, trim: true },
   entityType: { type: String, enum: entityTypes, required: true, index: true },

@@ -35,7 +35,7 @@ function scoreEquipment(equipment, request) {
   return { score, reasons };
 }
 
-exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); const item = await EquipmentRequest.create(data); res.status(201).json({ success: true, data: item }); });
+exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); if (req.user && !data.companyUserId) data.companyUserId = req.user._id; const item = await EquipmentRequest.create(data); res.status(201).json({ success: true, data: item }); });
 exports.getRequests = asyncHandler(async (req, res) => { const items = await EquipmentRequest.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getRequestById = asyncHandler(async (req, res) => { const item = await EquipmentRequest.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
 exports.getRequestMatches = asyncHandler(async (req, res) => {
