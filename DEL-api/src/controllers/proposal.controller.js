@@ -6,6 +6,7 @@ const EquipmentRequest = require('../models/EquipmentRequest');
 const Contract = require('../models/Contract');
 const asyncHandler = require('../utils/asyncHandler');
 const { updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
+const createNotification = require('../utils/createNotification');
 
 const decisionStatuses = ['PENDING', 'ACCEPTED', 'REJECTED'];
 const proposalSchema = z.object({
@@ -27,6 +28,18 @@ function recalculateProposalWorkflow(proposal) {
   if (companyStatus === 'ACCEPTED' && proposal.ownerDecisions.some((d) => (d.status || 'PENDING') === 'PENDING')) { proposal.workflowStatus = 'PENDING_OWNERS'; proposal.status = 'SENT'; return proposal; }
   if (companyStatus === 'ACCEPTED' && proposal.ownerDecisions.every((d) => d.status === 'ACCEPTED')) { proposal.workflowStatus = 'READY_FOR_CONTRACT'; proposal.status = 'ACCEPTED'; }
   return proposal;
+}
+
+
+async function notifyProposalDecision(proposal, actorRole, status) {
+  const type = status === 'ACCEPTED' ? 'PROPOSAL_ACCEPTED' : 'PROPOSAL_REJECTED';
+  const request = await EquipmentRequest.findById(proposal.requestId);
+  const message = actorRole === 'COMPANY' ? `L’entreprise a ${status === 'ACCEPTED' ? 'accepté' : 'refusé'} la proposition.` : `Un propriétaire a ${status === 'ACCEPTED' ? 'confirmé la disponibilité de son engin' : 'refusé la proposition'}.`;
+  const tasks = [];
+  if (actorRole === 'COMPANY') (proposal.ownerDecisions || []).filter((d) => d.ownerUserId).forEach((d) => tasks.push(createNotification({ recipientUserId: d.ownerUserId, recipientRole: 'OWNER', recipientName: d.ownerName, title: status === 'ACCEPTED' ? 'Proposition acceptée' : 'Proposition refusée', message, type, relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: status === 'REJECTED' ? 'HIGH' : 'NORMAL' })));
+  if (actorRole === 'OWNER' && request?.companyUserId) tasks.push(createNotification({ recipientUserId: request.companyUserId, recipientRole: 'COMPANY', recipientName: request.companyName, title: status === 'ACCEPTED' ? 'Propriétaire confirmé' : 'Propriétaire indisponible', message, type, relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: status === 'REJECTED' ? 'HIGH' : 'NORMAL' }));
+  tasks.push(createNotification({ recipientRole: 'SYSTEM', recipientName: 'DEL Admin', title: 'Décision proposition', message, type, relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/proposals' }));
+  await Promise.all(tasks);
 }
 
 async function releaseProposalReservations(proposal, equipmentIds = proposal.equipmentIds || []) {
@@ -61,7 +74,9 @@ exports.submitMyCompanyDecision = asyncHandler(async (req, res) => {
   const data = decisionSchema.parse(req.body); const proposal = await Proposal.findById(req.params.id); if (!proposal) return res.status(404).json({ success: false, message: 'Proposition introuvable' });
   const request = await EquipmentRequest.findById(proposal.requestId); if (!request || String(request.companyUserId || '') !== String(req.user._id)) return res.status(403).json({ success: false, message: 'Proposition non liée à votre entreprise' });
   proposal.companyDecision = { status: data.status, decidedByUserId: req.user._id, decidedAt: new Date(), notes: data.notes, rejectionReason: data.rejectionReason };
-  res.json({ success: true, data: await saveDecision(proposal, data.status === 'REJECTED') });
+  const saved = await saveDecision(proposal, data.status === 'REJECTED');
+  await notifyProposalDecision(saved, 'COMPANY', data.status);
+  res.json({ success: true, data: saved });
 });
 
 exports.submitMyOwnerDecision = asyncHandler(async (req, res) => {
@@ -70,18 +85,24 @@ exports.submitMyOwnerDecision = asyncHandler(async (req, res) => {
   const index = (proposal.ownerDecisions || []).findIndex((d) => String(d.ownerUserId || '') === String(req.user._id));
   if (index < 0) return res.status(403).json({ success: false, message: 'Aucun engin de cette proposition ne vous appartient' });
   proposal.ownerDecisions[index].status = data.status; proposal.ownerDecisions[index].decidedAt = new Date(); proposal.ownerDecisions[index].notes = data.notes; proposal.ownerDecisions[index].rejectionReason = data.rejectionReason;
-  res.json({ success: true, data: await saveDecision(proposal, data.status === 'REJECTED', proposal.ownerDecisions[index].equipmentIds) });
+  const saved = await saveDecision(proposal, data.status === 'REJECTED', proposal.ownerDecisions[index].equipmentIds);
+  await notifyProposalDecision(saved, 'OWNER', data.status);
+  res.json({ success: true, data: saved });
 });
 
 exports.submitAdminCompanyDecision = asyncHandler(async (req, res) => {
   const data = decisionSchema.parse(req.body); const proposal = await Proposal.findById(req.params.id); if (!proposal) return res.status(404).json({ success: false, message: 'Proposition introuvable' });
   proposal.companyDecision = { status: data.status, decidedByUserId: req.user._id, decidedAt: new Date(), notes: data.notes, rejectionReason: data.rejectionReason };
-  res.json({ success: true, data: await saveDecision(proposal, data.status === 'REJECTED') });
+  const saved = await saveDecision(proposal, data.status === 'REJECTED');
+  await notifyProposalDecision(saved, 'COMPANY', data.status);
+  res.json({ success: true, data: saved });
 });
 
 exports.submitAdminOwnerDecision = asyncHandler(async (req, res) => {
   const data = decisionSchema.parse(req.body); const proposal = await Proposal.findById(req.params.id); if (!proposal) return res.status(404).json({ success: false, message: 'Proposition introuvable' });
   const index = Number(req.params.index); if (!Number.isInteger(index) || !proposal.ownerDecisions[index]) return res.status(404).json({ success: false, message: 'Décision propriétaire introuvable' });
   proposal.ownerDecisions[index].status = data.status; proposal.ownerDecisions[index].decidedAt = new Date(); proposal.ownerDecisions[index].notes = data.notes; proposal.ownerDecisions[index].rejectionReason = data.rejectionReason;
-  res.json({ success: true, data: await saveDecision(proposal, data.status === 'REJECTED', proposal.ownerDecisions[index].equipmentIds) });
+  const saved = await saveDecision(proposal, data.status === 'REJECTED', proposal.ownerDecisions[index].equipmentIds);
+  await notifyProposalDecision(saved, 'OWNER', data.status);
+  res.json({ success: true, data: saved });
 });

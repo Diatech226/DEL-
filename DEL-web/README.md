@@ -138,3 +138,9 @@ Le dashboard général affiche des cartes financières et opérationnelles selon
 Le dashboard utilisateur affiche les propositions avec `status`, `workflowStatus`, `companyDecision` et `ownerDecisions`. Les entreprises peuvent accepter ou refuser via `PATCH /api/me/proposals/:id/company-decision`; les propriétaires peuvent confirmer ou refuser leur disponibilité via `PATCH /api/me/proposals/:id/owner-decision`.
 
 Les cartes `/dashboard` résument les propositions en attente, acceptées et refusées selon le rôle. Limites actuelles : pas de signature électronique, paiement en ligne, notifications email/SMS, messagerie avancée, wallet, dividendes ou GPS réel.
+
+## Notifications utilisateur
+
+DEL-web expose une page `/dashboard/notifications` qui récupère `GET /api/me/notifications`, affiche le nombre de notifications non lues, les badges de type/priorité, les dates, le statut lu/non lu et les actions “Marquer comme lu”, “Tout marquer comme lu” et “Ouvrir” quand `actionUrl` est présent.
+
+Le client API fournit `getMyNotifications()`, `markNotificationAsRead(id)` et `markAllNotificationsAsRead()` avec le token Bearer utilisateur. La navigation du dashboard et la navbar pointent vers cette page. La vue générale affiche une carte “Notifications non lues”. Les limites actuelles restent volontaires : pas de temps réel, push, email, SMS ou WhatsApp.

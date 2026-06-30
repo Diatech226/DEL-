@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Document = require('../models/Document');
 const asyncHandler = require('../utils/asyncHandler');
+const createNotification = require('../utils/createNotification');
 
 const requiredFields = ['title', 'type', 'entityType', 'entityId', 'fileUrl'];
 const allowedStatuses = ['PENDING', 'VERIFIED', 'REJECTED'];
@@ -54,6 +55,7 @@ exports.updateDocumentStatus = asyncHandler(async (req, res) => {
   const update = { status, rejectionReason: status === 'REJECTED' ? rejectionReason : '', verifiedAt: status === 'VERIFIED' ? new Date() : undefined };
   const document = await Document.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
   if (!document) return res.status(404).json({ success: false, message: 'Document introuvable' });
+  if (document.uploadedByUserId) await createNotification({ recipientUserId: document.uploadedByUserId, recipientRole: 'SYSTEM', recipientName: document.uploadedBy, title: status === 'VERIFIED' ? 'Document vérifié' : 'Document rejeté', message: status === 'VERIFIED' ? 'Votre document a été vérifié.' : 'Votre document a été rejeté. Consultez la raison dans votre dashboard.', type: status === 'VERIFIED' ? 'DOCUMENT_VERIFIED' : 'DOCUMENT_REJECTED', relatedEntityType: 'DOCUMENT', relatedEntityId: document._id, actionUrl: '/dashboard/documents', priority: status === 'REJECTED' ? 'HIGH' : 'NORMAL' });
   res.json({ success: true, data: document });
 });
 

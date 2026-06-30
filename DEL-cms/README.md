@@ -154,3 +154,9 @@ Limite actuelle : le logout supprime simplement le token local car le JWT est st
 La page propositions affiche `status`, `workflowStatus`, la décision entreprise et le résumé des décisions propriétaires. L’admin peut forcer une décision entreprise avec `PATCH /api/proposals/:id/company-decision` et une décision propriétaire avec `PATCH /api/proposals/:id/owner-decisions/:index`, notamment lorsque `ownerUserId` est absent.
 
 Le bouton “Créer contrat” n’est affiché que si la proposition est `READY_FOR_CONTRACT` ou `ACCEPTED`; sinon l’interface indique que les validations entreprise/propriétaire sont attendues. Après création depuis une demande, le message attendu est : “Proposition envoyée. En attente d’acceptation par l’entreprise et les propriétaires.”
+
+## Notifications admin
+
+DEL-cms ajoute `/notifications` pour consulter toutes les notifications internes DEL-api, créer une notification manuelle et supprimer une notification. Le client API fournit `getNotificationList()`, `createNotificationManual(payload)` et `deleteNotification(id)` avec le token admin.
+
+Le dashboard admin affiche les statistiques : total notifications, non lues, priorité HIGH, priorité CRITICAL et notifications système. La sidebar contient le lien “Notifications”. Les notifications sont uniquement internes en base de données : aucun email, SMS, WhatsApp, push, WebSocket, Firebase ou cron n’est encore implémenté.
