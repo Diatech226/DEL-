@@ -1,71 +1,82 @@
-# DEL
+# DEL — Plateforme d'engins industriels
 
-DEL est une plateforme numérique pour le placement, la location, la vente et la gestion d’engins industriels destinés aux mines, au BTP, à la logistique et aux grands chantiers.
+DEL est une plateforme numérique pour le placement, la location, la vente, le suivi, la gestion, la maintenance, la facturation et l'administration d'engins industriels destinés aux mines, au BTP, à la logistique et aux grands chantiers.
 
-## Structure du projet
+Le dépôt contient trois applications indépendantes. Il ne s'agit pas d'un workspace npm : chaque application conserve son propre `package.json`, ses dépendances et ses scripts.
+
+## Architecture
 
 ```text
 DEL/
-├── DEL-api
-├── DEL-web
-└── DEL-cms
+├── DEL-api/   # Backend Express.js + MongoDB
+├── DEL-web/   # Site public + espace utilisateur Next.js
+├── DEL-cms/   # Back-office administrateur Next.js
+├── docs/      # Continuité, audit technique et revue produit
+├── package.json
+├── README.md
+└── .gitignore
 ```
 
-Chaque application est autonome : aucun workspace obligatoire, aucun package partagé et aucune dépendance locale entre applications.
+## Rôle des applications
 
-Le `package.json` racine sert uniquement à lancer les applications ensemble ou individuellement depuis la racine du projet avec `concurrently`.
+- **DEL-api** : API REST Express.js, persistance MongoDB/Mongoose, authentification JWT, modules métier, exports CSV et génération PDF.
+- **DEL-web** : site public, authentification utilisateur, onboarding, dépôt d'engins, demandes d'engins, appels d'offres et tableaux de bord propriétaire/entreprise.
+- **DEL-cms** : back-office administrateur pour piloter les équipements, demandes, profils, contrats, documents, factures, paiements, missions, maintenance, planning, paramètres, audit et exports.
 
-## Applications
+## Prérequis
 
-- **DEL-api** : API Express.js connectée à MongoDB, exposant les ressources équipements, demandes, propositions et maintenance.
-- **DEL-web** : site public et espace utilisateur.
-- **DEL-cms** : back-office administrateur.
+- Node.js récent compatible avec Next.js 15.
+- npm.
+- MongoDB local ou distant pour utiliser les fonctionnalités persistées de l'API.
 
-## Ports
+## Installation
 
-| Application | Port | URL locale |
-| --- | --- | --- |
-| DEL-api | 5000 | http://localhost:5000 |
-| DEL-web | 3000 | http://localhost:3000 |
-| DEL-cms | 3001 | http://localhost:3001 |
-
-## Variables d’environnement
-
-Copier les fichiers `.env.example` de chaque application vers `.env` puis adapter les valeurs si nécessaire.
-
-- `DEL-api/.env.example`
-- `DEL-web/.env.example`
-- `DEL-cms/.env.example`
-
-Valeurs locales minimales :
-
-- `DEL-api/.env` : `PORT=5000` et une valeur `MONGODB_URI` MongoDB valide pour utiliser les routes qui lisent ou écrivent en base.
-- `DEL-web/.env` : `NEXT_PUBLIC_API_URL=http://localhost:5000`
-- `DEL-cms/.env` : `NEXT_PUBLIC_API_URL=http://localhost:5000`
-
-En développement, l’API peut démarrer sans `MONGODB_URI` pour exposer `/api/health`, mais les routes métier nécessitent MongoDB.
-
-## Commandes
-
-### Installation racine
+Depuis la racine :
 
 ```bash
 npm install
-```
-
-### Installation des apps
-
-```bash
 npm run install:all
 ```
 
-### Lancer tout
+Installation séparée possible :
+
+```bash
+npm install --prefix DEL-api
+npm install --prefix DEL-web
+npm install --prefix DEL-cms
+```
+
+## Variables d'environnement
+
+Copier les exemples puis compléter les valeurs locales :
+
+```bash
+cp DEL-api/.env.example DEL-api/.env
+cp DEL-web/.env.example DEL-web/.env.local
+cp DEL-cms/.env.example DEL-cms/.env.local
+```
+
+Variables principales :
+
+- `DEL-api/.env.example` : `PORT`, `NODE_ENV`, `MONGODB_URI`, `CORS_ORIGINS`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `ADMIN_EMAILS`.
+- `DEL-web/.env.example` : `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_NAME`.
+- `DEL-cms/.env.example` : `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_APP_NAME`.
+
+Ne jamais commiter de vrais secrets dans les fichiers `.env`.
+
+## Lancement simultané
 
 ```bash
 npm run dev
 ```
 
-### Lancer séparément
+Cette commande lance :
+
+- API : <http://localhost:5000/api/health>
+- Web : <http://localhost:3000>
+- CMS : <http://localhost:3001>
+
+## Lancement séparé
 
 ```bash
 npm run dev:api
@@ -73,53 +84,48 @@ npm run dev:web
 npm run dev:cms
 ```
 
-## Lancer les applications depuis leurs dossiers
+Les scripts racine appellent les scripts de chaque app avec `--prefix`. Le CMS définit déjà son port avec `next dev -p 3001`, il ne faut donc pas ajouter un second `-p 3001` dans le script racine.
 
-### API
-
-```bash
-cd DEL-api
-npm install
-npm run dev
-```
-
-### Web
+## Commandes de build et de vérification
 
 ```bash
-cd DEL-web
-npm install
-npm run dev
+npm run build:all
+npm run build --prefix DEL-web
+npm run build --prefix DEL-cms
 ```
 
-### CMS
+L'API n'a pas de build. Vérifier son démarrage avec :
 
 ```bash
-cd DEL-cms
-npm install
-npm run dev
+npm run dev --prefix DEL-api
+curl http://localhost:5000/api/health
 ```
 
-## Vérifications locales
+## Dépannage Windows EPERM sur `.next`
 
-- API : http://localhost:5000/api/health
-- Web : http://localhost:3000
-- CMS : http://localhost:3001
+Si Next.js échoue avec une erreur `EPERM` sur `.next` :
 
-## Dépannage Windows EPERM avec Next.js
+1. arrêter tous les processus `next dev` ;
+2. fermer les terminaux ou éditeurs qui verrouillent `.next` ;
+3. supprimer le dossier `.next` de l'application concernée ;
+4. relancer `npm run dev --prefix DEL-web` ou `npm run dev --prefix DEL-cms`.
 
-Si Windows affiche une erreur `EPERM` sur `DEL-cms/.next/package.json`, `DEL-cms/.next/trace` ou un fichier équivalent :
+## Dépannage Next.js workspace root warning
 
-- arrêter tous les serveurs ;
-- fermer les anciens terminaux ;
-- fermer VS Code si nécessaire lorsque le dossier `.next` reste verrouillé ;
-- relancer PowerShell en administrateur si le verrou persiste ;
-- supprimer `DEL-cms/.next` et `DEL-web/.next` manuellement ;
-- relancer `npm run dev` ;
-- éviter deux processus Next sur le même dossier.
+Chaque app Next possède son propre `next.config.js` avec `outputFileTracingRoot` et `turbopack.root` pointant vers son dossier. Si l'avertissement réapparaît, vérifier qu'aucun second fichier `next.config.*` n'existe dans la même app et que le script est lancé depuis le bon dossier ou via `--prefix`.
 
-## Déploiement recommandé
+## Ordre recommandé de développement
 
-- **DEL-web** : Vercel.
-- **DEL-cms** : Vercel.
-- **DEL-api** : Render.
-- **MongoDB** : MongoDB Atlas.
+1. Stabiliser API, CMS et builds Next.
+2. Harmoniser les états loading/error/empty dans Web et CMS.
+3. Finaliser le workflow demande → matching → proposition → contrat → facture → paiement.
+4. Professionnaliser documents, PDF, audit, exports et paramètres.
+5. Préparer le déploiement Vercel/Render et la configuration production.
+
+## État actuel
+
+- Structure attendue présente : `DEL-api`, `DEL-web`, `DEL-cms`, `package.json`, `README.md`, `.gitignore`.
+- Aucun workspace ou package partagé n'a été créé.
+- Les builds `DEL-web` et `DEL-cms` passent dans l'environnement d'audit.
+- L'installation `DEL-api` a été bloquée par une erreur registry npm `403 Forbidden` sur `jsonwebtoken`; le démarrage API n'a donc pas pu être validé dans cet environnement sans dépendances installées.
+- Les documents détaillés sont disponibles dans `docs/NEXT_ITERATIONS_CONTEXT.md`, `docs/TECHNICAL_AUDIT.md` et `docs/PRODUCT_REVIEW.md`.
