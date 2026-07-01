@@ -13,6 +13,8 @@ DEL/
 
 Chaque application est autonome : aucun workspace obligatoire, aucun package partagé et aucune dépendance locale entre applications.
 
+Le `package.json` racine sert uniquement à lancer les applications ensemble ou individuellement depuis la racine du projet.
+
 ## Applications
 
 - **DEL-api** : API Express.js connectée à MongoDB, exposant les ressources équipements, demandes, propositions et maintenance.
@@ -35,7 +37,40 @@ Copier les fichiers `.env.example` de chaque application vers `.env` puis adapte
 - `DEL-web/.env.example`
 - `DEL-cms/.env.example`
 
-## Lancer les applications
+## Installation de tout le projet
+
+```bash
+npm install
+npm run install:all
+```
+
+## Lancer les applications depuis la racine
+
+### Lancer les trois apps
+
+```bash
+npm run dev
+```
+
+### Lancer seulement l’API
+
+```bash
+npm run dev:api
+```
+
+### Lancer seulement le site web
+
+```bash
+npm run dev:web
+```
+
+### Lancer seulement le CMS
+
+```bash
+npm run dev:cms
+```
+
+## Lancer les applications séparément
 
 ### API
 
