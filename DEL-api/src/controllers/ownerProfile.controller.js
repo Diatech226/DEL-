@@ -1,5 +1,6 @@
 const OwnerProfile = require('../models/OwnerProfile');
 const asyncHandler = require('../utils/asyncHandler');
+const { auditCreate, auditStatusChange } = require('../utils/audit');
 const allowedStatuses = ['PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED'];
 const bad = (res, message) => res.status(400).json({ success: false, message });
 function statusUpdate(status, rejectionReason = '') {
@@ -16,10 +17,10 @@ exports.createOwnerProfile = asyncHandler(async (req, res) => {
   if (!req.body.country) return bad(res, 'country est obligatoire');
   if (!req.body.city) return bad(res, 'city est obligatoire');
   const item = await OwnerProfile.create(req.body);
-  res.status(201).json({ success: true, data: item });
+  await auditCreate(req, 'OWNER', 'OWNER_PROFILE', item, 'Profil propriétaire créé'); res.status(201).json({ success: true, data: item });
 });
 exports.getOwnerProfiles = asyncHandler(async (_req, res) => { const items = await OwnerProfile.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getOwnerProfileById = asyncHandler(async (req, res) => { const item = await OwnerProfile.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Profil introuvable' }); res.json({ success: true, data: item }); });
 exports.updateOwnerProfile = asyncHandler(async (req, res) => { const item = await OwnerProfile.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Profil introuvable' }); res.json({ success: true, data: item }); });
-exports.updateOwnerProfileStatus = asyncHandler(async (req, res) => { const update = statusUpdate(req.body.status, req.body.rejectionReason); if (!update) return bad(res, 'Statut invalide'); const item = await OwnerProfile.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Profil introuvable' }); res.json({ success: true, data: item }); });
+exports.updateOwnerProfileStatus = asyncHandler(async (req, res) => { const update = statusUpdate(req.body.status, req.body.rejectionReason); if (!update) return bad(res, 'Statut invalide'); const before = await OwnerProfile.findById(req.params.id); const item = before && await OwnerProfile.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Profil introuvable' }); await auditStatusChange(req, 'OWNER', 'OWNER_PROFILE', item, before?.status, item.status, `Statut profil propriétaire changé de ${before?.status || '—'} à ${item.status}`); res.json({ success: true, data: item }); });
 exports.deleteOwnerProfile = asyncHandler(async (req, res) => { const item = await OwnerProfile.findByIdAndDelete(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Profil introuvable' }); res.json({ success: true, data: item }); });

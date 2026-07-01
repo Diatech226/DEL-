@@ -190,3 +190,32 @@ La page permet d’administrer : identité DEL, coordonnées, informations léga
 Limites actuelles : pas d’éditeur riche avancé, pas de permissions fines ni historique détaillé des changements.
 
 Scénario de test : se connecter admin, ouvrir `/settings`, modifier `platformName`, `slogan`, `defaultPlatformCommissionRate`, `defaultCurrency`, `enabledCurrencies`, `homepageHeroTitle` et `termsOfService`, sauvegarder, puis vérifier DEL-web et les créations contrat/facture.
+
+## Audit Log dans DEL-cms
+
+DEL-cms expose une page globale `/audit` réservée aux administrateurs. Elle utilise le token admin stocké côté CMS et les routes `requireAdmin` de DEL-api.
+
+### Fonctions API ajoutées
+
+`src/lib/api.js` expose :
+
+- `getAuditLogs(filters)` ;
+- `getAuditLogById(id)` ;
+- `getAuditLogsByEntity(entityType, entityId)` ;
+- `deleteAuditLog(id)`.
+
+### Page `/audit`
+
+La page affiche les 100 derniers logs par défaut avec les colonnes date, acteur, rôle, action, module, entité, label, message, sévérité et une action de détail. Les filtres simples disponibles sont `module`, `action`, `actorRole`, `entityType`, `severity`, `dateFrom` et `dateTo`.
+
+### Page détail `/audit/[id]`
+
+La page détail affiche l’acteur, le rôle, l’action, le module, l’entité, `oldValue` et `newValue` en JSON lisible, le message, l’adresse IP, le user-agent, la sévérité et la date de création.
+
+### Dashboard
+
+Le dashboard calcule des statistiques simples à partir des audit logs récents : actions aujourd’hui, connexions aujourd’hui, changements de statut, actions critiques/hautes, paiements enregistrés et paramètres modifiés.
+
+### Limites actuelles
+
+Cette étape n’ajoute pas d’export Excel, d’alertes automatiques, de diff visuel avancé ou de fonctionnalités réglementaires complexes. L’historique récent dans les pages détail métier pourra être ajouté ultérieurement si nécessaire.

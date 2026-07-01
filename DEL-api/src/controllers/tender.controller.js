@@ -2,6 +2,7 @@ const { z } = require('zod');
 const Tender = require('../models/Tender');
 const TenderLot = require('../models/TenderLot');
 const asyncHandler = require('../utils/asyncHandler');
+const { auditCreate, auditStatusChange } = require('../utils/audit');
 
 const statuses = ['DRAFT','OPEN','UNDER_REVIEW','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED','REJECTED'];
 const lotStatuses = ['OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED'];
@@ -25,10 +26,10 @@ exports.createTender = asyncHandler(async (req, res) => {
     // eslint-disable-next-line no-await-in-loop
     lots.push(await TenderLot.create({ ...lotData, tenderId: tender._id, lotNumber: lotData.lotNumber || index + 1 }));
   }
-  res.status(201).json({ success: true, data: { tender, lots } });
+  await auditCreate(req, 'TENDER', 'TENDER', tender, 'Appel d’offres créé', 'NORMAL', ['title']); for (const lot of lots) await auditCreate(req, 'TENDER_LOT', 'TENDER_LOT', lot, 'Lot d’appel d’offres créé', 'NORMAL', ['title','lotNumber']); res.status(201).json({ success: true, data: { tender, lots } });
 });
 exports.getTenders = asyncHandler(async (_req, res) => { const data = await Tender.find().sort({ createdAt: -1 }); res.json({ success: true, count: data.length, data }); });
 exports.getTenderById = asyncHandler(async (req, res) => { const tender = await Tender.findById(req.params.id); if (!tender) return res.status(404).json({ success: false, message: 'Appel d’offres introuvable' }); res.json({ success: true, data: tender }); });
 exports.updateTender = asyncHandler(async (req, res) => { const data = tenderSchema.partial().parse(req.body); delete data.lots; const tender = await Tender.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!tender) return res.status(404).json({ success: false, message: 'Appel d’offres introuvable' }); res.json({ success: true, data: tender }); });
-exports.updateTenderStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const tender = await Tender.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!tender) return res.status(404).json({ success: false, message: 'Appel d’offres introuvable' }); res.json({ success: true, data: tender }); });
+exports.updateTenderStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const before = await Tender.findById(req.params.id); const tender = before && await Tender.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!tender) return res.status(404).json({ success: false, message: 'Appel d’offres introuvable' }); await auditStatusChange(req, 'TENDER', 'TENDER', tender, before?.status, tender.status, `Statut appel d’offres changé de ${before?.status || '—'} à ${tender.status}`); res.json({ success: true, data: tender }); });
 exports.deleteTender = asyncHandler(async (req, res) => { const tender = await Tender.findByIdAndDelete(req.params.id); if (!tender) return res.status(404).json({ success: false, message: 'Appel d’offres introuvable' }); await TenderLot.deleteMany({ tenderId: tender._id }); res.json({ success: true, data: tender }); });

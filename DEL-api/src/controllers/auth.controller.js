@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { signToken } = require('../utils/jwt');
+const { createAuditLog } = require('../utils/audit');
 
 const PUBLIC_ROLES = ['OWNER', 'COMPANY', 'INVESTOR', 'TECHNICIAN'];
 const pick = (obj, keys) => keys.reduce((acc, key) => (obj[key] !== undefined ? { ...acc, [key]: obj[key] } : acc), {});
@@ -16,6 +17,7 @@ async function register(req, res) {
   if (or.length && await User.findOne({ $or: or })) return res.status(409).json({ success: false, message: 'Email ou téléphone déjà utilisé' });
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await User.create({ fullName, email, phone, passwordHash, role, accountType, country, city, status: 'PENDING' });
+  await createAuditLog({ req, actorUserId: user._id, actorName: user.fullName, actorRole: user.role, action: 'REGISTER', module: 'AUTH', entityType: 'USER', entityId: user._id, entityLabel: user.fullName, message: 'Nouvel utilisateur inscrit' });
   return sendAuth(res, user);
 }
 
@@ -28,6 +30,7 @@ async function login(req, res) {
   if (user.status === 'SUSPENDED') return res.status(401).json({ success: false, message: 'Non autorisé' });
   user.lastLoginAt = new Date();
   await user.save();
+  await createAuditLog({ req, actorUserId: user._id, actorName: user.fullName, actorRole: user.role, action: 'LOGIN', module: 'AUTH', entityType: 'USER', entityId: user._id, entityLabel: user.fullName, message: 'Connexion utilisateur' });
   return sendAuth(res, user);
 }
 
@@ -37,5 +40,5 @@ async function updateMe(req, res) {
   await req.user.save();
   return res.json({ success: true, data: { user: req.user.toJSON() } });
 }
-const logoutPlaceholder = (_req, res) => res.json({ success: true, message: 'Déconnexion côté client' });
+const logoutPlaceholder = async (req, res) => { await createAuditLog({ req, action: 'LOGOUT', module: 'AUTH', entityType: 'USER', entityId: req.user?._id, entityLabel: req.user?.fullName, message: 'Déconnexion utilisateur' }); return res.json({ success: true, message: 'Déconnexion côté client' }); };
 module.exports = { register, login, getMe, updateMe, logoutPlaceholder };
