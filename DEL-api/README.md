@@ -365,3 +365,22 @@ Le matching par lot compare catégorie, statut `AVAILABLE`, pays, ville, prix me
 Limites actuelles : pas d’enchères temps réel, pas de soumission publique propriétaire, pas de scoring IA, pas de signature électronique, pas de paiement en ligne, pas de financement et pas de dividendes.
 
 Scénario de test manuel : lancer DEL-api, DEL-web et DEL-cms, créer depuis DEL-web un appel d’offres avec deux lots, vérifier `/tenders` dans DEL-cms, ouvrir un lot, lancer le matching, sélectionner des engins `AVAILABLE`, créer une proposition et vérifier `/dashboard/tenders` puis `/dashboard/proposals` côté entreprise.
+
+## Rapports PDF DEL
+
+DEL-api génère des PDF simples avec `pdfkit` (dépendance déclarée dans `package.json`). Les routes sont protégées par `requireAuth` et retournent `application/pdf` avec `Content-Disposition: attachment`.
+
+Routes disponibles :
+- `GET /api/reports/equipment/:id/pdf`
+- `GET /api/reports/proposals/:id/pdf`
+- `GET /api/reports/contracts/:id/pdf`
+- `GET /api/reports/invoices/:id/pdf`
+- `GET /api/reports/missions/:id/pdf`
+- `GET /api/reports/maintenance/:id/pdf`
+- `GET /api/reports/tenders/:id/pdf`
+
+Sécurité actuelle : les admins peuvent télécharger les rapports. Les engins et appels d’offres vérifient déjà le lien propriétaire/entreprise pour les non-admins ; les autres contrôles métier pourront être renforcés progressivement sans rendre les endpoints publics.
+
+Limites actuelles : pas de signature électronique officielle, pas de QR code, pas de stockage cloud automatique, pas de cache PDF, pas d’envoi email automatique et pas de modèles personnalisables depuis le CMS.
+
+Scénario de test recommandé : lancer l’API, se connecter, télécharger chaque PDF depuis DEL-cms puis vérifier le nom du fichier, l’ouverture du document et la présence des sections principales.

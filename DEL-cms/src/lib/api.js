@@ -89,3 +89,20 @@ export const getTenderLotById = (id) => request(`/api/tender-lots/${id}`);
 export const updateTenderLotStatus = (id, status) => request(`/api/tender-lots/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
 export const getTenderLotMatches = (id) => request(`/api/tender-lots/${id}/matches`);
 export const createProposalFromTenderLot = (lotId, payload) => request(`/api/tender-lots/${lotId}/proposals`, { method: 'POST', body: JSON.stringify(payload) });
+
+export function getReportUrl(type, id) { return `/api/reports/${type}/${id}/pdf`; }
+export const getEquipmentPdfUrl = (id) => getReportUrl('equipment', id);
+export const getProposalPdfUrl = (id) => getReportUrl('proposals', id);
+export const getContractPdfUrl = (id) => getReportUrl('contracts', id);
+export const getInvoicePdfUrl = (id) => getReportUrl('invoices', id);
+export const getMissionPdfUrl = (id) => getReportUrl('missions', id);
+export const getMaintenancePdfUrl = (id) => getReportUrl('maintenance', id);
+export const getTenderPdfUrl = (id) => getReportUrl('tenders', id);
+export async function downloadReport(path, filename = 'DEL-rapport.pdf') {
+  const res = await fetch(`${API_URL}${path}`, { headers: authHeaders(), cache: 'no-store' });
+  if (!res.ok) throw new Error(res.status === 401 || res.status === 403 ? 'Session expirée ou accès refusé. Veuillez vous reconnecter.' : 'Impossible de télécharger le PDF.');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+}

@@ -152,3 +152,13 @@ DEL-web expose `/appels-offres/nouveau` pour créer un `Tender` avec plusieurs l
 Différence métier : `/demander-des-engins` reste la demande simple, tandis que `/appels-offres/nouveau` couvre les besoins complexes multi-lots. Les propositions liées à un appel d’offres affichent un badge dédié dans `/dashboard/proposals`.
 
 Limites actuelles : suivi manuel DEL, pas d’enchères, pas de soumission publique propriétaire, pas de signature ou paiement en ligne.
+
+## Téléchargement utilisateur des rapports PDF
+
+DEL-web permet aux utilisateurs connectés de télécharger des PDF depuis les espaces privés : `/dashboard/equipment`, `/dashboard/proposals`, `/dashboard/contracts`, `/dashboard/invoices` et `/dashboard/missions`.
+
+Le client `downloadReport(path, filename)` dans `src/lib/api.js` envoie le token utilisateur avec `Authorization: Bearer`, récupère le blob PDF et déclenche le téléchargement. En cas de session expirée, l’interface affiche : “Veuillez vous reconnecter pour télécharger ce document.” En cas d’accès interdit : “Vous n’êtes pas autorisé à télécharger ce document.”
+
+Limites actuelles : les PDF sont générés par DEL-api et restent des documents simples ; ils ne constituent pas une signature électronique officielle. Pas de QR code, stockage cloud, cache PDF ou envoi email automatique.
+
+Scénario de test : se connecter avec un compte OWNER puis télécharger une fiche engin et les documents liés ; se connecter avec un compte COMPANY puis télécharger les propositions, contrats, factures et missions liés.
