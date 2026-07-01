@@ -170,3 +170,13 @@ Routes API utilisées : `GET /api/tenders`, `PATCH /api/tenders/:id/status`, `GE
 Scénario de validation : créer un appel d’offres multi-lots dans DEL-web, vérifier sa présence dans `/tenders`, ouvrir le détail, consulter le matching d’un lot, sélectionner des engins compatibles, créer une proposition et vérifier `/proposals`.
 
 Limites actuelles : logique CMS manuelle, pas d’enchères temps réel, pas de scoring IA avancé, pas de signature électronique ni paiement en ligne.
+
+## Téléchargement des rapports PDF
+
+DEL-cms expose des boutons **Télécharger PDF** sur les listes et détails d’engins, propositions, contrats, factures, missions, maintenance et appels d’offres. Les téléchargements utilisent `downloadReport(path, filename)` dans `src/lib/api.js`, qui envoie le token admin avec `Authorization: Bearer` et déclenche un téléchargement blob côté navigateur.
+
+PDF disponibles depuis l’administration : fiche engin, proposition, contrat, facture, rapport de mission, rapport maintenance et appel d’offres. Les documents sont générés par DEL-api via `/api/reports/...`.
+
+Limites actuelles : ces PDF sont des documents numériques simples et ne remplacent pas une signature électronique officielle. Aucun QR code, stockage cloud, cache ou envoi email automatique n’est encore implémenté.
+
+Scénario de test : lancer DEL-api puis DEL-cms sur le port 3001, se connecter admin, ouvrir chaque liste/détail concerné et vérifier que le bouton télécharge un PDF lisible avec un nom de fichier DEL cohérent.

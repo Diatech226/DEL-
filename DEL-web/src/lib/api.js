@@ -54,3 +54,16 @@ export const getMyTenders = () => request('/api/me/tenders', { auth: true });
 export const getMyTenderLots = () => request('/api/me/tender-lots', { auth: true });
 export const getTenderById = (id) => request(`/api/tenders/${id}`);
 export const getTenderLotsByTender = (id) => request(`/api/tenders/${id}/lots`);
+
+export async function downloadReport(path, filename = 'DEL-rapport.pdf') {
+  const res = await fetch(`${API_URL}${path}`, { headers: authHeaders(), cache: 'no-store' });
+  if (!res.ok) {
+    const err = new Error(res.status === 401 ? 'Veuillez vous reconnecter pour télécharger ce document.' : res.status === 403 ? 'Vous n’êtes pas autorisé à télécharger ce document.' : 'Impossible de télécharger le PDF.');
+    err.status = res.status;
+    throw err;
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+}

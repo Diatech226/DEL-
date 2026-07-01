@@ -1,0 +1,13 @@
+const express = require('express');
+const { requireAuth } = require('../middlewares/auth.middleware');
+const controller = require('../controllers/report.controller');
+const router = express.Router();
+router.use(requireAuth);
+router.get('/equipment/:id/pdf', controller.generateEquipmentPdf);
+router.get('/proposals/:id/pdf', controller.generateProposalPdf);
+router.get('/contracts/:id/pdf', controller.generateContractPdf);
+router.get('/invoices/:id/pdf', controller.generateInvoicePdf);
+router.get('/missions/:id/pdf', controller.generateMissionPdf);
+router.get('/maintenance/:id/pdf', controller.generateMaintenancePdf);
+router.get('/tenders/:id/pdf', controller.generateTenderPdf);
+module.exports = router;
