@@ -116,3 +116,30 @@ export const getAuditLogs = (filters = {}) => request(`/api/audit-logs${qs(filte
 export const getAuditLogById = (id) => request(`/api/audit-logs/${id}`, { auth: true });
 export const getAuditLogsByEntity = (entityType, entityId) => request(`/api/audit-logs/entity/${entityType}/${entityId}`, { auth: true });
 export const deleteAuditLog = (id) => request(`/api/audit-logs/${id}`, { method: 'DELETE', auth: true });
+
+export async function downloadExport(resource, format = 'csv', filters = {}) {
+  const params = new URLSearchParams();
+  if (format) params.set('format', format);
+  Object.entries(filters || {}).forEach(([key, value]) => { if (value !== undefined && value !== null && value !== '') params.set(key, value); });
+  const res = await fetch(`${API_URL}/api/exports/${resource}?${params.toString()}`, { headers: authHeaders(), cache: 'no-store' });
+  if (!res.ok) {
+    let message = 'Impossible de télécharger l’export.';
+    if (res.status === 401) message = 'Session expirée : reconnectez-vous avec un compte administrateur.';
+    if (res.status === 403) message = 'Accès refusé : droits administrateur requis.';
+    if (res.status >= 500) message = 'Erreur serveur pendant la génération de l’export.';
+    throw new Error(message);
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  const filename = match?.[1] || `DEL-${resource}-${new Date().toISOString().slice(0, 10)}.${format}`;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  return filename;
+}

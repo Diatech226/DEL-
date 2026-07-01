@@ -33,6 +33,7 @@ app.use('/api/equipment-schedules', require('./src/routes/equipmentSchedule.rout
 app.use('/api/proposals', require('./src/routes/proposal.routes'));
 app.use('/api/documents', require('./src/routes/document.routes'));
 app.use('/api/reports', require('./src/routes/report.routes'));
+app.use('/api/exports', require('./src/routes/export.routes'));
 app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
 app.use('/api', require('./src/routes/mission.routes'));
 app.use('/api', require('./src/routes/missionReport.routes'));
