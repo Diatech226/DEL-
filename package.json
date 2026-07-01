@@ -1,0 +1,16 @@
+{
+  "name": "del",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix DEL-api\" \"npm run dev --prefix DEL-web\" \"npm run dev --prefix DEL-cms -- -p 3001\"",
+    "dev:api": "npm run dev --prefix DEL-api",
+    "dev:web": "npm run dev --prefix DEL-web",
+    "dev:cms": "npm run dev --prefix DEL-cms -- -p 3001",
+    "install:all": "npm install --prefix DEL-api && npm install --prefix DEL-web && npm install --prefix DEL-cms",
+    "build:all": "npm run build --prefix DEL-web && npm run build --prefix DEL-cms"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
