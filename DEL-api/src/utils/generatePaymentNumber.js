@@ -1,6 +1,6 @@
-module.exports = function generatePaymentNumber() {
+module.exports = function generatePaymentNumber(prefix = 'DEL-PAY') {
   const d = new Date();
   const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   const rand = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  return `DEL-PAY-${ymd}-${rand}`;
+  return `${prefix || 'DEL-PAY'}-${ymd}-${rand}`;
 };

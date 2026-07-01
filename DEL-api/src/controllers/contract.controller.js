@@ -7,11 +7,12 @@ const asyncHandler = require('../utils/asyncHandler');
 const generateContractNumber = require('../utils/generateContractNumber');
 const { createScheduleForEquipment, normalizePeriod, updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
 const { notifyStakeholders } = require('../utils/createNotification');
+const { getOrCreateSettings } = require('../utils/settings.service');
 
 const statuses = ['DRAFT', 'PENDING_SIGNATURE', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
 const createSchema = z.object({
   startDate: z.coerce.date().optional(), endDate: z.coerce.date().optional(), durationMonths: z.coerce.number().optional(),
-  paymentTerms: z.string().optional(), platformCommissionRate: z.coerce.number().min(0).max(100).default(0),
+  paymentTerms: z.string().optional(), platformCommissionRate: z.coerce.number().min(0).max(100).optional(),
   conditions: z.string().optional(), responsibilities: z.string().optional(),
 }).passthrough();
 const updateSchema = z.object({
@@ -21,20 +22,21 @@ const updateSchema = z.object({
 }).passthrough();
 const statusSchema = z.object({ status: z.enum(statuses) });
 
-async function uniqueContractNumber() {
+async function uniqueContractNumber(prefix) {
   for (let i = 0; i < 5; i += 1) {
-    const contractNumber = generateContractNumber();
+    const contractNumber = generateContractNumber(new Date(), prefix);
     // eslint-disable-next-line no-await-in-loop
     const exists = await Contract.exists({ contractNumber });
     if (!exists) return contractNumber;
   }
-  return `${generateContractNumber()}-${Date.now().toString().slice(-3)}`;
+  return `${generateContractNumber(new Date(), prefix)}-${Date.now().toString().slice(-3)}`;
 }
 
 exports.createContractFromProposal = asyncHandler(async (req, res) => {
   const proposal = await Proposal.findById(req.params.id);
   if (!proposal) return res.status(404).json({ success: false, message: 'Proposition introuvable' });
   const data = createSchema.parse(req.body);
+  const settings = await getOrCreateSettings();
   const forceAllowed = data.force === true && req.user?.role === 'ADMIN';
   if (!forceAllowed && proposal.workflowStatus !== 'READY_FOR_CONTRACT' && proposal.status !== 'ACCEPTED') {
     return res.status(400).json({ success: false, message: 'La proposition doit être acceptée par l’entreprise et les propriétaires avant création du contrat.' });
@@ -43,13 +45,13 @@ exports.createContractFromProposal = asyncHandler(async (req, res) => {
   if (!request) return res.status(404).json({ success: false, message: 'Demande liée introuvable' });
   const equipment = await Equipment.find({ _id: { $in: proposal.equipmentIds || [] } });
   const amount = Number(proposal.finalPrice || 0);
-  const platformCommissionRate = Number(data.platformCommissionRate || 0);
+  const platformCommissionRate = Number(data.platformCommissionRate ?? settings.defaultPlatformCommissionRate ?? 0);
   const platformCommissionAmount = amount * platformCommissionRate / 100;
   const ownerAmount = amount - platformCommissionAmount;
   const contract = await Contract.create({
     proposalId: proposal._id, requestId: request._id, equipmentIds: proposal.equipmentIds || [],
     companyName: proposal.companyName || request.companyName, ownerNames: proposal.ownerNames?.length ? proposal.ownerNames : [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))],
-    title: proposal.title || request.title || 'Contrat DEL', contractNumber: await uniqueContractNumber(),
+    title: proposal.title || request.title || 'Contrat DEL', contractNumber: await uniqueContractNumber(settings.contractPrefix || 'DEL-CTR'),
     startDate: data.startDate, endDate: data.endDate, durationMonths: data.durationMonths ?? proposal.durationMonths,
     amount, currency: proposal.currency || request.currency || 'XOF', paymentTerms: data.paymentTerms,
     platformCommissionRate, platformCommissionAmount, ownerAmount, conditions: data.conditions ?? proposal.conditions,

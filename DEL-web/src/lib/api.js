@@ -12,6 +12,7 @@ async function request(path, options = {}) {
     if (Object.prototype.hasOwnProperty.call(json, 'unreadCount')) return json; return json.data ?? json;
   } catch (error) { throw new Error(error.message || 'Impossible de contacter DEL-api.'); }
 }
+export const getPublicSettings = () => request('/api/settings/public');
 export const register = (payload) => request('/api/auth/register', { method:'POST', body:JSON.stringify(payload) });
 export const login = (payload) => request('/api/auth/login', { method:'POST', body:JSON.stringify(payload) });
 export const getMe = () => request('/api/auth/me', { auth:true });

@@ -384,3 +384,29 @@ Sécurité actuelle : les admins peuvent télécharger les rapports. Les engins 
 Limites actuelles : pas de signature électronique officielle, pas de QR code, pas de stockage cloud automatique, pas de cache PDF, pas d’envoi email automatique et pas de modèles personnalisables depuis le CMS.
 
 Scénario de test recommandé : lancer l’API, se connecter, télécharger chaque PDF depuis DEL-cms puis vérifier le nom du fichier, l’ouverture du document et la présence des sections principales.
+
+## Paramètres plateforme (PlatformSettings)
+
+DEL-api stocke un document unique `PlatformSettings` avec `key = "default"` dans MongoDB. Il centralise l’identité DEL, les coordonnées, informations légales, devises, préfixes de numérotation, taux par défaut, options métier et textes légaux/publics.
+
+Routes settings :
+- `GET /api/settings/public` : lecture publique limitée aux informations utiles au site web.
+- `GET /api/settings/admin` : lecture complète, protégée admin.
+- `PATCH /api/settings/admin` : mise à jour admin ; `key` n’est pas modifiable.
+- `POST /api/settings/reset` : réinitialisation admin vers les valeurs par défaut.
+
+Script :
+```bash
+npm run seed:settings
+```
+Il crée le document par défaut s’il n’existe pas et ne l’écrase jamais.
+
+Utilisation actuelle :
+- création de contrats : `defaultPlatformCommissionRate` et `contractPrefix` si absents du body ;
+- création de factures : `defaultTaxRate`, `defaultPlatformCommissionRate` et `invoicePrefix` si absents du body ;
+- paiements : `paymentPrefix` pour la numérotation ;
+- rapports PDF : nom légal/plateforme et notices légales simples.
+
+Limites actuelles : pas de multi-tenant, pas de paramètres complexes par pays, pas d’historique détaillé des changements.
+
+Scénario de test manuel : lancer l’API, exécuter `npm run seed:settings`, modifier les paramètres depuis DEL-cms, vérifier `/api/settings/public`, créer contrat/facture sans taux explicite et vérifier les valeurs par défaut.

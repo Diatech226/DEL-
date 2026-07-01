@@ -180,3 +180,13 @@ PDF disponibles depuis l’administration : fiche engin, proposition, contrat, f
 Limites actuelles : ces PDF sont des documents numériques simples et ne remplacent pas une signature électronique officielle. Aucun QR code, stockage cloud, cache ou envoi email automatique n’est encore implémenté.
 
 Scénario de test : lancer DEL-api puis DEL-cms sur le port 3001, se connecter admin, ouvrir chaque liste/détail concerné et vérifier que le bouton télécharge un PDF lisible avec un nom de fichier DEL cohérent.
+
+## Module Paramètres CMS
+
+DEL-cms expose une page `/settings` protégée par la session admin. Elle lit `GET /api/settings/admin`, sauvegarde via `PATCH /api/settings/admin` et peut réinitialiser via `POST /api/settings/reset`.
+
+La page permet d’administrer : identité DEL, coordonnées, informations légales, devises, taux de commission/taxe, préfixes facture/contrat/paiement, options métier, textes légaux et textes publics. Le dashboard affiche aussi une carte avec la commission par défaut, la devise par défaut, les modules activés et un lien vers `/settings`.
+
+Limites actuelles : pas d’éditeur riche avancé, pas de permissions fines ni historique détaillé des changements.
+
+Scénario de test : se connecter admin, ouvrir `/settings`, modifier `platformName`, `slogan`, `defaultPlatformCommissionRate`, `defaultCurrency`, `enabledCurrencies`, `homepageHeroTitle` et `termsOfService`, sauvegarder, puis vérifier DEL-web et les créations contrat/facture.

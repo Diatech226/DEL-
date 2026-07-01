@@ -8,6 +8,10 @@ async function request(path, options = {}) { try { const res = await fetch(`${AP
 export const login = (payload) => request('/api/auth/login', { method:'POST', body:JSON.stringify(payload) });
 export const getMe = () => request('/api/auth/me', { auth:true });
 export const logout = () => request('/api/auth/logout', { method:'POST', auth:true }).finally(clearToken);
+
+export const getAdminSettings = () => request('/api/settings/admin', { auth: true });
+export const updateAdminSettings = (payload) => request('/api/settings/admin', { method: 'PATCH', body: JSON.stringify(payload), auth: true });
+export const resetSettingsToDefault = () => request('/api/settings/reset', { method: 'POST', auth: true });
 export const getEquipmentList = () => request('/api/equipment');
 export const updateEquipmentStatus = (id, status) => request(`/api/equipment/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
 export const getRequestList = () => request('/api/requests');
