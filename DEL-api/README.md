@@ -410,3 +410,37 @@ Utilisation actuelle :
 Limites actuelles : pas de multi-tenant, pas de paramètres complexes par pays, pas d’historique détaillé des changements.
 
 Scénario de test manuel : lancer l’API, exécuter `npm run seed:settings`, modifier les paramètres depuis DEL-cms, vérifier `/api/settings/public`, créer contrat/facture sans taux explicite et vérifier les valeurs par défaut.
+
+## Audit Log / Historique des actions
+
+DEL-api persiste les actions importantes dans le modèle `AuditLog` (`src/models/AuditLog.js`). Un log contient l’acteur (`actorUserId`, `actorName`, `actorRole`), l’action, le module, l’entité concernée (`entityType`, `entityId`, `entityLabel`), les valeurs avant/après (`oldValue`, `newValue`), un message, l’IP, le user-agent, la sévérité (`LOW`, `NORMAL`, `HIGH`, `CRITICAL`) et `createdAt`.
+
+### Routes audit
+
+Toutes les routes suivantes sont protégées par `requireAdmin` :
+
+- `GET /api/audit-logs` avec filtres `module`, `action`, `actorRole`, `entityType`, `entityId`, `severity`, `dateFrom`, `dateTo`, `limit` (100 derniers logs par défaut, maximum 500).
+- `GET /api/audit-logs/:id`.
+- `GET /api/audit-logs/entity/:entityType/:entityId`.
+- `DELETE /api/audit-logs/:id`.
+
+### Actions et modules loggés
+
+Les actions supportées sont `CREATE`, `UPDATE`, `DELETE`, `STATUS_CHANGE`, `LOGIN`, `LOGOUT`, `REGISTER`, `APPROVE`, `REJECT`, `DOWNLOAD`, `EXPORT`, `PAYMENT_RECORD`, `MESSAGE_SENT`, `NOTIFICATION_SENT`, `SETTINGS_UPDATE` et `SYSTEM`.
+
+Les modules supportés couvrent notamment `AUTH`, `USER`, `OWNER`, `COMPANY`, `TECHNICIAN`, `EQUIPMENT`, `REQUEST`, `TENDER`, `TENDER_LOT`, `PROPOSAL`, `CONTRACT`, `INVOICE`, `PAYMENT`, `DOCUMENT`, `MISSION`, `MISSION_REPORT`, `MAINTENANCE`, `PLANNING`, `REPORT`, `SETTINGS`, `NOTIFICATION`, `MESSAGE` et `SYSTEM`.
+
+L’utilitaire `createAuditLog` ne bloque jamais l’action métier : toute erreur d’audit est seulement journalisée via `console.error`. Les mots de passe ne sont pas stockés dans l’audit.
+
+### Scénario de test recommandé
+
+1. Démarrer l’API avec `npm run dev`.
+2. Créer un compte et se connecter pour vérifier `REGISTER` et `LOGIN`.
+3. Créer un engin, une demande, une proposition, un contrat, une facture et un paiement.
+4. Changer des statuts importants, notamment paiement `CONFIRMED`.
+5. Modifier ou réinitialiser les paramètres admin.
+6. Consulter `GET /api/audit-logs` et les filtres `module=PAYMENT`, `action=STATUS_CHANGE`, `severity=HIGH`, `entityType=CONTRACT`.
+
+### Limites actuelles
+
+L’export Excel, les alertes automatiques de fraude, l’audit légal avancé, la conservation réglementaire complexe, le diff visuel avancé et la signature cryptographique ne sont pas inclus dans cette étape.

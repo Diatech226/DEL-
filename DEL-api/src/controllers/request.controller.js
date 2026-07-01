@@ -3,6 +3,7 @@ const EquipmentRequest = require('../models/EquipmentRequest');
 const Equipment = require('../models/Equipment');
 const Proposal = require('../models/Proposal');
 const asyncHandler = require('../utils/asyncHandler');
+const { auditCreate, auditStatusChange } = require('../utils/audit');
 const { hasScheduleConflict, createScheduleForEquipment, normalizePeriod } = require('../utils/equipmentSchedule.service');
 const createNotification = require('../utils/createNotification');
 
@@ -36,7 +37,7 @@ function scoreEquipment(equipment, request) {
   return { score, reasons };
 }
 
-exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); if (req.user && !data.companyUserId) data.companyUserId = req.user._id; const item = await EquipmentRequest.create(data); res.status(201).json({ success: true, data: item }); });
+exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); if (req.user && !data.companyUserId) data.companyUserId = req.user._id; const item = await EquipmentRequest.create(data); await auditCreate(req, 'REQUEST', 'REQUEST', item, 'Demande créé'); res.status(201).json({ success: true, data: item }); });
 exports.getRequests = asyncHandler(async (req, res) => { const items = await EquipmentRequest.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getRequestById = asyncHandler(async (req, res) => { const item = await EquipmentRequest.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
 exports.getRequestMatches = asyncHandler(async (req, res) => {
@@ -95,8 +96,8 @@ exports.createProposalFromRequest = asyncHandler(async (req, res) => {
   if (request.companyUserId) await createNotification({ recipientUserId: request.companyUserId, recipientRole: 'COMPANY', recipientName: request.companyName, title: 'Nouvelle proposition DEL', message: 'Une proposition a été préparée pour votre demande.', type: 'PROPOSAL_CREATED', relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: 'HIGH' });
   await Promise.all([...ownerGroups.values()].filter((o) => o.ownerUserId).map((o) => createNotification({ recipientUserId: o.ownerUserId, recipientRole: 'OWNER', recipientName: o.ownerName, title: 'Nouvelle proposition pour votre engin', message: 'Votre engin a été sélectionné dans une proposition DEL.', type: 'PROPOSAL_CREATED', relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: 'HIGH' })));
   await Equipment.updateMany({ _id: { $in: data.equipmentIds } }, { status: 'RESERVED' }, { runValidators: true });
-  res.status(201).json({ success: true, data: proposal });
+  await auditCreate(req, 'PROPOSAL', 'PROPOSAL', proposal, 'Proposition créée depuis une demande', 'NORMAL', ['title']); res.status(201).json({ success: true, data: proposal });
 });
 exports.updateRequest = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await EquipmentRequest.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
-exports.updateRequestStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const item = await EquipmentRequest.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); if (item.companyUserId) await createNotification({ recipientUserId: item.companyUserId, recipientRole: 'COMPANY', recipientName: item.companyName, title: 'Statut de demande mis à jour', message: `Votre demande est maintenant ${status}.`, type: 'REQUEST_STATUS_UPDATED', relatedEntityType: 'REQUEST', relatedEntityId: item._id, actionUrl: '/dashboard/requests' }); res.json({ success: true, data: item }); });
+exports.updateRequestStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const before = await EquipmentRequest.findById(req.params.id); const item = before && await EquipmentRequest.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); if (item.companyUserId) await createNotification({ recipientUserId: item.companyUserId, recipientRole: 'COMPANY', recipientName: item.companyName, title: 'Statut de demande mis à jour', message: `Votre demande est maintenant ${status}.`, type: 'REQUEST_STATUS_UPDATED', relatedEntityType: 'REQUEST', relatedEntityId: item._id, actionUrl: '/dashboard/requests' }); await auditStatusChange(req, 'REQUEST', 'REQUEST', item, before?.status, item.status, `Statut demande changé de ${before?.status || '—'} à ${item.status}`); res.json({ success: true, data: item }); });
 exports.deleteRequest = asyncHandler(async (req, res) => { const item = await EquipmentRequest.findByIdAndDelete(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });

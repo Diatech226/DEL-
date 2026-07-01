@@ -15,6 +15,7 @@ app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.use('/api/health', require('./src/routes/health.routes'));
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/settings', require('./src/routes/settings.routes'));
+app.use('/api/audit-logs', require('./src/routes/audit.routes'));
 app.use('/api/me', require('./src/routes/me.routes'));
 const notificationRoutes = require('./src/routes/notification.routes');
 app.use('/api/notifications', notificationRoutes);

@@ -1,6 +1,7 @@
 const { z } = require('zod');
 const Equipment = require('../models/Equipment');
 const asyncHandler = require('../utils/asyncHandler');
+const { auditCreate, auditStatusChange } = require('../utils/audit');
 const createNotification = require('../utils/createNotification');
 
 const equipmentSchema = z.object({
@@ -18,9 +19,9 @@ const equipmentSchema = z.object({
 const updateSchema = equipmentSchema.partial();
 const statusSchema = z.object({ status: z.enum(['DRAFT','PENDING_REVIEW','AVAILABLE','RESERVED','PLACED','UNDER_MAINTENANCE','SOLD','REJECTED']) });
 
-exports.createEquipment = asyncHandler(async (req, res) => { const data = equipmentSchema.parse(req.body); if (req.user && !data.ownerUserId) data.ownerUserId = req.user._id; const equipment = await Equipment.create(data); res.status(201).json({ success: true, data: equipment }); });
+exports.createEquipment = asyncHandler(async (req, res) => { const data = equipmentSchema.parse(req.body); if (req.user && !data.ownerUserId) data.ownerUserId = req.user._id; const equipment = await Equipment.create(data); await auditCreate(req, 'EQUIPMENT', 'EQUIPMENT', equipment, 'Engin créé'); res.status(201).json({ success: true, data: equipment }); });
 exports.getEquipment = asyncHandler(async (req, res) => { const items = await Equipment.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getEquipmentById = asyncHandler(async (req, res) => { const item = await Equipment.findById(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); res.json({ success: true, data: item }); });
 exports.updateEquipment = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await Equipment.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); res.json({ success: true, data: item }); });
-exports.updateEquipmentStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const item = await Equipment.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); if (item.ownerUserId) await createNotification({ recipientUserId: item.ownerUserId, recipientRole: 'OWNER', recipientName: item.ownerName, title: 'Statut engin mis à jour', message: `Le statut de votre engin est maintenant ${status}.`, type: 'EQUIPMENT_STATUS_UPDATED', relatedEntityType: 'EQUIPMENT', relatedEntityId: item._id, actionUrl: '/dashboard/equipment' }); res.json({ success: true, data: item }); });
+exports.updateEquipmentStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const before = await Equipment.findById(req.params.id); const item = before && await Equipment.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); if (item.ownerUserId) await createNotification({ recipientUserId: item.ownerUserId, recipientRole: 'OWNER', recipientName: item.ownerName, title: 'Statut engin mis à jour', message: `Le statut de votre engin est maintenant ${status}.`, type: 'EQUIPMENT_STATUS_UPDATED', relatedEntityType: 'EQUIPMENT', relatedEntityId: item._id, actionUrl: '/dashboard/equipment' }); await auditStatusChange(req, 'EQUIPMENT', 'EQUIPMENT', item, before?.status, item.status, `Statut engin changé de ${before?.status || '—'} à ${item.status}`); res.json({ success: true, data: item }); });
 exports.deleteEquipment = asyncHandler(async (req, res) => { const item = await Equipment.findByIdAndDelete(req.params.id); if (!item) return res.status(404).json({ success: false, message: 'Engin introuvable' }); res.json({ success: true, data: item }); });

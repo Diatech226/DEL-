@@ -110,3 +110,9 @@ export async function downloadReport(path, filename = 'DEL-rapport.pdf') {
   const link = document.createElement('a');
   link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
+
+function qs(filters = {}) { const params = new URLSearchParams(); Object.entries(filters).forEach(([k,v]) => { if (v !== undefined && v !== null && v !== '') params.set(k, v); }); const s = params.toString(); return s ? `?${s}` : ''; }
+export const getAuditLogs = (filters = {}) => request(`/api/audit-logs${qs(filters)}`, { auth: true });
+export const getAuditLogById = (id) => request(`/api/audit-logs/${id}`, { auth: true });
+export const getAuditLogsByEntity = (entityType, entityId) => request(`/api/audit-logs/entity/${entityType}/${entityId}`, { auth: true });
+export const deleteAuditLog = (id) => request(`/api/audit-logs/${id}`, { method: 'DELETE', auth: true });
