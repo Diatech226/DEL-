@@ -444,3 +444,42 @@ L’utilitaire `createAuditLog` ne bloque jamais l’action métier : toute erre
 ### Limites actuelles
 
 L’export Excel, les alertes automatiques de fraude, l’audit légal avancé, la conservation réglementaire complexe, le diff visuel avancé et la signature cryptographique ne sont pas inclus dans cette étape.
+
+## Exports administratifs
+
+Les exports sont générés par DEL-api et sont disponibles uniquement pour les administrateurs authentifiés avec un token Bearer. Toutes les routes acceptent les filtres `dateFrom`, `dateTo`, `status` et `limit` lorsque cela s’applique.
+
+### Routes disponibles
+
+- `GET /api/exports/equipment?format=csv|json`
+- `GET /api/exports/requests?format=csv|json`
+- `GET /api/exports/tenders?format=csv|json`
+- `GET /api/exports/proposals?format=csv|json`
+- `GET /api/exports/contracts?format=csv|json`
+- `GET /api/exports/invoices?format=csv|json`
+- `GET /api/exports/payments?format=csv|json`
+- `GET /api/exports/missions?format=csv|json`
+- `GET /api/exports/maintenance?format=csv|json`
+- `GET /api/exports/documents?format=csv|json`
+- `GET /api/exports/users?format=csv|json`
+- `GET /api/exports/audit-logs?format=csv|json`
+- `GET /api/exports/full-backup?format=json`
+
+### Formats et sécurité
+
+- `csv` est le format par défaut et inclut un BOM UTF-8 pour une ouverture correcte des accents dans Excel.
+- `json` retourne les objets complets lorsque l’export le permet.
+- `users` et `full-backup` excluent toujours `passwordHash`.
+- Chaque export crée une entrée d’audit `EXPORT` si le module audit est disponible. Le full backup est audité en sévérité `HIGH`.
+
+### Limites actuelles
+
+Le full backup JSON est un export administratif de reporting, de contrôle interne et de sauvegarde manuelle. Ce n’est pas une sauvegarde MongoDB complète et il ne permet pas une restauration automatique de base de données. Les exports sont limités par le paramètre `limit` pour éviter de surcharger l’API.
+
+### Scénario de test manuel
+
+1. Démarrer l’API : `npm install && npm run dev`.
+2. Appeler une route sans token admin et vérifier une réponse `401`.
+3. Appeler une route avec un utilisateur non admin et vérifier une réponse `403`.
+4. Depuis DEL-cms, télécharger Engins CSV/JSON, Contrats CSV, Factures CSV, Paiements CSV, Audit logs JSON et Full backup JSON.
+5. Vérifier les noms de fichiers `DEL-<resource>-YYYY-MM-DD.<format>`, l’absence de `passwordHash`, les accents CSV et la création des audits.

@@ -219,3 +219,26 @@ Le dashboard calcule des statistiques simples à partir des audit logs récents 
 ### Limites actuelles
 
 Cette étape n’ajoute pas d’export Excel, d’alertes automatiques, de diff visuel avancé ou de fonctionnalités réglementaires complexes. L’historique récent dans les pages détail métier pourra être ajouté ultérieurement si nécessaire.
+
+## Module Exports & sauvegarde
+
+DEL-cms expose une page administrateur `/exports` pour télécharger les données importantes produites par DEL-api.
+
+### Exports disponibles
+
+La page permet de télécharger en CSV ou JSON : engins, demandes simples, appels d’offres, propositions, contrats, factures, paiements, missions, maintenance, documents, utilisateurs et audit logs. Une section séparée permet aussi de télécharger la sauvegarde administrative complète en JSON uniquement.
+
+### Filtres
+
+Les filtres globaux disponibles sont : `dateFrom`, `dateTo`, `status` et `limit`. Ils sont transmis à DEL-api sous forme de query params sur `/api/exports/:resource`.
+
+### Sécurité et limites
+
+Les téléchargements envoient le token admin stocké côté navigateur. DEL-api refuse les requêtes sans token ou sans rôle `ADMIN`. La sauvegarde complète JSON est un export administratif, pas une restauration MongoDB ; elle sert au contrôle interne, au reporting et à la sauvegarde manuelle.
+
+### Scénario de test manuel
+
+1. Démarrer DEL-api : `cd DEL-api && npm install && npm run dev`.
+2. Démarrer DEL-cms : `cd DEL-cms && npm install && npm run dev -- -p 3001`.
+3. Se connecter comme administrateur, ouvrir `/exports`, puis télécharger Engins CSV/JSON, Contrats CSV, Factures CSV, Paiements CSV, Audit logs JSON et Full backup JSON.
+4. Vérifier les téléchargements, les noms de fichiers, l’absence de `passwordHash` dans les exports utilisateurs/full backup et la création des entrées audit.
