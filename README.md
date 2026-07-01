@@ -13,7 +13,7 @@ DEL/
 
 Chaque application est autonome : aucun workspace obligatoire, aucun package partagé et aucune dépendance locale entre applications.
 
-Le `package.json` racine sert uniquement à lancer les applications ensemble ou individuellement depuis la racine du projet.
+Le `package.json` racine sert uniquement à lancer les applications ensemble ou individuellement depuis la racine du projet avec `concurrently`.
 
 ## Applications
 
@@ -37,40 +37,43 @@ Copier les fichiers `.env.example` de chaque application vers `.env` puis adapte
 - `DEL-web/.env.example`
 - `DEL-cms/.env.example`
 
-## Installation de tout le projet
+Valeurs locales minimales :
+
+- `DEL-api/.env` : `PORT=5000` et une valeur `MONGODB_URI` MongoDB valide pour utiliser les routes qui lisent ou écrivent en base.
+- `DEL-web/.env` : `NEXT_PUBLIC_API_URL=http://localhost:5000`
+- `DEL-cms/.env` : `NEXT_PUBLIC_API_URL=http://localhost:5000`
+
+En développement, l’API peut démarrer sans `MONGODB_URI` pour exposer `/api/health`, mais les routes métier nécessitent MongoDB.
+
+## Commandes
+
+### Installation racine
 
 ```bash
 npm install
+```
+
+### Installation des apps
+
+```bash
 npm run install:all
 ```
 
-## Lancer les applications depuis la racine
-
-### Lancer les trois apps
+### Lancer tout
 
 ```bash
 npm run dev
 ```
 
-### Lancer seulement l’API
+### Lancer séparément
 
 ```bash
 npm run dev:api
-```
-
-### Lancer seulement le site web
-
-```bash
 npm run dev:web
-```
-
-### Lancer seulement le CMS
-
-```bash
 npm run dev:cms
 ```
 
-## Lancer les applications séparément
+## Lancer les applications depuis leurs dossiers
 
 ### API
 
@@ -80,7 +83,7 @@ npm install
 npm run dev
 ```
 
-### WEB
+### Web
 
 ```bash
 cd DEL-web
@@ -93,7 +96,7 @@ npm run dev
 ```bash
 cd DEL-cms
 npm install
-npm run dev -- -p 3001
+npm run dev
 ```
 
 ## Vérifications locales
@@ -101,6 +104,18 @@ npm run dev -- -p 3001
 - API : http://localhost:5000/api/health
 - Web : http://localhost:3000
 - CMS : http://localhost:3001
+
+## Dépannage Windows EPERM avec Next.js
+
+Si Windows affiche une erreur `EPERM` sur `DEL-cms/.next/package.json`, `DEL-cms/.next/trace` ou un fichier équivalent :
+
+- arrêter tous les serveurs ;
+- fermer les anciens terminaux ;
+- fermer VS Code si nécessaire lorsque le dossier `.next` reste verrouillé ;
+- relancer PowerShell en administrateur si le verrou persiste ;
+- supprimer `DEL-cms/.next` et `DEL-web/.next` manuellement ;
+- relancer `npm run dev` ;
+- éviter deux processus Next sur le même dossier.
 
 ## Déploiement recommandé
 

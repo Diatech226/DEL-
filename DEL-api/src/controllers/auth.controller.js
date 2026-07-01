@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+const { hashPassword, verifyPassword } = require('../utils/password');
 const User = require('../models/User');
 const { signToken } = require('../utils/jwt');
 const { createAuditLog } = require('../utils/audit');
@@ -15,7 +15,7 @@ async function register(req, res) {
   if (email) or.push({ email: String(email).toLowerCase().trim() });
   if (phone) or.push({ phone: String(phone).trim() });
   if (or.length && await User.findOne({ $or: or })) return res.status(409).json({ success: false, message: 'Email ou téléphone déjà utilisé' });
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await hashPassword(password);
   const user = await User.create({ fullName, email, phone, passwordHash, role, accountType, country, city, status: 'PENDING' });
   await createAuditLog({ req, actorUserId: user._id, actorName: user.fullName, actorRole: user.role, action: 'REGISTER', module: 'AUTH', entityType: 'USER', entityId: user._id, entityLabel: user.fullName, message: 'Nouvel utilisateur inscrit' });
   return sendAuth(res, user);
@@ -26,7 +26,7 @@ async function login(req, res) {
   if (!identifier || !password) return res.status(400).json({ success: false, message: 'Identifiant et mot de passe requis' });
   const ident = String(identifier).trim();
   const user = await User.findOne({ $or: [{ email: ident.toLowerCase() }, { phone: ident }] }).select('+passwordHash');
-  if (!user || !user.passwordHash || !(await bcrypt.compare(password, user.passwordHash))) return res.status(401).json({ success: false, message: 'Non autorisé' });
+  if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) return res.status(401).json({ success: false, message: 'Non autorisé' });
   if (user.status === 'SUSPENDED') return res.status(401).json({ success: false, message: 'Non autorisé' });
   user.lastLoginAt = new Date();
   await user.save();

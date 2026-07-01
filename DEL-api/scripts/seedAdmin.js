@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+const { hashPassword } = require('../src/utils/password');
 const connectDB = require('../src/config/db');
 const env = require('../src/config/env');
 const User = require('../src/models/User');
@@ -6,7 +6,7 @@ const User = require('../src/models/User');
 async function run() {
   await connectDB();
   if (!env.adminEmails.length) throw new Error('ADMIN_EMAILS est vide.');
-  const passwordHash = await bcrypt.hash('changer-moi-123', 10);
+  const passwordHash = await hashPassword('changer-moi-123');
   for (const email of env.adminEmails) {
     const existing = await User.findOne({ email });
     if (existing) {
