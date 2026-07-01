@@ -162,3 +162,15 @@ Le client `downloadReport(path, filename)` dans `src/lib/api.js` envoie le token
 Limites actuelles : les PDF sont générés par DEL-api et restent des documents simples ; ils ne constituent pas une signature électronique officielle. Pas de QR code, stockage cloud, cache PDF ou envoi email automatique.
 
 Scénario de test : se connecter avec un compte OWNER puis télécharger une fiche engin et les documents liés ; se connecter avec un compte COMPANY puis télécharger les propositions, contrats, factures et missions liés.
+
+## Paramètres publics DEL
+
+DEL-web lit `GET /api/settings/public` via `getPublicSettings()` sans token. La page d’accueil utilise les textes publics (`homepageHeroTitle`, `homepageHeroSubtitle`, `homepageCtaText`) et les informations de plateforme avec fallback local si l’API est indisponible.
+
+La Navbar/Footer affichent au minimum le nom de plateforme, le nom légal et les coordonnées publiques. Les pages `/conditions` et `/confidentialite` affichent les textes légaux configurés dans le CMS ou un message indiquant que le texte est à compléter.
+
+Les formulaires publics utilisent les devises activées avec fallback `XOF`, `USD`, `EUR`. Les notices CMS sont affichées sur dépôt d’engin, demande d’engins et appel d’offres. Si les options publiques sont désactivées, le formulaire concerné est bloqué.
+
+Limites actuelles : thème non entièrement dynamique, pages légales simples sans éditeur riche, aucune gestion multi-tenant.
+
+Scénario de test : modifier les paramètres depuis DEL-cms, vérifier l’accueil, `/conditions`, `/confidentialite`, puis désactiver/réactiver le dépôt public pour vérifier le blocage du formulaire.

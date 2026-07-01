@@ -1,0 +1,11 @@
+const defaultSettings = {
+  key: 'default',
+  platformName: 'DEL', legalName: 'DEL', slogan: 'Plateforme de placement, location et gestion d’engins industriels', description: 'DEL connecte propriétaires d’engins et entreprises industrielles.', logoUrl: '', faviconUrl: '', primaryColor: '#1f2933', secondaryColor: '#14532d', accentColor: '#d6a31a',
+  email: '', phone: '', whatsapp: '', website: '', address: '', country: '', city: '',
+  rccm: '', ifu: '', taxNumber: '', registrationNumber: '',
+  defaultCurrency: 'XOF', enabledCurrencies: ['XOF', 'USD', 'EUR'], defaultPlatformCommissionRate: 10, defaultTaxRate: 0, invoicePrefix: 'DEL-INV', contractPrefix: 'DEL-CTR', paymentPrefix: 'DEL-PAY',
+  allowPublicEquipmentSubmission: true, allowPublicRequestSubmission: true, requireAdminApprovalForEquipment: true, requireAdminApprovalForRequests: true, requireDocumentsForVerification: true, enableTenderModule: true, enableTenderSubmissions: true, enableScoring: true, enablePdfReports: true, enableInternalMessaging: true, enableNotifications: true,
+  termsOfService: 'Conditions générales à personnaliser depuis le CMS DEL.', privacyPolicy: 'Politique de confidentialité à personnaliser depuis le CMS DEL.', rentalTerms: 'Conditions de location à personnaliser depuis le CMS DEL.', ownerTerms: 'Conditions propriétaires à personnaliser depuis le CMS DEL.', companyTerms: 'Conditions entreprises à personnaliser depuis le CMS DEL.', investmentDisclaimer: 'Avertissement investissement à personnaliser depuis le CMS DEL.', paymentTerms: 'Conditions de paiement à personnaliser depuis le CMS DEL.', contractLegalNotice: 'Mention légale contrat à personnaliser depuis le CMS DEL.', invoiceLegalNotice: 'Mention légale facture à personnaliser depuis le CMS DEL.',
+  homepageHeroTitle: 'DEL connecte les propriétaires d’engins aux entreprises qui bâtissent l’Afrique industrielle.', homepageHeroSubtitle: 'Déposez un engin, publiez un besoin, puis laissez DEL qualifier et matcher les opportunités.', homepageCtaText: 'Voir les engins', equipmentSubmissionNotice: 'Votre engin sera vérifié par l’administration DEL avant publication.', requestSubmissionNotice: 'Votre demande sera analysée par l’équipe DEL avant matching.', tenderSubmissionNotice: 'Votre appel d’offres sera étudié par l’équipe DEL avant traitement.'
+};
+module.exports = { defaultSettings };

@@ -11,10 +11,10 @@ function createPdfDocument(res, filename) {
   return doc;
 }
 function ensureSpace(doc, h = 60) { if (doc.y + h > doc.page.height - 72) doc.addPage(); }
-function addHeader(doc, title) {
+function addHeader(doc, title, settings = {}) {
   doc.rect(0, 0, doc.page.width, 92).fill(COLORS.charcoal);
-  doc.fillColor(COLORS.gold).fontSize(28).font('Helvetica-Bold').text('DEL', 48, 28, { continued: false });
-  doc.fillColor('white').fontSize(10).font('Helvetica').text('Plateforme de gestion d’engins industriels', 48, 60);
+  doc.fillColor(COLORS.gold).fontSize(28).font('Helvetica-Bold').text(settings.platformName || 'DEL', 48, 28, { continued: false });
+  doc.fillColor('white').fontSize(10).font('Helvetica').text(settings.legalName || 'Plateforme de gestion d’engins industriels', 48, 60);
   doc.moveDown(3);
   doc.fillColor(COLORS.charcoal).fontSize(20).font('Helvetica-Bold').text(title, 48, 118);
   doc.fillColor(COLORS.gray).fontSize(9).font('Helvetica').text(`Date de génération : ${formatDate(new Date())}`, 48, 144);

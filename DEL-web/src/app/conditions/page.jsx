@@ -1,0 +1,3 @@
+import {getPublicSettings} from '../../lib/api';
+const empty='Texte à compléter par l’administration DEL.';function Block({title,text}){return <section className="card"><h2 className="text-2xl font-black">{title}</h2><p className="mt-3 whitespace-pre-wrap text-gray-700">{text||empty}</p></section>}
+export default async function Conditions(){let s={};try{s=await getPublicSettings()}catch{}return <main className="mx-auto max-w-4xl space-y-6 px-6 py-12"><h1 className="text-4xl font-black">Conditions</h1><Block title="Conditions générales" text={s.termsOfService}/><Block title="Conditions de location" text={s.rentalTerms}/><Block title="Conditions propriétaires" text={s.ownerTerms}/><Block title="Conditions entreprises" text={s.companyTerms}/></main>}
