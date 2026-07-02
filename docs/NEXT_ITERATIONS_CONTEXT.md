@@ -265,3 +265,60 @@ curl http://localhost:5000/api/health
 ### Prochaine étape recommandée
 
 Migrer par lot les pages métier les plus importantes vers les composants UI locaux : demandes, propositions, contrats, factures, engins et documents. Priorité : détails `requests/[id]`, `proposals/[id]`, `contracts/[id]`, `invoices/[id]`, `equipment/[id]`, puis formulaires web.
+
+## Préparation déploiement production
+
+### Variables nécessaires
+
+API (`DEL-api`) :
+
+- `PORT=5000`
+- `NODE_ENV=production`
+- `MONGODB_URI` obligatoire en production, à fournir depuis MongoDB Atlas.
+- `CORS_ORIGINS` obligatoire à maintenir avec les domaines Vercel finaux, séparés par virgule.
+- `JWT_SECRET` obligatoire en production et différent de la valeur de développement.
+- `JWT_EXPIRES_IN=7d`
+- `ADMIN_EMAILS` pour le seed des comptes administrateurs.
+- `APP_URL`, `CMS_URL`, `API_URL` pour documenter les URLs publiques des trois services.
+
+Web (`DEL-web`) :
+
+- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_APP_NAME=DEL`
+
+CMS (`DEL-cms`) :
+
+- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_APP_NAME=DEL`
+- `NEXT_PUBLIC_WEB_URL`
+
+### État de préparation
+
+- Les scripts de production restent indépendants par app : `npm start` côté API, `next build` puis `next start -p 3000` côté Web, `next build` puis `next start -p 3001` côté CMS.
+- `CORS_ORIGINS` supporte plusieurs domaines séparés par virgule et conserve des valeurs localhost par défaut hors production.
+- `helmet` est activé dans Express.
+- `express.json` est limité à `1mb`.
+- Les réponses d'erreur ne renvoient pas de stack en production.
+- `passwordHash` est exclu par défaut des requêtes Mongoose et supprimé du JSON utilisateur.
+- `JWT_SECRET` et `MONGODB_URI` sont maintenant obligatoires au démarrage lorsque `NODE_ENV=production`.
+- `render.yaml` est présent à la racine pour faciliter un déploiement Render sans secrets commités.
+- `docs/DEPLOYMENT_CHECKLIST.md` liste les étapes de mise en production.
+
+### Risques
+
+- Les URLs Vercel définitives devront être copiées dans `CORS_ORIGINS` après le premier déploiement Web/CMS, sinon le navigateur bloquera les appels API.
+- Les seeds production nécessitent une connexion MongoDB Atlas valide et les variables `ADMIN_EMAILS`, `MONGODB_URI` et `JWT_SECRET` disponibles dans l'environnement du shell/API.
+- Le mot de passe temporaire admin `changer-moi-123` doit être changé rapidement après la première connexion si le changement de mot de passe est disponible.
+- Les workflows métier critiques, PDF et exports doivent être validés avec de vraies données Atlas avant ouverture utilisateur.
+- L'absence de rate limiting et de tests end-to-end reste un point de durcissement pour une production publique.
+
+### Prochaines actions
+
+1. Créer le cluster MongoDB Atlas et configurer l'IP access.
+2. Déployer DEL-api sur Render, Railway ou Fly.io avec les variables de production.
+3. Vérifier `GET /api/health` sur l'URL publique API.
+4. Déployer DEL-web sur Vercel avec `Root Directory: DEL-web`.
+5. Déployer DEL-cms sur Vercel avec `Root Directory: DEL-cms`.
+6. Mettre à jour `CORS_ORIGINS` côté API avec les deux URLs Vercel finales.
+7. Lancer `npm run seed:admin` puis `npm run seed:settings` dans l'environnement API production.
+8. Tester login CMS, workflow simple, PDF et exports.
