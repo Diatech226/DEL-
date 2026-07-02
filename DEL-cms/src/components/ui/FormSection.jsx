@@ -1,0 +1,1 @@
+import Card from './Card';export default function FormSection({title,description,children}){return <Card><h2 className="text-lg font-black">{title}</h2>{description&&<p className="mt-1 text-sm text-slate-500">{description}</p>}<div className="mt-4 grid gap-4">{children}</div></Card>}

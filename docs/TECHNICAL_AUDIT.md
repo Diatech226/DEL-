@@ -141,3 +141,11 @@ Points positifs : séparation claire routes/controllers/models/utils. Points à 
 ## Audit workflow central
 
 Le cœur business DEL est maintenant représenté côté API par des routes explicites pour matching, proposition, décisions, contrat, facture, mission et résumé workflow. Les modèles ont été alignés avec les statuts nécessaires au cycle central. Limites actuelles : les tests automatisés restent des tests d'import/recalcul sans base MongoDB; le scénario manuel complet doit encore être rejoué avec les trois applications lancées et des comptes réels.
+
+## Audit technique — refonte UI/UX
+
+- Ajout de composants UI locaux séparés entre DEL-web et DEL-cms, sans workspace ni package partagé.
+- Ajout de mappings locaux de statuts dans chaque frontend (`src/lib/status.js`) afin d’éviter une dépendance commune.
+- Les appels API existants ont été conservés. Les tokens restent lus via `localStorage` uniquement côté client grâce aux gardes `typeof window` déjà présents.
+- La page CMS `/workflows` calcule un avancement simple à partir des listes existantes lorsque l’API workflow détaillée n’est pas disponible.
+- Builds validés pour DEL-web et DEL-cms. Le warning npm `Unknown env config "http-proxy"` provient de l’environnement npm et ne bloque pas la compilation.

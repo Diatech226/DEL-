@@ -89,3 +89,15 @@ Les pages client appellent DEL-api via `NEXT_PUBLIC_API_URL`. Sans API disponibl
 ## Workflow central dans les dashboards
 
 Les dashboards entreprise et propriétaire consomment les routes `/api/me/*` pour afficher demandes, propositions, contrats, factures et missions. Les décisions de proposition passent par `PATCH /api/me/proposals/:id/company-decision` pour l'entreprise et `PATCH /api/me/proposals/:id/owner-decision` pour les propriétaires. Les pages doivent toujours afficher loading, erreur, état vide et message de succès après action.
+
+## UI/UX refondue — interface industrielle premium
+
+Cette itération renforce l’identité DEL côté web public et espace utilisateur :
+
+- page d’accueil refondue avec hero premium, statistiques, capacités, étapes, blocs propriétaires/entreprises, appels d’offres et CTA final ;
+- navbar responsive avec navigation claire, CTA visible, accès dashboard et menu mobile ;
+- footer enrichi avec positionnement DEL, coordonnées publiques si disponibles et liens légaux/opérationnels ;
+- composants UI locaux ajoutés dans `src/components/ui` : `Button`, `Card`, `Badge`, `StatCard`, `EmptyState`, `LoadingState`, `ErrorState`, `PageHeader`, `SectionTitle`, `StatusBadge` ;
+- mapping local des statuts dans `src/lib/status.js` pour labels français et variantes couleur.
+
+Limites restantes : certaines pages dashboard et formulaires conservent leur logique fonctionnelle existante et pourront être harmonisés plus finement composant par composant lors de la prochaine itération.

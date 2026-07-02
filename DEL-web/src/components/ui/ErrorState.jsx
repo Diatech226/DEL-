@@ -1,0 +1,1 @@
+import Button from './Button';export default function ErrorState({message='Une erreur est survenue.',onRetry}){return <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900"><b>Erreur</b><p className="mt-1">{message}</p>{onRetry&&<Button type="button" variant="danger" className="mt-4" onClick={onRetry}>Réessayer</Button>}</div>}

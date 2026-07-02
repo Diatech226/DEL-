@@ -1,0 +1,1 @@
+export default function SectionTitle({kicker,title,description}){return <div className="mx-auto max-w-3xl text-center">{kicker&&<p className="font-black uppercase tracking-wide text-gold">{kicker}</p>}<h2 className="mt-2 text-3xl font-black text-coal md:text-4xl">{title}</h2>{description&&<p className="mt-3 text-slate-600">{description}</p>}</div>}

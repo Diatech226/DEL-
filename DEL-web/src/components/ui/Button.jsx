@@ -1,0 +1,3 @@
+import Link from 'next/link';
+const styles={primary:'bg-gold text-coal hover:bg-yellow-400',secondary:'bg-coal text-white hover:bg-slate-800',outline:'border border-slate-300 bg-white text-slate-900 hover:border-gold',ghost:'text-slate-700 hover:bg-slate-100',danger:'bg-red-600 text-white'};
+export default function Button({href,variant='primary',className='',children,...props}){const c=`inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-black transition ${styles[variant]||styles.primary} ${className}`;return href?<Link href={href} className={c} {...props}>{children}</Link>:<button className={c} {...props}>{children}</button>}

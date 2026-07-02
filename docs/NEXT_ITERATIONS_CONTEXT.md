@@ -235,3 +235,33 @@ curl http://localhost:5000/api/health
 - Écrans CMS détaillés avec timeline enrichie et formulaires préremplis.
 - Dashboards web avec filtres par rôle et vues détail proposition.
 - Tests d'intégration MongoDB dédiés au cycle complet.
+
+## UI/UX refondue
+
+### Ce qui a été amélioré
+
+- Identité visuelle DEL renforcée : palette bleu nuit/graphite, accent chantier, cartes blanches, statuts lisibles et tonalité industrielle premium.
+- DEL-web dispose maintenant d’une page d’accueil plus claire, orientée propriétaires, entreprises, appels d’offres et pilotage opérationnel.
+- DEL-cms dispose d’un dashboard admin plus exploitable avec indicateurs, alertes, raccourcis et activité récente.
+- Navigation améliorée sur DEL-web et DEL-cms, avec menus responsive.
+
+### Pages refondues
+
+- DEL-web : accueil, navbar, footer.
+- DEL-cms : dashboard administrateur, sidebar admin, nouvelle page `/workflows`.
+
+### Composants ajoutés
+
+- DEL-web : composants UI locaux dans `DEL-web/src/components/ui` et statut local dans `DEL-web/src/lib/status.js`.
+- DEL-cms : composants UI locaux dans `DEL-cms/src/components/ui` et statut local dans `DEL-cms/src/lib/status.js`.
+- Aucun package partagé, workspace ou librairie UI lourde n’a été ajouté.
+
+### Problèmes restants
+
+- Les pages listes/détails et formulaires existants restent partiellement hétérogènes : elles compilent, mais toutes ne sont pas encore migrées vers les nouveaux composants UI.
+- Les tests manuels complets avec API et navigateurs doivent être faits dans un environnement persistant avec données de démonstration.
+- Les pages CMS placeholder (`messages`, `scoring`, certains lots/soumissions) restent simples.
+
+### Prochaine étape recommandée
+
+Migrer par lot les pages métier les plus importantes vers les composants UI locaux : demandes, propositions, contrats, factures, engins et documents. Priorité : détails `requests/[id]`, `proposals/[id]`, `contracts/[id]`, `invoices/[id]`, `equipment/[id]`, puis formulaires web.
