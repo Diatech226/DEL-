@@ -1,47 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
+require('dotenv').config();
+
+const app = require('./src/app');
 const connectDB = require('./src/config/db');
 const env = require('./src/config/env');
-const notFound = require('./src/middlewares/notFound.middleware');
-const errorMiddleware = require('./src/middlewares/error.middleware');
 
-const app = express();
-app.use(helmet());
-app.use(cors({ origin: (origin, cb) => (!origin || env.corsOrigins.includes(origin) ? cb(null, true) : cb(new Error('Not allowed by CORS'))), credentials: true }));
-app.use(express.json());
-app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
-app.use('/api/health', require('./src/routes/health.routes'));
-app.use('/api/auth', require('./src/routes/auth.routes'));
-app.use('/api/settings', require('./src/routes/settings.routes'));
-app.use('/api/audit-logs', require('./src/routes/audit.routes'));
-app.use('/api/me', require('./src/routes/me.routes'));
-const notificationRoutes = require('./src/routes/notification.routes');
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/me/notifications', notificationRoutes.meRouter);
-app.use('/api/equipment', require('./src/routes/equipment.routes'));
-app.use('/api/users', require('./src/routes/user.routes'));
-app.use('/api/owner-profiles', require('./src/routes/ownerProfile.routes'));
-app.use('/api/company-profiles', require('./src/routes/companyProfile.routes'));
-app.use('/api/technician-profiles', require('./src/routes/technicianProfile.routes'));
+const start = async () => {
+  await connectDB();
+  app.listen(env.port, () => console.log(`DEL-api running on port ${env.port}`));
+};
 
-app.use('/api/requests', require('./src/routes/request.routes'));
-app.use('/api/tenders', require('./src/routes/tender.routes'));
-app.use('/api/tender-lots', require('./src/routes/tenderLot.routes'));
-app.use('/api/equipment-schedules', require('./src/routes/equipmentSchedule.routes'));
-app.use('/api/proposals', require('./src/routes/proposal.routes'));
-app.use('/api/documents', require('./src/routes/document.routes'));
-app.use('/api/reports', require('./src/routes/report.routes'));
-app.use('/api/exports', require('./src/routes/export.routes'));
-app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
-app.use('/api', require('./src/routes/mission.routes'));
-app.use('/api', require('./src/routes/missionReport.routes'));
-app.use('/api', require('./src/routes/contract.routes'));
-app.use('/api', require('./src/routes/invoice.routes'));
-app.use('/api', require('./src/routes/payment.routes'));
-app.use(notFound);
-app.use(errorMiddleware);
-
-const start = async () => { await connectDB(); app.listen(env.port, () => console.log(`DEL-api running on port ${env.port}`)); };
-start().catch((error) => { console.error(error.message); process.exit(1); });
+start().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});

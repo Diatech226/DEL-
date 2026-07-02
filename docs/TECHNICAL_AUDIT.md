@@ -110,3 +110,30 @@ Points positifs : séparation claire routes/controllers/models/utils. Points à 
 3. Ajouter tests health/auth.
 4. Durcir les routes admin.
 5. Transformer les placeholders messages/scoring/tender submissions en écrans d'état assumés ou modules complets.
+
+## Addendum API — stabilisation DEL-api (2026-07-01)
+
+### Problèmes trouvés
+
+- `server.js` configurait Express, connectait MongoDB et lançait `app.listen` dans le même fichier, ce qui empêchait de tester l’application avec un runner HTTP sans démarrer le serveur.
+- `DEL-api/package.json` ne contenait pas `bcryptjs` alors que le standard cible demande un hash de mot de passe via `bcryptjs`.
+- Aucun script `test` ni test minimal API n’était disponible.
+- Aucun `.npmrc` local ne forçait explicitement le registry officiel npm.
+- Le healthcheck ne contenait pas le champ `success` attendu par la normalisation API.
+
+### Corrections faites
+
+- Création de `DEL-api/src/app.js` pour configurer Express, les middlewares, les routes, le 404 et le gestionnaire d’erreurs global sans connexion MongoDB ni `listen`.
+- Simplification de `DEL-api/server.js` pour charger l’environnement, connecter MongoDB et démarrer le serveur.
+- Ajout de `.npmrc` local.
+- Ajout du script `test`, de `supertest` en devDependency et de tests `health` / `auth` basiques.
+- Ajout de `bcryptjs` et migration du helper password vers bcrypt, avec compatibilité de vérification pour les anciens hashes `scrypt:`.
+- Normalisation du healthcheck avec `{ success: true, status: "ok", service: "DEL-api" }`.
+- Mise à jour de `.env.example` et de `DEL-api/README.md`.
+
+### Risques restants
+
+- `npm install --prefix DEL-api` reste bloqué par l’environnement avec `403 Forbidden - GET https://registry.npmjs.org/bcryptjs`; les tests ne peuvent donc pas être exécutés localement tant que les dépendances API ne sont pas installées.
+- Les tests ajoutés couvrent uniquement la base de démarrage et la validation auth minimale; les routes métier doivent être couvertes avec une base MongoDB de test.
+- La messagerie métier, les tender submissions dédiées et le scoring restent des chantiers fonctionnels à finaliser.
+- Les permissions fines doivent encore être auditées avec des scénarios de rôles réels avant une mise en production.
