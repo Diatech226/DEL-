@@ -203,3 +203,16 @@ npm run build:all
 npm run dev
 curl http://localhost:5000/api/health
 ```
+
+## Mise à jour API — stabilisation DEL-api (2026-07-01)
+
+- `DEL-api/package.json` a été complété avec `bcryptjs`, `supertest` et le script `test` (`node --test`).
+- `DEL-api/.npmrc` force maintenant `https://registry.npmjs.org/` avec `strict-ssl=true` sans token ni secret.
+- L’application Express est séparée de `server.js` via `DEL-api/src/app.js` pour permettre les tests sans lancer `app.listen` ni connecter MongoDB.
+- `server.js` charge `dotenv`, connecte MongoDB via `connectDB()`, puis lance l’écoute sur `PORT`.
+- Le healthcheck `GET /api/health` retourne `{ success: true, status: "ok", service: "DEL-api" }`.
+- Des tests Node natifs ont été ajoutés pour le healthcheck et la validation minimale de `/api/auth/register` et `/api/auth/login`.
+- Le hashing de mot de passe utilise maintenant `bcryptjs`; les anciens hashes `scrypt:` restent vérifiables pour compatibilité.
+- `.env.example` documente les variables minimales et les URLs locales utiles.
+- Installation non validée dans cet environnement : `npm install --prefix DEL-api` échoue encore avec `403 Forbidden - GET https://registry.npmjs.org/bcryptjs`, ce qui confirme un blocage registry/environnement plutôt qu’un problème propre à `jsonwebtoken`.
+- Prochaine étape recommandée : relancer `npm install` dans un environnement avec accès npm autorisé, puis exécuter `npm run test`, `npm run dev` et un audit de permissions route par route avec MongoDB disponible.

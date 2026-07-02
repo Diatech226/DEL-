@@ -1,18 +1,16 @@
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { promisify } = require('util');
 
 const scrypt = promisify(crypto.scrypt);
 const KEY_LENGTH = 64;
+const BCRYPT_ROUNDS = 12;
 
 async function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const derivedKey = await scrypt(password, salt, KEY_LENGTH);
-  return `scrypt:${salt}:${derivedKey.toString('hex')}`;
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
-async function verifyPassword(password, storedHash) {
-  if (!storedHash || !storedHash.startsWith('scrypt:')) return false;
-
+async function verifyLegacyScryptPassword(password, storedHash) {
   const [, salt, key] = storedHash.split(':');
   if (!salt || !key) return false;
 
@@ -20,6 +18,16 @@ async function verifyPassword(password, storedHash) {
   const storedKey = Buffer.from(key, 'hex');
 
   return storedKey.length === derivedKey.length && crypto.timingSafeEqual(storedKey, derivedKey);
+}
+
+async function verifyPassword(password, storedHash) {
+  if (!storedHash) return false;
+
+  if (storedHash.startsWith('scrypt:')) {
+    return verifyLegacyScryptPassword(password, storedHash);
+  }
+
+  return bcrypt.compare(password, storedHash);
 }
 
 module.exports = { hashPassword, verifyPassword };

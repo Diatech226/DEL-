@@ -7,7 +7,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed:admin": "node scripts/seedAdmin.js",
-    "seed:settings": "node scripts/seedSettings.js"
+    "seed:settings": "node scripts/seedSettings.js",
+    "test": "node --test"
   },
   "keywords": [
     "del",
@@ -25,9 +26,11 @@
     "morgan": "^1.10.0",
     "zod": "^3.24.1",
     "jsonwebtoken": "^9.0.2",
-    "pdfkit": "^0.15.2"
+    "pdfkit": "^0.15.2",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0"
   }
 }

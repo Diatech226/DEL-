@@ -1,143 +1,126 @@
 # DEL-api
 
-API REST Express.js + MongoDB de la plateforme DEL.
-
-## Rôle
-
-DEL-api centralise les données métier : utilisateurs, profils, équipements, demandes, appels d'offres, propositions, contrats, documents, factures, paiements, missions, maintenance, notifications, audit, exports, paramètres et rapports PDF.
-
-## Stack
-
-- Node.js / Express.js
-- MongoDB / Mongoose
-- JWT pour l'authentification
-- Helmet, CORS, Morgan
-- PDFKit pour les rapports PDF
+API Express/MongoDB de la plateforme DEL. Elle sert les applications `DEL-web` et `DEL-cms` pour l’authentification, les profils, les équipements, les demandes, les appels d’offres, les propositions, les contrats, les factures, les paiements, les missions, la maintenance, les notifications, les paramètres, les exports, les rapports PDF et les journaux d’audit.
 
 ## Installation
 
 ```bash
+cd DEL-api
 npm install
-cp .env.example .env
 ```
 
-## Variables d'environnement
+Un fichier `.npmrc` local force le registry npm officiel :
 
-Voir `.env.example` :
+```ini
+registry=https://registry.npmjs.org/
+strict-ssl=true
+```
+
+## Configuration `.env`
+
+Copier `.env.example` vers `.env` puis renseigner au minimum :
 
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=
+MONGODB_URI=mongodb://localhost:27017/del
 CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 JWT_SECRET=change-me-in-production
 JWT_EXPIRES_IN=7d
 ADMIN_EMAILS=
 ```
 
-`MONGODB_URI` est obligatoire en production. En développement, l'API peut démarrer sans MongoDB mais les routes utilisant les modèles ne seront pas exploitables correctement.
+Aucun secret réel ne doit être versionné. En développement, l’API peut démarrer sans `MONGODB_URI` pour exposer le healthcheck, mais les routes métier nécessitent MongoDB.
 
 ## Scripts
 
 ```bash
-npm run dev
-npm run start
-npm run seed:admin
-npm run seed:settings
+npm run dev            # nodemon server.js
+npm start              # node server.js
+npm run test           # node --test
+npm run seed:admin     # crée / met à jour les administrateurs depuis ADMIN_EMAILS
+npm run seed:settings  # initialise les paramètres plateforme
 ```
+
+## Démarrage et healthcheck
+
+```bash
+npm run dev
+curl http://localhost:5000/api/health
+```
+
+Réponse attendue :
+
+```json
+{
+  "success": true,
+  "status": "ok",
+  "service": "DEL-api"
+}
+```
+
+## Tests
+
+Les tests utilisent le runner Node.js intégré et vérifient le healthcheck ainsi que la validation minimale de `/api/auth/register` et `/api/auth/login`.
+
+```bash
+npm run test
+```
+
+Les tests d’intégration métier complets nécessitent une base MongoDB via `MONGODB_URI`.
 
 ## Routes principales
 
-- `GET /api/health`
-- `/api/auth` : register, login, me, logout placeholder
-- `/api/me` : ressources utilisateur connectées
-- `/api/equipment`
-- `/api/requests`
-- `/api/tenders`
-- `/api/tender-lots`
-- `/api/proposals`
-- `/api/contracts`
-- `/api/documents`
-- `/api/invoices`
-- `/api/payments`
-- `/api/missions`
-- `/api/mission-reports`
-- `/api/maintenance`
-- `/api/equipment-schedules`
-- `/api/notifications`
-- `/api/settings`
-- `/api/audit-logs`
-- `/api/exports`
-- `/api/reports`
-- `/api/users`, `/api/owner-profiles`, `/api/company-profiles`, `/api/technician-profiles`
+- Public : `GET /api/health`, `GET /api/settings/public`, `POST /api/auth/register`, `POST /api/auth/login`.
+- Utilisateur connecté : `/api/auth/me`, `/api/me/*`, notifications utilisateur.
+- Administration : `/api/users`, validations de profils/documents, paramètres admin, audit logs, exports, changements de statuts sensibles.
+- Métier : équipements, demandes, appels d’offres, lots, propositions, contrats, documents, factures, paiements, missions, maintenance, planning.
+- Reporting : `/api/reports/*/:id/pdf`.
+- Exports : `/api/exports/equipment`, `/api/exports/requests`, `/api/exports/tenders`, `/api/exports/proposals`, `/api/exports/contracts`, `/api/exports/invoices`, `/api/exports/payments`, `/api/exports/missions`, `/api/exports/maintenance`, `/api/exports/documents`, `/api/exports/users`, `/api/exports/audit-logs`, `/api/exports/full-backup`.
 
-## Modules disponibles
+## Sécurité
 
-| Module | État |
-| --- | --- |
-| Auth | Présent, JWT, login/register/me |
-| Users | Présent CRUD + statut admin |
-| Owner/company/technician profiles | Présents, CRUD + validation admin |
-| Equipment | Présent, CRUD + statut |
-| Requests | Présent, CRUD, matching, création de proposition |
-| Tenders / tender lots | Présents, lots et matching partiels |
-| Tender submissions | Absent comme modèle dédié ; à formaliser |
-| Proposals | Présent, décisions entreprise/propriétaires |
-| Contracts | Présent, création depuis proposition |
-| Documents | Présent, validation admin |
-| Invoices | Présent, création depuis contrat |
-| Payments | Présent, paiements manuels |
-| Missions / mission reports | Présents |
-| Maintenance | Présent |
-| Planning | Présent via equipment schedules |
-| Notifications | Présent, admin et utilisateur connecté |
-| Conversations/messages | Absent comme modèle dédié |
-| Scoring | Partiel via matching, pas de modèle scoring dédié |
-| Reports PDF | Présent via `/api/reports/*/pdf` |
-| Settings | Présent |
-| Audit logs | Présent |
-| Exports | Présent CSV/JSON |
-| Health | Présent |
-
-## Authentification et administration
-
-- Le middleware `requireAuth` protège les routes connectées.
-- Le middleware `requireAdmin` protège les routes d'administration.
-- Les emails listés dans `ADMIN_EMAILS` peuvent être utilisés pour identifier les administrateurs selon la logique du projet.
-
-## Seeds
-
-```bash
-npm run seed:admin
-npm run seed:settings
-```
-
-Ces scripts initialisent respectivement un administrateur et les paramètres plateforme si les dépendances et MongoDB sont disponibles.
-
-## Structure
-
-```text
-server.js
-src/config/
-src/controllers/
-src/middlewares/
-src/models/
-src/routes/
-src/utils/
-scripts/
-```
+- Authentification JWT Bearer via `requireAuth`.
+- Administration via `requireAdmin` (`req.user.role === "ADMIN"`).
+- Rôles multiples via `requireRole`.
+- Authentification optionnelle via `optionalAuth` pour les routes publiques enrichies.
+- Les mots de passe sont hashés avec `bcryptjs`. Les anciens hashes `scrypt:` restent vérifiables pour compatibilité.
+- Les réponses utilisateur n’exposent pas `passwordHash`.
 
 ## Limites actuelles
 
-- Pas encore de tests automatisés.
-- Certaines routes sont publiques alors qu'elles devraient probablement être protégées ou limitées.
-- Tender submissions, messages/conversations et scoring n'ont pas encore de modèle métier complet.
-- L'audit, les exports et les PDF doivent être durcis pour une production réelle.
+- Certains modules restent des bases fonctionnelles et demandent des tests d’intégration avec MongoDB.
+- La messagerie métier et les tender submissions dédiées ne sont pas encore implémentées comme modules complets.
+- Le scoring existe partiellement et doit être durci lors d’une itération dédiée.
+- Les permissions fines par rôle métier doivent être auditées route par route avant production.
 
-## Prochaines améliorations recommandées
+## Dépannage npm / jsonwebtoken 403
 
-1. Ajouter tests API sur health, auth et workflows critiques.
-2. Clarifier les permissions par rôle pour chaque route.
-3. Finaliser le workflow demande/appel d'offres → matching → proposition → contrat.
-4. Ajouter pagination, recherche et filtres normalisés.
-5. Renforcer validation Zod, erreurs métier et journalisation.
+Si `npm install` échoue avec `403 Forbidden - GET https://registry.npmjs.org/jsonwebtoken` ou un autre package :
+
+1. Vérifier le registry :
+   ```bash
+   npm config get registry
+   ```
+2. Forcer le registry officiel :
+   ```bash
+   npm config set registry https://registry.npmjs.org/
+   ```
+3. Supprimer les artefacts locaux si nécessaire sous PowerShell :
+   ```powershell
+   Remove-Item -Recurse -Force node_modules
+   Remove-Item -Force package-lock.json
+   ```
+4. Relancer :
+   ```bash
+   npm install
+   ```
+
+Ne pas lancer automatiquement `npm audit fix --force` : cela peut introduire des changements majeurs non contrôlés.
+
+## Prochaines améliorations
+
+- Ajouter une base MongoDB de test et couvrir les parcours auth complets.
+- Finaliser messages métier, tender submissions dédiées et scoring.
+- Renforcer les permissions par module et documenter une matrice de rôles.
+- Ajouter des tests d’exports CSV/JSON et de rapports PDF.
