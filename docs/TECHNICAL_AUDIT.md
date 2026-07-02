@@ -137,3 +137,7 @@ Points positifs : séparation claire routes/controllers/models/utils. Points à 
 - Les tests ajoutés couvrent uniquement la base de démarrage et la validation auth minimale; les routes métier doivent être couvertes avec une base MongoDB de test.
 - La messagerie métier, les tender submissions dédiées et le scoring restent des chantiers fonctionnels à finaliser.
 - Les permissions fines doivent encore être auditées avec des scénarios de rôles réels avant une mise en production.
+
+## Audit workflow central
+
+Le cœur business DEL est maintenant représenté côté API par des routes explicites pour matching, proposition, décisions, contrat, facture, mission et résumé workflow. Les modèles ont été alignés avec les statuts nécessaires au cycle central. Limites actuelles : les tests automatisés restent des tests d'import/recalcul sans base MongoDB; le scénario manuel complet doit encore être rejoué avec les trois applications lancées et des comptes réels.

@@ -17,6 +17,7 @@ export const updateEquipmentStatus = (id, status) => request(`/api/equipment/${i
 export const getRequestList = () => request('/api/requests');
 export const getRequestById = (id) => request(`/api/requests/${id}`);
 export const getRequestMatches = (id) => request(`/api/requests/${id}/matches`);
+export const getWorkflowRequest = (id) => request(`/api/workflows/requests/${id}`, { auth: true });
 export const createProposalFromRequest = (requestId, payload) => request(`/api/requests/${requestId}/proposals`, { method: 'POST', body: JSON.stringify(payload) });
 export const updateRequestStatus = (id, status) => request(`/api/requests/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }), auth: true });
 export const getProposalList = () => request('/api/proposals');

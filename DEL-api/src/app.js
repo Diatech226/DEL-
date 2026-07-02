@@ -33,6 +33,7 @@ app.use('/api/owner-profiles', require('./routes/ownerProfile.routes'));
 app.use('/api/company-profiles', require('./routes/companyProfile.routes'));
 app.use('/api/technician-profiles', require('./routes/technicianProfile.routes'));
 app.use('/api/requests', require('./routes/request.routes'));
+app.use('/api/workflows', require('./routes/workflow.routes'));
 app.use('/api/tenders', require('./routes/tender.routes'));
 app.use('/api/tender-lots', require('./routes/tenderLot.routes'));
 app.use('/api/equipment-schedules', require('./routes/equipmentSchedule.routes'));
