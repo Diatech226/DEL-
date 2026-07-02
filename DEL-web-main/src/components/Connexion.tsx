@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Construction, Lock, Mail, ArrowRight, UserCheck } from 'lucide-react';
 
 interface ConnexionProps {
@@ -10,12 +11,22 @@ export default function Connexion({ onLoginSuccess, onNavigate }: ConnexionProps
   const [email, setEmail] = useState('diaexpressofficial@gmail.com');
   const [password, setPassword] = useState('••••••••••••');
   const [isRegister, setIsRegister] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const { login, register, loading, error } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLoginSuccess();
-    // Go to Accueil or Dashboard
-    onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
+    try {
+      if (isRegister) {
+        await register({ email, password, fullName, role: 'OWNER' });
+      } else {
+        await login(email, password);
+      }
+      onLoginSuccess();
+      onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
+    } catch {
+      // AuthContext exposes the displayable error.
+    }
   };
 
   return (
@@ -46,19 +57,26 @@ export default function Connexion({ onLoginSuccess, onNavigate }: ConnexionProps
             <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Compte de Démonstration Premium</p>
             <p className="text-xs font-semibold text-gray-300">Email : <span className="font-mono">{email}</span></p>
             <button
-              onClick={() => {
-                onLoginSuccess();
-                onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
+              onClick={async () => {
+                try { await login(email, password); onLoginSuccess(); onNavigate('Dashboard Propriétaire Personnalisé - DEL-web'); } catch {}
               }}
               className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-[10px] font-bold text-gray-950 hover:bg-amber-400 transition-colors cursor-pointer"
             >
-              <UserCheck className="h-3.5 w-3.5" /> Connexion Immédiate en 1 clic
+              <UserCheck className="h-3.5 w-3.5" /> Connexion API avec ces identifiants
             </button>
           </div>
         )}
 
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-4">
+
+          {isRegister && (
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Nom complet</label>
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full rounded-lg border border-gray-800 bg-gray-900/80 px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-amber-500" required />
+            </div>
+          )}
+          {error && <div className="rounded-lg border border-red-900/50 bg-red-950/40 p-3 text-xs font-bold text-red-200">{error}</div>}
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Email professionnel</label>
             <div className="relative">
@@ -97,7 +115,7 @@ export default function Connexion({ onLoginSuccess, onNavigate }: ConnexionProps
             type="submit"
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-xs font-bold text-gray-950 hover:bg-amber-400 transition-all cursor-pointer"
           >
-            {isRegister ? "S'enregistrer comme membre" : "Se Connecter sécurisé"}
+            {loading ? 'Connexion…' : (isRegister ? "S'enregistrer comme membre" : "Se Connecter sécurisé")}
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>

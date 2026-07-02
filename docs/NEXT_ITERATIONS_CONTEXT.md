@@ -322,3 +322,13 @@ CMS (`DEL-cms`) :
 6. Mettre à jour `CORS_ORIGINS` côté API avec les deux URLs Vercel finales.
 7. Lancer `npm run seed:admin` puis `npm run seed:settings` dans l'environnement API production.
 8. Tester login CMS, workflow simple, PDF et exports.
+
+## DEL-web-main connecté à DEL-api
+
+- `DEL-web-main` reste une application Vite/React autonome, séparée de `DEL-web`, `DEL-api` et `DEL-cms`.
+- Une couche HTTP centralisée (`src/lib/http.ts`) lit `VITE_API_URL`, ajoute le bearer token, normalise les erreurs et conserve le token dans `localStorage`.
+- Les services API ont été créés pour auth, settings, equipment, requests, tenders, proposals, contracts, invoices, payments, missions, documents, maintenance et notifications.
+- Les mappers design/API ont été ajoutés pour éviter que les composants premium consomment directement les payloads bruts.
+- Connexions réelles démarrées : auth, catalogue engins, création d'engin, création de demande, dashboards utilisateur via `/api/me/*` quand l'utilisateur est authentifié.
+- Restent partiellement mockés : maintenance globale, appels d'offres affichés, certaines actions métier de propositions/contrats/factures et les données de secours visuelles en cas d'API indisponible.
+- Prochaine étape recommandée : remplacer les handlers simulés restants par les mutations DEL-api et introduire un vrai router React sans convertir en Next.js.

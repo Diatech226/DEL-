@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { createEquipment } from '../services/equipment.service';
+import { mapDesignEquipmentToApiPayload } from '../mappers/equipment.mapper';
+import { getErrorMessage } from '../lib/http';
 import { PlusCircle, ArrowRight, Layers, FileCheck2, Camera, MapPin, Wrench } from 'lucide-react';
 
 interface DeposerEnginProps {
@@ -20,8 +23,10 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
   const [vgpDate, setVgpDate] = useState('2026-03-01');
   const [nextMaint, setNextMaint] = useState('2026-09-01');
   const [enginePower, setEnginePower] = useState('120 ch');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!brand || !model || !serialNumber) return;
 
@@ -47,9 +52,18 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
       imageUrl: 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=600&auto=format&fit=crop&q=80' // default premium machine picture
     };
 
-    onAddMachine(newMachine);
-    onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
-    alert('Votre engin de chantier a été enregistré sur DEL-web. Il est prêt à être loué.');
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await createEquipment(mapDesignEquipmentToApiPayload(newMachine));
+      onAddMachine(newMachine);
+      onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
+      alert('Votre engin de chantier a été enregistré dans DEL-api.');
+    } catch (error) {
+      setSubmitError(getErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -64,6 +78,7 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
         {/* Form Column */}
         <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {submitError && <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-bold text-red-700">{submitError}</div>}
             
             <div className="space-y-4">
               <h3 className="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Identifiants constructeur</h3>

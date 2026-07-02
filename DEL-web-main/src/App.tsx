@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   INITIAL_USER, 
   INITIAL_MACHINES, 
@@ -42,6 +42,10 @@ import Connexion from './components/Connexion';
 import SuiviMissions from './components/SuiviMissions';
 import GestionContrats from './components/GestionContrats';
 import ListeEngins from './components/ListeEngins';
+import { useAuth } from './context/AuthContext';
+import { useEquipmentList } from './hooks/useEquipment';
+import { useMyDashboardData } from './hooks/useDashboardData';
+import { LoadingState, ErrorState, EmptyState } from './components/common/States';
 
 // Lucide icons
 import { 
@@ -64,6 +68,7 @@ export default function App() {
   const [isDemoPanelOpen, setIsDemoPanelOpen] = useState(false);
 
   // App states (Durable Local Storage simulation)
+  const auth = useAuth();
   const [user, setUser] = useState<UserProfile>(INITIAL_USER);
   const [machines, setMachines] = useState<Machine[]>(INITIAL_MACHINES);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>(INITIAL_MAINTENANCE_LOGS);
@@ -88,6 +93,13 @@ export default function App() {
 
   // Selected sub-items
   const [selectedMachine, setSelectedMachine] = useState<Machine>(INITIAL_MACHINES[0]);
+
+  // activeScreen reste temporaire jusqu'à la migration router complète.
+  const equipmentList = useEquipmentList();
+  const dashboardData = useMyDashboardData(auth.isAuthenticated);
+  useEffect(() => { if (auth.user) setUser(prev => ({ ...prev, ...auth.user, role: prev.role })); }, [auth.user]);
+  useEffect(() => { if (equipmentList.data?.length) { setMachines(equipmentList.data); setSelectedMachine(equipmentList.data[0]); } }, [equipmentList.data]);
+  useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.contracts)) setContracts(d.contracts as Contract[]); if (Array.isArray(d.proposals)) setProposals(d.proposals as Proposal[]); if (Array.isArray(d.invoices)) setInvoices(d.invoices as Invoice[]); if (Array.isArray(d.documents)) setDocuments(d.documents as DocumentFile[]); if (Array.isArray(d.missions)) setMissions(d.missions as Mission[]); }, [dashboardData.data]);
 
   // Trigger automatic email simulation when a critical maintenance is detected
   React.useEffect(() => {
@@ -266,6 +278,9 @@ export default function App() {
         return <AccueilPremium onNavigate={setActiveScreen} onRoleChange={setActiveRole} />;
 
       case 'Dashboard Propriétaire Personnalisé - DEL-web':
+        if (!auth.isAuthenticated && !auth.loading) return <EmptyState message="Connectez-vous pour charger votre dashboard depuis DEL-api." />;
+        if (dashboardData.loading) return <LoadingState message="Chargement du dashboard DEL-api…" />;
+        if (dashboardData.error) return <ErrorState message={dashboardData.error} />;
         return (
           <DashboardProprietaire 
             user={user} 
@@ -383,6 +398,9 @@ export default function App() {
         );
 
       case 'Dashboard Entreprise - DEL-web':
+        if (!auth.isAuthenticated && !auth.loading) return <EmptyState message="Connectez-vous pour charger votre espace entreprise depuis DEL-api." />;
+        if (dashboardData.loading) return <LoadingState message="Chargement du dashboard DEL-api…" />;
+        if (dashboardData.error) return <ErrorState message={dashboardData.error} />;
         return (
           <DashboardEntreprise 
             user={user} 
@@ -402,7 +420,7 @@ export default function App() {
       case 'Connexion / Inscription - DEL-web':
         return (
           <Connexion 
-            onLoginSuccess={() => setUser({ ...user, isVip: true })} 
+            onLoginSuccess={() => auth.refreshMe()} 
             onNavigate={setActiveScreen} 
           />
         );
@@ -420,6 +438,9 @@ export default function App() {
         );
 
       case 'Liste des Engins - DEL-web':
+        if (equipmentList.loading) return <LoadingState message="Chargement des engins DEL-api…" />;
+        if (equipmentList.error) return <ErrorState message={equipmentList.error} />;
+        if (!machines.length) return <EmptyState message="Aucun engin disponible." />;
         return (
           <ListeEngins 
             machines={machines} 
