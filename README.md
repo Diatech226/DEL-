@@ -129,3 +129,107 @@ Chaque app Next possède son propre `next.config.js` avec `outputFileTracingRoot
 - Les builds `DEL-web` et `DEL-cms` passent dans l'environnement d'audit.
 - L'installation `DEL-api` a été bloquée par une erreur registry npm `403 Forbidden` sur `jsonwebtoken`; le démarrage API n'a donc pas pu être validé dans cet environnement sans dépendances installées.
 - Les documents détaillés sont disponibles dans `docs/NEXT_ITERATIONS_CONTEXT.md`, `docs/TECHNICAL_AUDIT.md` et `docs/PRODUCT_REVIEW.md`.
+
+## Déploiement production
+
+Les trois applications restent indépendantes : ne pas créer de workspace npm et ne pas créer de package partagé. DEL-web et DEL-cms sont prévus pour Vercel ; DEL-api est prévu pour Render, Railway ou Fly.io avec MongoDB Atlas.
+
+### Variables de production à renseigner
+
+API (`DEL-api`) :
+
+- `PORT=5000`
+- `NODE_ENV=production`
+- `MONGODB_URI` : URI MongoDB Atlas.
+- `CORS_ORIGINS` : domaines autorisés séparés par virgule, par exemple `https://URL-DEL-WEB.vercel.app,https://URL-DEL-CMS.vercel.app`.
+- `JWT_SECRET` : secret long, unique et obligatoire en production.
+- `JWT_EXPIRES_IN=7d`
+- `ADMIN_EMAILS` : emails admin séparés par virgule.
+- `APP_URL` : URL Vercel de DEL-web.
+- `CMS_URL` : URL Vercel de DEL-cms.
+- `API_URL` : URL publique de DEL-api.
+
+Web (`DEL-web`) :
+
+- `NEXT_PUBLIC_API_URL` : URL publique de DEL-api.
+- `NEXT_PUBLIC_APP_NAME=DEL`
+
+CMS (`DEL-cms`) :
+
+- `NEXT_PUBLIC_API_URL` : URL publique de DEL-api.
+- `NEXT_PUBLIC_APP_NAME=DEL`
+- `NEXT_PUBLIC_WEB_URL` : URL publique de DEL-web.
+
+### Déploiement DEL-web sur Vercel
+
+1. Importer le dépôt dans Vercel.
+2. Configurer **Root Directory** sur `DEL-web`.
+3. Configurer **Build Command** sur `npm run build`.
+4. Laisser l'output en détection automatique Next.js.
+5. Renseigner au minimum `NEXT_PUBLIC_API_URL` dans les variables Vercel.
+6. Déployer, puis vérifier que le site appelle bien l'API de production.
+
+### Déploiement DEL-cms sur Vercel
+
+1. Importer le même dépôt dans un projet Vercel séparé.
+2. Configurer **Root Directory** sur `DEL-cms`.
+3. Configurer **Build Command** sur `npm run build`.
+4. Laisser l'output en détection automatique Next.js.
+5. Renseigner `NEXT_PUBLIC_API_URL` et `NEXT_PUBLIC_WEB_URL` dans les variables Vercel.
+6. Déployer, puis tester la connexion admin.
+
+### Déploiement DEL-api sur Render, Railway ou Fly.io
+
+Configuration recommandée :
+
+- **Root Directory** : `DEL-api`
+- **Build Command** : `npm install`
+- **Start Command** : `npm start`
+- **Healthcheck** : `GET /api/health`
+- **Variables obligatoires** : `MONGODB_URI`, `JWT_SECRET`, `CORS_ORIGINS`, `ADMIN_EMAILS`.
+
+Un fichier `render.yaml` est fourni à la racine pour Render. Il déclare un service web Node.js avec `rootDir: DEL-api`, `buildCommand: npm install` et `startCommand: npm start`. Les secrets restent à renseigner dans Render et ne doivent pas être commités.
+
+### Seed production admin et settings
+
+Avant de se connecter au CMS en production :
+
+1. Renseigner `ADMIN_EMAILS` côté API avec un ou plusieurs emails séparés par virgule.
+2. Lancer le seed admin depuis le service API ou depuis un shell connecté à l'environnement production :
+
+```bash
+npm run seed:admin
+```
+
+Le seed crée ou met à jour les utilisateurs admin avec le mot de passe temporaire `changer-moi-123`.
+
+3. Lancer le seed des paramètres plateforme :
+
+```bash
+npm run seed:settings
+```
+
+4. Se connecter au CMS avec un email présent dans `ADMIN_EMAILS`.
+5. Changer le mot de passe temporaire après connexion si la fonctionnalité est disponible.
+
+### Commandes de build et vérification production
+
+Depuis la racine du dépôt :
+
+```bash
+npm run build:all
+```
+
+Depuis `DEL-api` :
+
+```bash
+npm start
+```
+
+Pour vérifier l'API après déploiement :
+
+```bash
+curl https://URL-DEL-API.onrender.com/api/health
+```
+
+Consulter aussi `docs/DEPLOYMENT_CHECKLIST.md` avant mise en production.
