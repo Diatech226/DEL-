@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { createEquipmentRequest } from '../services/request.service';
+import { getErrorMessage } from '../lib/http';
 import { ShieldAlert, Plus, HelpCircle, MapPin, Calendar, Coins, ArrowRight } from 'lucide-react';
 
 interface DemanderEnginProps {
@@ -15,8 +17,10 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
   const [duration, setDuration] = useState('2');
   const [location, setLocation] = useState('Lyon (69)');
   const [description, setDescription] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) return;
 
@@ -36,10 +40,18 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
       postDate: new Date().toISOString().split('T')[0]
     };
 
-    onAddTender(newTender);
-    // Navigate back to tenders
-    onNavigate('Appels d\'Offres - DEL-web');
-    alert('Votre besoin B2B a été publié sous forme d\'Appel d\'Offres. Les propriétaires d\'engins certifiés pourront vous proposer leurs devis.');
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await createEquipmentRequest({ title, equipmentType: machineType, minWeight: Number(minWeight), maxBudgetPerDay: Number(maxBudget), startDate, durationMonths: Number(duration), location, description });
+      onAddTender(newTender);
+      onNavigate('Appels d\'Offres - DEL-web');
+      alert('Votre besoin B2B a été publié dans DEL-api.');
+    } catch (error) {
+      setSubmitError(getErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -54,6 +66,7 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
         {/* Form panel */}
         <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {submitError && <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-bold text-red-700">{submitError}</div>}
             <div className="space-y-4">
               <h3 className="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Caractéristiques de la Mission</h3>
 
@@ -165,7 +178,7 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
                 type="submit"
                 className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/10"
               >
-                Publier l'Appel d'Offres
+                {submitting ? 'Envoi vers DEL-api…' : "Publier l'Appel d'Offres"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

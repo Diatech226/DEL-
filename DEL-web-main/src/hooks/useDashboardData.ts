@@ -1,0 +1,11 @@
+import { useAsync } from './useAsync';
+import { getMyEquipment } from '../services/equipment.service';
+import { getMyRequests } from '../services/request.service';
+import { getMyProposals } from '../services/proposal.service';
+import { getMyContracts } from '../services/contract.service';
+import { getMyInvoices } from '../services/invoice.service';
+import { getMyMissions } from '../services/mission.service';
+import { getMyDocuments } from '../services/document.service';
+import { unwrapData } from '../lib/http';
+import { mapApiEquipmentListToDesign } from '../mappers/equipment.mapper';
+export const useMyDashboardData=(enabled=true)=>useAsync(async()=>{if(!enabled)return null; const [equipment,requests,proposals,contracts,invoices,missions,documents]=await Promise.allSettled([getMyEquipment(),getMyRequests(),getMyProposals(),getMyContracts(),getMyInvoices(),getMyMissions(),getMyDocuments()]); const val=(r:any)=>r.status==='fulfilled'?unwrapData(r.value):[]; return { equipment: mapApiEquipmentListToDesign(val(equipment)), requests:val(requests), proposals:val(proposals), contracts:val(contracts), invoices:val(invoices), missions:val(missions), documents:val(documents) };},[enabled]);

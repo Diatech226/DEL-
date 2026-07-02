@@ -71,3 +71,23 @@ Mot de passe commun de démo : `Demo@DEL2026!`
 ## Note légale MVP
 
 DEL MVP ne promet pas de rendement, dividende, financement, investissement fractionné, paiement réel automatisé ou signature électronique qualifiée. Ces sujets sont des évolutions futures à valider juridiquement et techniquement.
+
+
+## Lancer DEL-web-main connecté à DEL-api
+
+`DEL-web-main` est le frontend design Vite/React autonome connecté progressivement à `DEL-api`. Il reste indépendant de `DEL-web`, `DEL-cms` et `DEL-api`.
+
+```bash
+npm run install:design-web
+npm run dev:api
+npm run dev:design-web
+```
+
+Par défaut, Vite expose `DEL-web-main` sur `http://localhost:5173` et lit `VITE_API_URL` dans `DEL-web-main/.env` :
+
+```env
+VITE_API_URL=http://localhost:5000
+VITE_APP_NAME=DEL
+```
+
+Pour le développement local, `DEL-api` doit inclure `http://localhost:5173` dans `CORS_ORIGINS` sans retirer les origines existantes.
