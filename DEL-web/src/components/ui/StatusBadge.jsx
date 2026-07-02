@@ -1,0 +1,1 @@
+import Badge from './Badge';import {getStatusLabel,getStatusVariant} from '../../lib/status';export default function StatusBadge({status}){return <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>}

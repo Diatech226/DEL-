@@ -90,3 +90,15 @@ Sur Windows, si `.next` est verrouillé : arrêter Next, supprimer `.next`, vér
 ## Workflow central dans le CMS
 
 Le CMS utilise le workflow demande → matching → proposition → contrat → facture → mission. La page détail demande s'appuie sur `GET /api/requests/:id/matches` pour sélectionner les engins et `POST /api/requests/:id/proposals` pour créer une proposition. Les pages propositions/contrats exposent les actions admin de décision forcée, création contrat, facture et mission lorsque les routes API sont disponibles. Les erreurs API sont affichées avec des messages lisibles afin d'éviter les pages blanches.
+
+## UI/UX refondue — console d’administration premium
+
+Cette itération améliore l’expérience CMS pour un pilotage industriel plus crédible :
+
+- dashboard admin refondu avec vue générale, alertes opérationnelles, raccourcis rapides et activité récente ;
+- sidebar responsive réorganisée par groupes : Tableau de bord, Opérations, Commercial, Finance, Documents, Utilisateurs et Administration ;
+- page centrale `workflows` ajoutée pour suivre l’avancement des demandes jusqu’à proposition, contrat, facture et mission ;
+- composants UI locaux ajoutés dans `src/components/ui` : `Button`, `Card`, `Badge`, `StatCard`, `DataTable`, `EmptyState`, `LoadingState`, `ErrorState`, `PageHeader`, `StatusBadge`, `ConfirmModal`, `FormSection` ;
+- mapping local des statuts dans `src/lib/status.js` pour conserver une lecture cohérente des états métier.
+
+Limites restantes : plusieurs listes et détails existants restent fonctionnels avec leur structure historique. La prochaine passe doit migrer progressivement chaque page vers `DataTable`, `PageHeader`, `StatusBadge` et les états homogènes.

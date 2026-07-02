@@ -123,3 +123,19 @@ Positionnement recommandé : « DEL — La plateforme opérationnelle des engins
 - Messagerie temps réel.
 - Scoring avancé.
 - Application mobile.
+
+## Revue produit — UI/UX industrielle premium
+
+DEL présente désormais plus clairement sa proposition de valeur : connecter propriétaires d’engins, entreprises minières, BTP, logistique et grands chantiers dans un cadre opérationnel fiable.
+
+### Apports produit
+
+- Accueil public plus crédible : promesse explicite, CTA directs, capacités, méthode, segments propriétaires/entreprises et appels d’offres.
+- Console admin plus orientée pilotage : indicateurs, alertes, activité récente et raccourcis vers les opérations clés.
+- Cohérence visuelle accrue : couleurs sobres, accent chantier, cartes, badges de statuts et états loading/error/empty réutilisables.
+
+### Limites et priorités
+
+- Les écrans métier profonds doivent encore être harmonisés visuellement page par page.
+- Les données de démonstration et tests manuels end-to-end restent nécessaires pour valider la perception premium en conditions réelles.
+- Prochaine priorité : rendre les détails de demandes/propositions/contrats/factures/engins aussi premium que le dashboard et l’accueil.
