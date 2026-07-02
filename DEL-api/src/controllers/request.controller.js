@@ -7,7 +7,7 @@ const { auditCreate, auditStatusChange } = require('../utils/audit');
 const { hasScheduleConflict, createScheduleForEquipment, normalizePeriod } = require('../utils/equipmentSchedule.service');
 const createNotification = require('../utils/createNotification');
 
-const statuses = ['OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','CONTRACT_PENDING','ACTIVE','COMPLETED','CANCELLED'];
+const statuses = ['DRAFT','SUBMITTED','UNDER_REVIEW','OPEN','MATCHING','PROPOSAL_SENT','NEGOTIATION','ACCEPTED','CONTRACT_PENDING','CONTRACTED','ACTIVE','COMPLETED','CANCELLED','REJECTED'];
 const requestSchema = z.object({
   companyName: z.string().trim().min(1, 'companyName est obligatoire'), contactName: z.string().trim().min(1, 'contactName est obligatoire'), contactPhone: z.string().trim().min(1, 'contactPhone est obligatoire'),
   equipmentCategory: z.string().trim().min(1, 'equipmentCategory est obligatoire'), quantity: z.coerce.number().min(1, 'quantity doit être supérieur à 0'), country: z.string().trim().min(1, 'country est obligatoire'), city: z.string().trim().min(1, 'city est obligatoire'),
@@ -27,14 +27,15 @@ const proposalFromRequestSchema = z.object({
 
 const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 function scoreEquipment(equipment, request) {
-  let score = 0;
-  const reasons = [];
-  if (same(equipment.category, request.equipmentCategory)) { score += 40; reasons.push('Catégorie compatible'); }
-  if (equipment.status === 'AVAILABLE') { score += 20; reasons.push('Engin disponible'); }
-  if (request.country && same(equipment.country, request.country)) { score += 15; reasons.push('Même pays'); }
-  if (request.city && same(equipment.city, request.city)) { score += 15; reasons.push('Même ville'); }
-  if (request.proposedPrice && equipment.rentalPricePerMonth && equipment.rentalPricePerMonth <= request.proposedPrice) { score += 10; reasons.push('Prix compatible'); }
-  return { score, reasons };
+  let matchScore = 0;
+  const reasons = []; const warnings = [];
+  if (same(equipment.category, request.equipmentCategory)) { matchScore += 35; reasons.push('Catégorie compatible'); } else warnings.push('Catégorie proche à vérifier');
+  if (equipment.status === 'AVAILABLE') { matchScore += 20; reasons.push('Engin disponible'); } else warnings.push(`Statut engin: ${equipment.status}`);
+  if (request.country && same(equipment.country, request.country)) { matchScore += 15; reasons.push('Même pays'); }
+  if (request.city && same(equipment.city, request.city)) { matchScore += 10; reasons.push('Même ville'); }
+  if (request.proposedPrice && equipment.rentalPricePerMonth && equipment.rentalPricePerMonth <= request.proposedPrice) { matchScore += 10; reasons.push('Prix compatible'); } else if (request.proposedPrice) warnings.push('Prix à négocier');
+  if (Number(equipment.score || 0) >= 70 || ['A','BON','GOOD','EXCELLENT'].includes(String(equipment.scoreLabel || '').toUpperCase())) { matchScore += 10; reasons.push('Score engin favorable'); }
+  return { matchScore: Math.min(matchScore, 100), reasons, warnings };
 }
 
 exports.createRequest = asyncHandler(async (req, res) => { const data = requestSchema.parse(req.body); if (req.user && !data.companyUserId) data.companyUserId = req.user._id; const item = await EquipmentRequest.create(data); await auditCreate(req, 'REQUEST', 'REQUEST', item, 'Demande créé'); res.status(201).json({ success: true, data: item }); });
@@ -43,7 +44,9 @@ exports.getRequestById = asyncHandler(async (req, res) => { const item = await E
 exports.getRequestMatches = asyncHandler(async (req, res) => {
   const request = await EquipmentRequest.findById(req.params.id);
   if (!request) return res.status(404).json({ success: false, message: 'Demande introuvable pour le matching' });
-  const query = { category: request.equipmentCategory, status: 'AVAILABLE' };
+  const includeUnavailable = req.query.includeUnavailable === 'true';
+  const query = { category: request.equipmentCategory };
+  if (!includeUnavailable) query.status = 'AVAILABLE';
   if (request.country) query.country = new RegExp(`^${request.country.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
   const equipment = await Equipment.find(query).sort({ createdAt: -1 });
   const period = normalizePeriod(request.startDate, request.endDate, request.durationMonths);
@@ -53,19 +56,21 @@ exports.getRequestMatches = asyncHandler(async (req, res) => {
     const conflicts = await hasScheduleConflict(item._id, period.start, period.end);
     if (conflicts.length) continue;
     const scored = scoreEquipment(item, request);
-    scored.score += 15;
     scored.reasons.push('Disponible sur la période demandée');
-    matches.push({ equipment: item, available: true, conflicts: [], ...scored });
+    matches.push({ equipment: item, available: true, conflicts: [], score: scored.matchScore, ...scored });
   }
-  const data = matches.sort((a, b) => b.score - a.score);
+  const data = matches.sort((a, b) => b.matchScore - a.matchScore);
   res.json({ success: true, request, count: data.length, data });
 });
 exports.createProposalFromRequest = asyncHandler(async (req, res) => {
   const request = await EquipmentRequest.findById(req.params.id);
   if (!request) return res.status(404).json({ success: false, message: 'Demande introuvable pour créer une proposition' });
+  if (['CANCELLED', 'REJECTED'].includes(request.status)) return res.status(400).json({ success: false, message: 'Impossible de créer une proposition pour une demande annulée ou rejetée' });
   const data = proposalFromRequestSchema.parse(req.body);
   const equipment = await Equipment.find({ _id: { $in: data.equipmentIds } });
   if (equipment.length !== data.equipmentIds.length) return res.status(400).json({ success: false, message: 'Un ou plusieurs engins sont introuvables' });
+  const unavailable = equipment.filter((item) => item.status !== 'AVAILABLE');
+  if (unavailable.length && req.body.force !== true) return res.status(400).json({ success: false, message: 'Tous les engins doivent être AVAILABLE sauf force=true', unavailable: unavailable.map((e) => ({ id: e._id, title: e.title, status: e.status })) });
   const period = normalizePeriod(request.startDate, request.endDate, data.durationMonths || request.durationMonths);
   const conflictsByEquipment = [];
   for (const item of equipment) {
@@ -84,7 +89,9 @@ exports.createProposalFromRequest = asyncHandler(async (req, res) => {
   const proposal = await Proposal.create({
     ...data,
     requestId: request._id,
+    companyUserId: request.companyUserId,
     companyName: request.companyName,
+    ownerUserIds: [...new Set(equipment.map((e) => e.ownerUserId).filter(Boolean).map(String))],
     ownerNames: [...new Set(equipment.map((e) => e.ownerName).filter(Boolean))],
     status: 'SENT',
     workflowStatus: 'PENDING_COMPANY',
@@ -96,7 +103,7 @@ exports.createProposalFromRequest = asyncHandler(async (req, res) => {
   if (request.companyUserId) await createNotification({ recipientUserId: request.companyUserId, recipientRole: 'COMPANY', recipientName: request.companyName, title: 'Nouvelle proposition DEL', message: 'Une proposition a été préparée pour votre demande.', type: 'PROPOSAL_CREATED', relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: 'HIGH' });
   await Promise.all([...ownerGroups.values()].filter((o) => o.ownerUserId).map((o) => createNotification({ recipientUserId: o.ownerUserId, recipientRole: 'OWNER', recipientName: o.ownerName, title: 'Nouvelle proposition pour votre engin', message: 'Votre engin a été sélectionné dans une proposition DEL.', type: 'PROPOSAL_CREATED', relatedEntityType: 'PROPOSAL', relatedEntityId: proposal._id, actionUrl: '/dashboard/proposals', priority: 'HIGH' })));
   await Equipment.updateMany({ _id: { $in: data.equipmentIds } }, { status: 'RESERVED' }, { runValidators: true });
-  await auditCreate(req, 'PROPOSAL', 'PROPOSAL', proposal, 'Proposition créée depuis une demande', 'NORMAL', ['title']); res.status(201).json({ success: true, data: proposal });
+  await auditCreate(req, 'PROPOSAL', 'PROPOSAL', proposal, 'Proposition créée depuis une demande', 'NORMAL', ['title']); res.status(201).json({ success: true, message: 'Proposition créée avec succès', data: proposal });
 });
 exports.updateRequest = asyncHandler(async (req, res) => { const data = updateSchema.parse(req.body); const item = await EquipmentRequest.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); res.json({ success: true, data: item }); });
 exports.updateRequestStatus = asyncHandler(async (req, res) => { const { status } = statusSchema.parse(req.body); const before = await EquipmentRequest.findById(req.params.id); const item = before && await EquipmentRequest.findByIdAndUpdate(req.params.id, { status }, { new: true, runValidators: true }); if (!item) return res.status(404).json({ success: false, message: 'Demande introuvable' }); if (item.companyUserId) await createNotification({ recipientUserId: item.companyUserId, recipientRole: 'COMPANY', recipientName: item.companyName, title: 'Statut de demande mis à jour', message: `Votre demande est maintenant ${status}.`, type: 'REQUEST_STATUS_UPDATED', relatedEntityType: 'REQUEST', relatedEntityId: item._id, actionUrl: '/dashboard/requests' }); await auditStatusChange(req, 'REQUEST', 'REQUEST', item, before?.status, item.status, `Statut demande changé de ${before?.status || '—'} à ${item.status}`); res.json({ success: true, data: item }); });

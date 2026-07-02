@@ -216,3 +216,22 @@ curl http://localhost:5000/api/health
 - `.env.example` documente les variables minimales et les URLs locales utiles.
 - Installation non validée dans cet environnement : `npm install --prefix DEL-api` échoue encore avec `403 Forbidden - GET https://registry.npmjs.org/bcryptjs`, ce qui confirme un blocage registry/environnement plutôt qu’un problème propre à `jsonwebtoken`.
 - Prochaine étape recommandée : relancer `npm install` dans un environnement avec accès npm autorisé, puis exécuter `npm run test`, `npm run dev` et un audit de permissions route par route avec MongoDB disponible.
+
+## Workflow central stabilisé
+
+### Ce qui fonctionne
+- Matching exploitable via `GET /api/requests/:id/matches` avec score, raisons et alertes.
+- Création de proposition depuis demande avec décisions entreprise/propriétaires initialisées.
+- Recalcul centralisé du workflow proposition (`PENDING_COMPANY`, `PENDING_OWNERS`, `READY_FOR_CONTRACT`, rejets).
+- Création de contrat, facture et mission depuis les entités amont.
+- Route CMS `GET /api/workflows/requests/:id` pour suivre l'avancement d'un dossier.
+
+### Ce qui reste à tester
+- Scénario manuel complet avec MongoDB, comptes entreprise/propriétaire/admin et données réelles.
+- Notifications et audit en conditions réelles.
+- Génération PDF selon disponibilité du module reports.
+
+### Prochains modules à améliorer
+- Écrans CMS détaillés avec timeline enrichie et formulaires préremplis.
+- Dashboards web avec filtres par rôle et vues détail proposition.
+- Tests d'intégration MongoDB dédiés au cycle complet.

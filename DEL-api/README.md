@@ -124,3 +124,21 @@ Ne pas lancer automatiquement `npm audit fix --force` : cela peut introduire des
 - Finaliser messages métier, tender submissions dédiées et scoring.
 - Renforcer les permissions par module et documenter une matrice de rôles.
 - Ajouter des tests d’exports CSV/JSON et de rapports PDF.
+
+## Workflow central DEL
+
+Le workflow métier stabilisé couvre : demande entreprise → matching → proposition → décisions entreprise/propriétaires → contrat → facture → mission.
+
+Routes principales :
+- `GET /api/requests/:id/matches` retourne les engins compatibles, avec `matchScore`, `reasons` et `warnings`.
+- `POST /api/requests/:id/proposals` (admin) crée une proposition et réserve les engins.
+- `PATCH /api/me/proposals/:id/company-decision` et `PATCH /api/me/proposals/:id/owner-decision` enregistrent les décisions côté dashboards.
+- `PATCH /api/proposals/:id/company-decision` et `PATCH /api/proposals/:id/owner-decisions/:index` permettent une décision admin.
+- `POST /api/proposals/:id/contracts` crée un contrat seulement si la proposition est `READY_FOR_CONTRACT`, sauf `force=true` admin.
+- `POST /api/contracts/:id/invoices` crée une facture.
+- `POST /api/contracts/:id/missions` crée une mission.
+- `GET /api/workflows/requests/:id` retourne le résumé complet pour le CMS.
+
+Statuts clés : propositions `SENT`, `ACCEPTED`, `REJECTED`; workflow `PENDING_COMPANY`, `PENDING_OWNERS`, `READY_FOR_CONTRACT`, `CONTRACT_CREATED`, `REJECTED_BY_COMPANY`, `REJECTED_BY_OWNER`. Les demandes passent notamment par `PROPOSAL_SENT`, `CONTRACTED`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `REJECTED`.
+
+Vérification rapide : `node scripts/checkWorkflowRoutes.js` vérifie les imports de routes et les cas de recalcul de workflow proposition.

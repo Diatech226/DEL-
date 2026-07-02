@@ -15,22 +15,10 @@ const proposalSchema = z.object({
   durationMonths: z.coerce.number().optional(), conditions: z.string().optional(), status: z.string().optional(), workflowStatus: z.string().optional(), companyDecision: z.any().optional(), ownerDecisions: z.array(z.any()).optional(),
 }).passthrough();
 const updateSchema = proposalSchema.partial();
-const statusSchema = z.object({ status: z.enum(['DRAFT','SENT','ACCEPTED','REJECTED','EXPIRED']) });
+const statusSchema = z.object({ status: z.enum(['DRAFT','SENT','ACCEPTED','REJECTED','CANCELLED','EXPIRED']) });
 const decisionSchema = z.object({ status: z.enum(['ACCEPTED', 'REJECTED']), notes: z.string().optional(), rejectionReason: z.string().optional() });
 
-function recalculateProposalWorkflow(proposal) {
-  if (!proposal.companyDecision) proposal.companyDecision = { status: 'PENDING' };
-  if (!Array.isArray(proposal.ownerDecisions)) proposal.ownerDecisions = [];
-  const companyStatus = proposal.companyDecision.status || 'PENDING';
-  if (companyStatus === 'REJECTED') { proposal.workflowStatus = 'REJECTED_BY_COMPANY'; proposal.status = 'REJECTED'; return proposal; }
-  if (proposal.ownerDecisions.some((d) => d.status === 'REJECTED')) { proposal.workflowStatus = 'REJECTED_BY_OWNER'; proposal.status = 'REJECTED'; return proposal; }
-  if (companyStatus === 'PENDING') { proposal.workflowStatus = 'PENDING_COMPANY'; proposal.status = 'SENT'; return proposal; }
-  if (companyStatus === 'ACCEPTED' && proposal.ownerDecisions.some((d) => (d.status || 'PENDING') === 'PENDING')) { proposal.workflowStatus = 'PENDING_OWNERS'; proposal.status = 'SENT'; return proposal; }
-  if (companyStatus === 'ACCEPTED' && proposal.ownerDecisions.every((d) => d.status === 'ACCEPTED')) { proposal.workflowStatus = 'READY_FOR_CONTRACT'; proposal.status = 'ACCEPTED'; }
-  return proposal;
-}
-
-
+const { recalculateProposalWorkflow } = require('../utils/proposalWorkflow');
 async function notifyProposalDecision(proposal, actorRole, status) {
   const type = status === 'ACCEPTED' ? 'PROPOSAL_ACCEPTED' : 'PROPOSAL_REJECTED';
   const request = await EquipmentRequest.findById(proposal.requestId);

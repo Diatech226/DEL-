@@ -86,3 +86,7 @@ Sur Windows, si `.next` est verrouillé : arrêter Next, supprimer `.next`, vér
 3. Ajouter filtres, recherche, pagination et actions en masse.
 4. Finaliser tender submissions, scoring et messages.
 5. Préparer les paramètres de production et les rôles avancés.
+
+## Workflow central dans le CMS
+
+Le CMS utilise le workflow demande → matching → proposition → contrat → facture → mission. La page détail demande s'appuie sur `GET /api/requests/:id/matches` pour sélectionner les engins et `POST /api/requests/:id/proposals` pour créer une proposition. Les pages propositions/contrats exposent les actions admin de décision forcée, création contrat, facture et mission lorsque les routes API sont disponibles. Les erreurs API sont affichées avec des messages lisibles afin d'éviter les pages blanches.

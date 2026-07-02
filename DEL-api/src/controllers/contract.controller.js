@@ -7,6 +7,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const generateContractNumber = require('../utils/generateContractNumber');
 const { createScheduleForEquipment, normalizePeriod, updateSchedulesStatus } = require('../utils/equipmentSchedule.service');
 const { notifyStakeholders } = require('../utils/createNotification');
+const { auditCreate, auditStatusChange } = require('../utils/audit');
 const { getOrCreateSettings } = require('../utils/settings.service');
 
 const statuses = ['DRAFT', 'PENDING_SIGNATURE', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
@@ -55,15 +56,15 @@ exports.createContractFromProposal = asyncHandler(async (req, res) => {
     startDate: data.startDate, endDate: data.endDate, durationMonths: data.durationMonths ?? proposal.durationMonths,
     amount, currency: proposal.currency || request.currency || 'XOF', paymentTerms: data.paymentTerms,
     platformCommissionRate, platformCommissionAmount, ownerAmount, conditions: data.conditions ?? proposal.conditions,
-    responsibilities: data.responsibilities, status: 'DRAFT',
+    responsibilities: data.responsibilities, status: 'PENDING_SIGNATURE',
   });
   const period = normalizePeriod(contract.startDate, contract.endDate, contract.durationMonths || proposal.durationMonths);
   await Promise.all(equipment.map((item) => createScheduleForEquipment(item, { type: 'CONTRACT', title: 'Contrat actif ou en préparation', startDate: period.start, endDate: period.end, relatedEntityType: 'CONTRACT', relatedEntityId: contract._id, createdBy: 'DEL-api' })));
-  if (proposal.status !== 'ACCEPTED') await Proposal.findByIdAndUpdate(proposal._id, { status: 'ACCEPTED' }, { runValidators: true });
-  await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'CONTRACT_PENDING' }, { runValidators: true });
+  await Proposal.findByIdAndUpdate(proposal._id, { workflowStatus: 'CONTRACT_CREATED' }, { runValidators: true });
+  await EquipmentRequest.findByIdAndUpdate(request._id, { status: 'CONTRACTED' }, { runValidators: true });
   await Equipment.updateMany({ _id: { $in: proposal.equipmentIds || [] } }, { status: 'RESERVED' }, { runValidators: true });
   await notifyStakeholders({ request, equipment, title: 'Contrat créé', message: 'Un contrat a été créé pour votre proposition.', type: 'CONTRACT_CREATED', relatedEntityType: 'CONTRACT', relatedEntityId: contract._id, actionUrl: '/dashboard/contracts' });
-  await auditCreate(req, 'CONTRACT', 'CONTRACT', contract, 'Contrat créé', 'NORMAL', ['contractNumber','title']); res.status(201).json({ success: true, data: contract });
+  await auditCreate(req, 'CONTRACT', 'CONTRACT', contract, 'Contrat créé', 'NORMAL', ['contractNumber','title']); res.status(201).json({ success: true, message: 'Contrat créé avec succès', data: contract });
 });
 exports.getContracts = asyncHandler(async (req, res) => { const items = await Contract.find().sort({ createdAt: -1 }); res.json({ success: true, count: items.length, data: items }); });
 exports.getContractById = asyncHandler(async (req, res) => { const item = await Contract.findById(req.params.id).populate('equipmentIds'); if (!item) return res.status(404).json({ success: false, message: 'Contrat introuvable' }); res.json({ success: true, data: item }); });

@@ -85,3 +85,7 @@ Les pages client appellent DEL-api via `NEXT_PUBLIC_API_URL`. Sans API disponibl
 3. Onboarding par rôle propriétaire/entreprise.
 4. Parcours complet demande → proposition → contrat.
 5. Amélioration responsive et accessibilité.
+
+## Workflow central dans les dashboards
+
+Les dashboards entreprise et propriétaire consomment les routes `/api/me/*` pour afficher demandes, propositions, contrats, factures et missions. Les décisions de proposition passent par `PATCH /api/me/proposals/:id/company-decision` pour l'entreprise et `PATCH /api/me/proposals/:id/owner-decision` pour les propriétaires. Les pages doivent toujours afficher loading, erreur, état vide et message de succès après action.
