@@ -8,7 +8,8 @@
     "start": "node server.js",
     "seed:admin": "node scripts/seedAdmin.js",
     "seed:settings": "node scripts/seedSettings.js",
-    "test": "node --test"
+    "test": "node --test",
+    "seed:demo": "node scripts/seedDemo.js"
   },
   "keywords": [
     "del",
