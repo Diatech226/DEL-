@@ -1,0 +1,6 @@
+{
+  "name": "DEL-web",
+  "description": "Plateforme premium de gestion, maintenance et location de matériel et engins de chantier B2B.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

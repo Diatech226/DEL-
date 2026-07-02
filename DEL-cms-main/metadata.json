@@ -1,0 +1,6 @@
+{
+  "name": "DEL-cms",
+  "description": "Portail d'administration et de gestion d'engins industriels, demandes, propositions, contrats, factures et suivi opérationnel",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

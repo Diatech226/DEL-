@@ -1,0 +1,290 @@
+@import "tailwindcss";
+
+/* Elegant Dark Design Theme CSS Overrides */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #080c14 !important;
+  color: #cbd5e1 !important;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+}
+
+/* Base structural containers */
+#app-root,
+#main-content-pane,
+.bg-slate-50 {
+  background-color: #080c14 !important;
+}
+
+/* Card components & background blocks */
+.bg-white {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+/* Sidebar and sticky header remain beautiful slate dark, matching the layout */
+#admin-sidebar,
+header.bg-slate-950,
+aside.bg-slate-950 {
+  background-color: #070a13 !important;
+  border-color: #161e31 !important;
+}
+
+.bg-slate-900,
+.bg-slate-950 {
+  background-color: #101827 !important;
+  border-color: #1e293b !important;
+}
+
+/* Text colors overrides for extreme high contrast readability */
+.text-slate-900,
+.text-slate-800,
+.text-gray-900,
+.text-slate-950,
+h1, h2, h3, h4, h5, h6 {
+  color: #f8fafc !important;
+}
+
+.text-slate-700,
+.text-slate-600,
+.text-gray-700,
+.text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+.text-slate-500,
+.text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.text-slate-400,
+.text-gray-400 {
+  color: #64748b !important;
+}
+
+.text-slate-300,
+.text-gray-300 {
+  color: #475569 !important;
+}
+
+/* Highlight / Active text overrides */
+.text-amber-500,
+.text-amber-600 {
+  color: #fbbf24 !important;
+}
+
+/* Border color overrides */
+.border,
+.border-slate-200,
+.border-slate-100,
+.border-gray-200,
+.border-gray-100 {
+  border-color: #1e293b !important;
+}
+
+.border-slate-800,
+.border-slate-700,
+.border-slate-900 {
+  border-color: #1e293b !important;
+}
+
+/* Tables styling */
+table {
+  background-color: #0f172a !important;
+}
+
+thead,
+tr.bg-slate-50\/50,
+.bg-slate-50 {
+  background-color: #131d31 !important;
+}
+
+th {
+  color: #94a3b8 !important;
+  border-color: #1e293b !important;
+}
+
+td {
+  border-color: #1e293b !important;
+}
+
+tr:hover,
+.hover\:bg-slate-50:hover,
+.hover\:bg-slate-50\/50:hover {
+  background-color: #182235 !important;
+}
+
+/* Form Controls, Inputs & Select elements */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="search"],
+select,
+textarea {
+  background-color: #0e131f !important;
+  border: 1px solid #1e293b !important;
+  color: #f8fafc !important;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="email"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #f59e0b !important;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Dropdown list colors inside select */
+option {
+  background-color: #0e131f !important;
+  color: #f8fafc !important;
+}
+
+/* Sidebar item selections and hover states */
+button[id^="nav-"] {
+  color: #94a3b8;
+}
+button[id^="nav-"]:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #f8fafc !important;
+}
+
+/* Ensure selected Nav states are preserved and visible with high contrast */
+button[id^="nav-"].bg-amber-500 {
+  background-color: #fbbf24 !important;
+  color: #070a13 !important;
+}
+
+button[id^="nav-"].bg-amber-500 * {
+  color: #070a13 !important;
+}
+
+/* Navigation tabs in nested views (e.g., Finance, Documents, etc.) */
+button[id^="tab-"] {
+  color: #94a3b8;
+}
+
+button[id^="tab-"].bg-amber-500,
+button[id^="tab-"].bg-slate-900 {
+  background-color: #fbbf24 !important;
+  color: #070a13 !important;
+}
+
+/* Scrollbars custom styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #080c14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Badges styling to ensure high-readability on dark mode */
+.bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.25) !important;
+}
+.bg-rose-100, .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.25) !important;
+}
+.bg-emerald-100, .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+}
+.bg-sky-100, .bg-sky-50 {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+}
+.bg-purple-100 {
+  background-color: rgba(139, 92, 246, 0.12) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(139, 92, 246, 0.25) !important;
+}
+.bg-sky-500\/10 {
+  background-color: rgba(14, 165, 233, 0.1) !important;
+  color: #38bdf8 !important;
+}
+.bg-amber-500\/20 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+}
+.bg-teal-100 {
+  background-color: rgba(20, 184, 166, 0.12) !important;
+  color: #2dd4bf !important;
+  border: 1px solid rgba(20, 184, 166, 0.25) !important;
+}
+
+/* Custom text and badge colors inside specific elements */
+.text-amber-800,
+.text-amber-950,
+.text-emerald-800,
+.text-rose-800,
+.text-sky-800,
+.text-teal-800,
+.text-purple-800 {
+  color: inherit !important;
+}
+
+/* Buttons primary & actions */
+.bg-amber-500,
+.bg-amber-400 {
+  background-color: #fbbf24 !important;
+  color: #070a13 !important;
+}
+.bg-amber-500:hover,
+.bg-amber-400:hover {
+  background-color: #f59e0b !important;
+}
+/* Ensure text inside action buttons remains dark */
+.bg-amber-500 *,
+.bg-amber-400 *,
+.bg-emerald-500 *,
+.bg-sky-500 * {
+  color: #070a13 !important;
+}
+
+/* Modals & Dialog backgrounds */
+.fixed.inset-0 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+.fixed.inset-0 .bg-white {
+  background-color: #0f172a !important;
+  border: 1px solid #1e293b !important;
+}
+
+/* Quick KPI Icon wraps */
+.bg-slate-100 {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+.bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #fbbf24 !important;
+}
+
+/* Map placeholder inside detail views */
+.bg-slate-100 {
+  background-color: #141b2d !important;
+}
+
