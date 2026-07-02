@@ -1,18 +1,2 @@
-const titles = {
-  messages: 'Messages',
-  'tender-lots': 'Lots d’appel d’offres',
-  'tender-submissions': 'Soumissions aux appels d’offres',
-  scoring: 'Scoring',
-};
-
-export default function Page() {
-  const title = titles['messages'];
-  return (
-    <main className="space-y-4">
-      <h1 className="text-3xl font-black text-coal">{title}</h1>
-      <p className="rounded-xl bg-white p-6 text-slate-600 shadow-sm">
-        Aucun élément à afficher pour le moment.
-      </p>
-    </main>
-  );
-}
+import ComingSoon from '../../components/ComingSoon';
+export default function MessagesPage(){return <ComingSoon title="Messages avancés" details="Pour la démonstration MVP, les échanges restent gérés via les propositions, documents et statuts. La messagerie temps réel viendra plus tard."/>;}
