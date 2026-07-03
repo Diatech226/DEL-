@@ -52,6 +52,8 @@ import { getAdminDashboardData } from './services/dashboard.service';
 import { updateEquipmentStatus as updateApiEquipmentStatus } from './services/equipment.service';
 import { getRequestById, updateRequestStatus as updateApiRequestStatus } from './services/request.service';
 import { createProposalFromRequest } from './services/matching.service';
+import { getProposalList, getProposalById, updateCompanyDecisionAsAdmin, updateOwnerDecisionAsAdmin } from './services/proposal.service';
+import { getContractList, getContractById, createContractFromProposal, updateContractStatus as updateApiContractStatus } from './services/contract.service';
 
 // Icons
 import { 
@@ -106,6 +108,10 @@ function CmsShell() {
   // Selection references for detail view routing
   const [selectedEngineId, setSelectedEngineId] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [commercialLoading, setCommercialLoading] = useState(false);
+  const [commercialError, setCommercialError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +129,41 @@ function CmsShell() {
       .finally(() => { if (!cancelled) setApiLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+
+  const refreshCommercialData = () => {
+    setCommercialLoading(true);
+    setCommercialError(null);
+    Promise.allSettled([getProposalList(), getContractList()])
+      .then(([proposalResult, contractResult]) => {
+        if (proposalResult.status === 'fulfilled') setProposals(proposalResult.value);
+        if (contractResult.status === 'fulfilled') setContracts(contractResult.value);
+        const errors = [proposalResult, contractResult]
+          .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+          .map((result) => result.reason?.message)
+          .filter(Boolean);
+        setCommercialError(errors.length ? errors.join(' · ') : null);
+      })
+      .finally(() => setCommercialLoading(false));
+  };
+
+  useEffect(() => {
+    refreshCommercialData();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedProposalId) return;
+    getProposalById(selectedProposalId)
+      .then((proposal) => setProposals((prev) => prev.some((item) => item.id === selectedProposalId) ? prev.map((item) => item.id === selectedProposalId ? proposal : item) : [proposal, ...prev]))
+      .catch((error) => setCommercialError(error?.message || 'Impossible de charger le détail proposition.'));
+  }, [selectedProposalId]);
+
+  useEffect(() => {
+    if (!selectedContractId) return;
+    getContractById(selectedContractId)
+      .then((contract) => setContracts((prev) => prev.some((item) => item.id === selectedContractId) ? prev.map((item) => item.id === selectedContractId ? contract : item) : [contract, ...prev]))
+      .catch((error) => setCommercialError(error?.message || 'Impossible de charger le détail contrat.'));
+  }, [selectedContractId]);
 
   useEffect(() => {
     if (!selectedRequestId) return;
@@ -489,6 +530,12 @@ function CmsShell() {
       setSelectedEngineId(targetId || null);
     } else if (view === 'Demandes') {
       setSelectedRequestId(targetId || null);
+    } else if (view === 'Propositions') {
+      setSelectedProposalId(targetId || null);
+      setSelectedContractId(null);
+    } else if (view === 'Contrats') {
+      setSelectedContractId(targetId || null);
+      setSelectedProposalId(null);
     }
   };
 
