@@ -1,47 +1,43 @@
-import { Proposal } from '../types';
+import { normalizeStatus } from '../constants/status';
+import type { Proposal } from '../types';
 
-const arr = (value: any) => Array.isArray(value) ? value : value ? [value] : [];
-const idOf = (value: any) => String(value?._id || value?.id || value || '');
+const arr = (value: unknown): any[] => Array.isArray(value) ? value : [];
+const idOf = (value: any) => typeof value === 'object' && value !== null ? String(value._id ?? value.id ?? '') : String(value ?? '');
 
 export function mapApiProposalToAdmin(apiProposal: any): Proposal {
-  const id = idOf(apiProposal);
-  const ownerDecisions = arr(apiProposal?.ownerDecisions);
-  const ownerNames = arr(apiProposal?.ownerNames?.length ? apiProposal.ownerNames : ownerDecisions.map((decision: any) => decision?.ownerName)).filter(Boolean);
   const equipmentIds = arr(apiProposal?.equipmentIds).map(idOf).filter(Boolean);
-  const title = apiProposal?.title || 'Proposition DEL';
-  const finalPrice = Number(apiProposal?.finalPrice ?? apiProposal?.priceOffered ?? apiProposal?.totalEstimated ?? 0);
-  const currency = apiProposal?.currency || 'XOF';
-
   return {
-    id,
-    code: apiProposal?.code || apiProposal?.proposalNumber || `PRO-${id.slice(-6) || 'API'}`,
+    id: String(apiProposal?._id ?? apiProposal?.id ?? ''),
+    code: String(apiProposal?.code ?? apiProposal?._id ?? apiProposal?.id ?? 'PRO-API'),
+    title: apiProposal?.title ?? 'Proposition DEL',
     requestId: idOf(apiProposal?.requestId),
-    requestTitle: title,
-    engineId: equipmentIds[0] || '',
-    engineName: equipmentIds.length ? equipmentIds.join(', ') : 'Engins à confirmer',
-    companyName: apiProposal?.companyName || apiProposal?.company?.name || 'Entreprise à confirmer',
-    dailyRate: finalPrice,
-    transportCost: Number(apiProposal?.transportCost || 0),
-    otherCosts: Number(apiProposal?.otherCosts || 0),
-    totalEstimated: finalPrice,
-    status: apiProposal?.status || 'UNKNOWN',
-    validUntil: apiProposal?.validUntil?.slice?.(0, 10) || '',
-    createdAt: apiProposal?.createdAt?.slice?.(0, 10) || '',
-    title,
+    requestTitle: apiProposal?.requestTitle ?? apiProposal?.request?.title ?? 'Demande liée',
     tenderId: idOf(apiProposal?.tenderId),
     tenderLotId: idOf(apiProposal?.tenderLotId),
-    companyUserId: idOf(apiProposal?.companyUserId),
+    engineId: equipmentIds[0] ?? '',
+    engineName: apiProposal?.engineName ?? apiProposal?.equipment?.title ?? equipmentIds.join(', ') ?? 'Engin à confirmer',
     equipmentIds,
-    ownerNames,
+    companyName: apiProposal?.companyName ?? 'Entreprise à confirmer',
+    companyUserId: idOf(apiProposal?.companyUserId),
+    ownerNames: arr(apiProposal?.ownerNames),
     ownerUserIds: arr(apiProposal?.ownerUserIds).map(idOf).filter(Boolean),
-    finalPrice,
-    currency,
-    durationMonths: Number(apiProposal?.durationMonths || 0),
-    workflowStatus: apiProposal?.workflowStatus || 'UNKNOWN',
-    companyDecision: apiProposal?.companyDecision || { status: 'UNKNOWN' },
-    ownerDecisions,
-    updatedAt: apiProposal?.updatedAt || '',
+    dailyRate: Number(apiProposal?.dailyRate ?? apiProposal?.finalPrice ?? 0),
+    transportCost: Number(apiProposal?.transportCost ?? 0),
+    otherCosts: Number(apiProposal?.otherCosts ?? 0),
+    totalEstimated: Number(apiProposal?.totalEstimated ?? apiProposal?.finalPrice ?? 0),
+    finalPrice: Number(apiProposal?.finalPrice ?? 0),
+    currency: apiProposal?.currency ?? 'XOF',
+    durationMonths: Number(apiProposal?.durationMonths ?? 0),
+    status: normalizeStatus(apiProposal?.status),
+    workflowStatus: normalizeStatus(apiProposal?.workflowStatus),
+    companyDecision: apiProposal?.companyDecision ?? { status: 'PENDING' },
+    ownerDecisions: arr(apiProposal?.ownerDecisions),
+    validUntil: apiProposal?.validUntil ?? '',
+    createdAt: apiProposal?.createdAt ?? '',
+    updatedAt: apiProposal?.updatedAt ?? '',
   };
 }
 
-export const mapApiProposalListToAdmin = (apiItems: any[] = []) => apiItems.map(mapApiProposalToAdmin);
+export function mapApiProposalListToAdmin(apiItems: any): Proposal[] {
+  return arr(apiItems).map(mapApiProposalToAdmin);
+}

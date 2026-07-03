@@ -582,22 +582,11 @@ function CmsShell() {
           <CommercialView 
             proposals={proposals}
             contracts={contracts}
-            loading={commercialLoading}
-            error={commercialError}
+            pdfReports={pdfReports}
             initialTab={currentView === 'Contrats' ? 'contracts' : 'proposals'}
-            selectedProposalId={selectedProposalId}
-            selectedContractId={selectedContractId}
-            onSelectProposal={(id) => { setSelectedProposalId(id); setSelectedContractId(null); }}
-            onSelectContract={(id) => { setSelectedContractId(id); setSelectedProposalId(null); setCurrentView('Contrats'); }}
-            onRefresh={refreshCommercialData}
-            onCompanyDecision={async (id, status) => { await updateCompanyDecisionAsAdmin(id, { status }); }}
-            onOwnerDecision={async (id, index, status) => { await updateOwnerDecisionAsAdmin(id, index, { status }); }}
-            onCreateContract={async (proposalId, payload) => {
-              const contract = await createContractFromProposal(proposalId, payload);
-              setContracts((prev) => [contract, ...prev.filter((item) => item.id !== contract.id)]);
-              return contract;
-            }}
-            onContractStatus={async (id, status) => { await updateApiContractStatus(id, status); }}
+            onDownloadReport={handleDownloadPdfReport}
+            onProposalsLoaded={setProposals}
+            onContractsLoaded={setContracts}
           />
         );
       case 'Factures':

@@ -1,42 +1,42 @@
-import { Contract } from '../types';
+import { normalizeStatus } from '../constants/status';
+import type { Contract } from '../types';
 
-const arr = (value: any) => Array.isArray(value) ? value : value ? [value] : [];
-const idOf = (value: any) => String(value?._id || value?.id || value || '');
+const arr = (value: unknown): any[] => Array.isArray(value) ? value : [];
+const idOf = (value: any) => typeof value === 'object' && value !== null ? String(value._id ?? value.id ?? '') : String(value ?? '');
 
 export function mapApiContractToAdmin(apiContract: any): Contract {
-  const id = idOf(apiContract);
   const equipmentIds = arr(apiContract?.equipmentIds).map(idOf).filter(Boolean);
-  const amount = Number(apiContract?.amount ?? apiContract?.totalPrice ?? apiContract?.totalAmount ?? 0);
-  const currency = apiContract?.currency || 'XOF';
   return {
-    id,
-    code: apiContract?.contractNumber || apiContract?.code || `CTR-${id.slice(-6) || 'API'}`,
+    id: String(apiContract?._id ?? apiContract?.id ?? ''),
+    code: apiContract?.contractNumber ?? 'Non généré',
+    contractNumber: apiContract?.contractNumber ?? 'Non généré',
+    title: apiContract?.title ?? 'Contrat DEL',
     proposalId: idOf(apiContract?.proposalId),
-    companyName: apiContract?.companyName || apiContract?.client?.companyName || 'Entreprise à confirmer',
-    engineName: equipmentIds.length ? equipmentIds.join(', ') : 'Engins à confirmer',
-    startDate: apiContract?.startDate?.slice?.(0, 10) || '',
-    endDate: apiContract?.endDate?.slice?.(0, 10) || '',
-    dailyRate: Number(apiContract?.dailyRate || amount),
-    totalAmount: amount,
-    status: apiContract?.status || 'UNKNOWN',
-    signedAt: apiContract?.signedAt?.slice?.(0, 10),
-    insuranceNumber: apiContract?.insuranceNumber || 'Non renseigné',
-    contractNumber: apiContract?.contractNumber || 'Non généré',
-    title: apiContract?.title || 'Contrat DEL',
     requestId: idOf(apiContract?.requestId),
-    ownerNames: arr(apiContract?.ownerNames).filter(Boolean),
+    companyName: apiContract?.companyName ?? 'Entreprise à confirmer',
+    ownerNames: arr(apiContract?.ownerNames),
     equipmentIds,
-    amount,
-    platformCommissionRate: Number(apiContract?.platformCommissionRate || 0),
-    platformCommissionAmount: Number(apiContract?.platformCommissionAmount || 0),
-    ownerAmount: Number(apiContract?.ownerAmount || 0),
-    currency,
-    paymentTerms: apiContract?.paymentTerms || '',
-    conditions: apiContract?.conditions || '',
-    responsibilities: apiContract?.responsibilities || '',
-    createdAt: apiContract?.createdAt || '',
-    updatedAt: apiContract?.updatedAt || '',
+    engineName: apiContract?.engineName ?? equipmentIds.join(', ') ?? 'Engin à confirmer',
+    startDate: apiContract?.startDate ?? '',
+    endDate: apiContract?.endDate ?? '',
+    dailyRate: Number(apiContract?.dailyRate ?? 0),
+    totalAmount: Number(apiContract?.totalAmount ?? apiContract?.amount ?? 0),
+    amount: Number(apiContract?.amount ?? 0),
+    platformCommissionRate: Number(apiContract?.platformCommissionRate ?? 0),
+    platformCommissionAmount: Number(apiContract?.platformCommissionAmount ?? 0),
+    ownerAmount: Number(apiContract?.ownerAmount ?? 0),
+    currency: apiContract?.currency ?? 'XOF',
+    status: normalizeStatus(apiContract?.status),
+    signedAt: apiContract?.signedAt,
+    insuranceNumber: apiContract?.insuranceNumber ?? 'Non renseigné',
+    paymentTerms: apiContract?.paymentTerms ?? '',
+    conditions: apiContract?.conditions ?? '',
+    responsibilities: apiContract?.responsibilities ?? '',
+    createdAt: apiContract?.createdAt ?? '',
+    updatedAt: apiContract?.updatedAt ?? '',
   };
 }
 
-export const mapApiContractListToAdmin = (apiItems: any[] = []) => apiItems.map(mapApiContractToAdmin);
+export function mapApiContractListToAdmin(apiItems: any): Contract[] {
+  return arr(apiItems).map(mapApiContractToAdmin);
+}

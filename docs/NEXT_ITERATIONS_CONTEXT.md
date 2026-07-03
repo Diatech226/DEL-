@@ -347,10 +347,11 @@ CMS (`DEL-cms`) :
 ## DEL-cms-main — Itération 2 Propositions & Contrats
 
 - Liste propositions connectée à `GET /api/proposals` dans le nouveau CMS autonome `DEL-cms-main`.
-- Détail proposition connecté à `GET /api/proposals/:id`, avec affichage des décisions entreprise/propriétaires et actions admin disponibles.
-- Création contrat depuis proposition connectée à `POST /api/proposals/:id/contracts`, seulement quand la proposition est `READY_FOR_CONTRACT` ou `ACCEPTED`.
+- Détail proposition connecté à `GET /api/proposals/:id`, avec décisions entreprise/propriétaires affichées.
+- Actions administrateur disponibles pour accepter/refuser la décision entreprise et les décisions propriétaires via les endpoints API existants.
+- Création contrat depuis proposition connectée à `POST /api/proposals/:id/contracts`, uniquement depuis une proposition prête (`READY_FOR_CONTRACT`) ou acceptée (`ACCEPTED`).
 - Liste contrats connectée à `GET /api/contracts`.
-- Détail contrat connecté à `GET /api/contracts/:id`, avec montants, parties, engins, dates, conditions et changement de statut via `PATCH /api/contracts/:id/status`.
-- Factures non connectées dans cette itération ; placeholder conservé pour l'itération suivante.
-- Missions non connectées dans cette itération ; module laissé tel quel.
-- `DEL-cms` et `DEL-web` ne sont pas modifiés.
+- Détail contrat connecté à `GET /api/contracts/:id`, avec montants, commissions, dates, conditions et responsabilités.
+- Changement de statut contrat connecté à `PATCH /api/contracts/:id/status`.
+- Factures non connectées dans cette itération.
+- Missions non connectées dans cette itération.

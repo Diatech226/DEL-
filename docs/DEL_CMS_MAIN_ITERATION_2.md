@@ -1,60 +1,63 @@
 # DEL-cms-main — Itération 2 Propositions & Contrats
 
 ## Objectif
-Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` pour les seuls modules Propositions et Contrats, sans modifier `DEL-cms`, `DEL-web`, `DEL-web-main`, ni créer de workspace ou package partagé.
+Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` pour les seuls modules Propositions et Contrats, sans modifier `DEL-cms`, `DEL-web` ou créer de workspace/package partagé.
 
 ## Pages connectées
-- Onglet `Propositions` du module commercial : liste API, filtres locaux, état loading/error/empty et accès détail.
-- Détail proposition : résumé, lien demande/appel d'offres, engins, décision entreprise, décisions propriétaires et actions admin.
-- Formulaire de création de contrat depuis une proposition prête (`READY_FOR_CONTRACT`) ou acceptée (`ACCEPTED`).
-- Onglet `Contrats` du module commercial : liste API, filtres locaux, état loading/error/empty et accès détail.
-- Détail contrat : identification, parties, engins, montants, dates, conditions et actions de statut.
+- Onglet / vue `Propositions` dans `DEL-cms-main` : liste API, filtre local, état loading/error/empty et détail proposition.
+- Onglet / vue `Contrats` dans `DEL-cms-main` : liste API, filtre local, état loading/error/empty et détail contrat.
 
 ## Services créés
 - `DEL-cms-main/src/services/proposal.service.ts`
-  - `getProposalList(params?)` → `GET /api/proposals`
-  - `getProposalById(id)` → `GET /api/proposals/:id`
-  - `updateProposalStatus(id, status)` → `PATCH /api/proposals/:id/status`
-  - `updateCompanyDecisionAsAdmin(id, payload)` → `PATCH /api/proposals/:id/company-decision`
-  - `updateOwnerDecisionAsAdmin(id, index, payload)` → `PATCH /api/proposals/:id/owner-decisions/:index`
 - `DEL-cms-main/src/services/contract.service.ts`
-  - `getContractList(params?)` → `GET /api/contracts`
-  - `getContractById(id)` → `GET /api/contracts/:id`
-  - `createContractFromProposal(proposalId, payload)` → `POST /api/proposals/:id/contracts`
-  - `updateContractStatus(id, status)` → `PATCH /api/contracts/:id/status`
-  - `updateContract(id, payload)` → `PATCH /api/contracts/:id`
 
 ## Mappers créés
-- `DEL-cms-main/src/mappers/proposal.mapper.ts` avec `mapApiProposalToAdmin` et `mapApiProposalListToAdmin`.
-- `DEL-cms-main/src/mappers/contract.mapper.ts` avec `mapApiContractToAdmin` et `mapApiContractListToAdmin`.
+- `DEL-cms-main/src/mappers/proposal.mapper.ts`
+- `DEL-cms-main/src/mappers/contract.mapper.ts`
 
-## Statuts ajoutés
+## Statuts ajoutés / complétés
 - Propositions : `DRAFT`, `SENT`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED`, `PENDING_COMPANY`, `PENDING_OWNERS`, `READY_FOR_CONTRACT`, `REJECTED_BY_COMPANY`, `REJECTED_BY_OWNER`, `CONTRACT_CREATED`, `UNKNOWN`.
 - Contrats : `DRAFT`, `PENDING_SIGNATURE`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `UNKNOWN`.
-- Variantes UI : success, warning, danger, info et neutral via `getStatusVariant`.
+- Variantes visuelles : success, warning, danger, info, neutral via `getStatusVariant`.
 
-## Endpoints utilisés et actions disponibles
-Les endpoints demandés existent côté `DEL-api` et sont branchés dans le CMS : décisions admin proposition, création contrat depuis proposition, lecture contrats/propositions et changement de statut contrat.
+## Endpoints utilisés
+- `GET /api/proposals`
+- `GET /api/proposals/:id`
+- `PATCH /api/proposals/:id/status`
+- `PATCH /api/proposals/:id/company-decision`
+- `PATCH /api/proposals/:id/owner-decisions/:index`
+- `GET /api/contracts`
+- `GET /api/contracts/:id`
+- `POST /api/proposals/:id/contracts`
+- `PATCH /api/contracts/:id/status`
+- `PATCH /api/contracts/:id`
+
+## Actions disponibles
+- Décision entreprise administrateur : acceptation/refus via `PATCH /api/proposals/:id/company-decision`.
+- Décision propriétaire administrateur : acceptation/refus via `PATCH /api/proposals/:id/owner-decisions/:index`.
+- Création de contrat depuis une proposition si `workflowStatus === READY_FOR_CONTRACT` ou `status === ACCEPTED`.
+- Changement de statut contrat vers `PENDING_SIGNATURE`, `ACTIVE`, `COMPLETED`, `CANCELLED`.
 
 ## Actions non disponibles / non connectées
-- Signature électronique réelle utilisateur.
-- Factures, paiements, missions, maintenance, documents, audit, exports, settings, notifications, messages, scoring et PDF réel ne sont pas connectés dans cette itération.
+- Factures, paiements, missions, maintenance, documents, audit, exports, settings, notifications, messages, scoring et PDF restent hors périmètre de cette itération.
+- Le bouton PDF historique n'a pas été connecté à l'API ; les factures affichent seulement le placeholder d'itération suivante dans le détail contrat.
 
 ## Mocks restants
-- Les modules hors Propositions/Contrats restent alimentés par les données existantes ou par l'itération 1.
-- Le bouton/placeholder PDF existant n'est pas transformé en génération PDF réelle.
+- Les modules hors Propositions et Contrats conservent leurs données locales ou leur état précédent.
+- Les rapports PDF restent simulés localement.
 
 ## Limites
-- Les actions admin utilisent les routes existantes ; si l'API refuse une transition, le message d'erreur DEL-api est affiché.
-- La SPA `DEL-cms-main` conserve sa navigation par état React, sans routeur externe.
-- Les données absentes sont affichées avec des fallbacks pour éviter les pages blanches.
+- La création contrat envoie le payload du formulaire, mais l'API calcule actuellement le montant/devise depuis la proposition côté backend.
+- Les contrôles fonctionnels complets nécessitent MongoDB et des données de propositions prêtes.
 
 ## Commandes de test
+- `npm install --prefix DEL-cms-main`
 - `npm run build --prefix DEL-cms-main`
+- `npm run dev --prefix DEL-cms-main`
+- `npm run dev --prefix DEL-api`
+- `curl http://localhost:5000/api/health`
 - `git diff -- DEL-cms`
 - `git diff -- DEL-web`
-- `npm run dev --prefix DEL-api` puis `curl http://localhost:5000/api/health` à valider dans un environnement MongoDB disponible.
-- `npm run dev --prefix DEL-cms-main` pour validation manuelle du login, dashboard, engins, demandes, propositions et contrats.
 
 ## Prochaine itération recommandée
-Connecter les factures depuis les contrats, puis paiements manuels, sans élargir aux missions/maintenance avant validation du workflow contrat → facture.
+Connecter les factures après validation du workflow proposition → contrat, puis brancher paiements manuels, documents contractuels et PDF brandés dans des itérations séparées.
