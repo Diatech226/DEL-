@@ -12,7 +12,8 @@
     "dev:design-web": "npm run dev --prefix DEL-web-main",
     "install:design-web": "npm install --prefix DEL-web-main",
     "dev:main-cms": "npm run dev --prefix DEL-cms-main",
-    "install:main-cms": "npm install --prefix DEL-cms-main"
+    "install:main-cms": "npm install --prefix DEL-cms-main",
+    "install:new-frontends": "npm install --prefix DEL-web-main && npm install --prefix DEL-cms-main"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

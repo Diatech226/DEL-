@@ -91,3 +91,28 @@ VITE_APP_NAME=DEL
 ```
 
 Pour le développement local, `DEL-api` doit inclure `http://localhost:5173` dans `CORS_ORIGINS` sans retirer les origines existantes.
+
+## Applications et ports locaux
+
+Le dépôt garde cinq applications indépendantes, sans workspace ni package partagé :
+
+- `DEL-api` — API Express/MongoDB sur `http://localhost:5000`.
+- `DEL-web` — ancienne application Web Next sur `http://localhost:3000`.
+- `DEL-web-main` — nouveau frontend design Vite sur `http://localhost:5173`.
+- `DEL-cms` — ancien CMS Next sur `http://localhost:3001`.
+- `DEL-cms-main` — nouveau CMS Vite sur `http://localhost:5174`.
+
+Commandes racine utiles :
+
+```bash
+npm run dev:api
+npm run dev:web
+npm run dev:design-web
+npm run dev:cms
+npm run dev:main-cms
+npm run install:new-frontends
+```
+
+Variables d’environnement : copier le `.env.example` de chaque application vers un `.env` local dans le même dossier (`DEL-api/.env`, `DEL-web/.env`, `DEL-web-main/.env`, `DEL-cms/.env`, `DEL-cms-main/.env`) puis adapter uniquement les valeurs locales nécessaires. Ne jamais versionner de secrets réels.
+
+CORS local : `DEL-api` doit autoriser toutes les origines de développement utilisées par les apps locales, notamment `3000`, `3001`, `5173` et `5174` via `CORS_ORIGINS`.
