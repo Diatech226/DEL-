@@ -355,3 +355,16 @@ CMS (`DEL-cms`) :
 - Changement de statut contrat connecté à `PATCH /api/contracts/:id/status`.
 - Factures non connectées dans cette itération.
 - Missions non connectées dans cette itération.
+
+## DEL-cms-main — Itération 3 Factures & Paiements (2026-07-03)
+
+- Liste factures connectée à `GET /api/invoices` dans `DEL-cms-main` avec mapper dédié, filtres locaux, loading/error/empty et action détail.
+- Détail facture connecté à `GET /api/invoices/:id` avec affichage identification, parties, liens métier, montants, dates et paiements liés.
+- Création facture depuis détail contrat connectée à `POST /api/contracts/:id/invoices` via un formulaire minimal, sans créer automatiquement de paiement.
+- Changement de statut facture branché sur `PATCH /api/invoices/:id/status` pour les actions disponibles dans l'UI.
+- Liste paiements connectée à `GET /api/payments` avec mapper dédié, filtres locaux et action détail.
+- Création paiement manuel depuis facture connectée à `POST /api/payments`, avec rafraîchissement facture/paiements après création.
+- Confirmation, rejet et annulation paiement branchés sur `PATCH /api/payments/:id/status` si l'endpoint accepte l'action.
+- Missions non connectées dans cette itération.
+- Documents non connectés dans cette itération.
+- PDF avancés non connectés ; un placeholder indique une prochaine itération.

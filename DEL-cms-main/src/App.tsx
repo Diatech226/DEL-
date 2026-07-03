@@ -599,6 +599,8 @@ function CmsShell() {
             onDownloadReport={handleDownloadPdfReport}
             onAddInvoice={handleAddInvoice}
             onPayInvoice={handlePayInvoice}
+            onInvoicesLoaded={setInvoices}
+            onPaymentsLoaded={setPayments}
           />
         );
       case 'Missions':
