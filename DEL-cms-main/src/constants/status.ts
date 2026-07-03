@@ -20,3 +20,19 @@ export function getStatusVariant(status?: string | null) {
   if (['RESERVED', 'PLACED', 'CONTRACTED', 'CONTRACT_CREATED'].includes(normalized)) return 'info';
   return 'neutral';
 }
+
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  CREATE: 'Création', UPDATE: 'Modification', DELETE: 'Suppression', STATUS_CHANGE: 'Changement de statut', LOGIN: 'Connexion', LOGOUT: 'Déconnexion', REGISTER: 'Inscription', APPROVE: 'Approbation', REJECT: 'Rejet', DOWNLOAD: 'Téléchargement', EXPORT: 'Export', PAYMENT_RECORD: 'Paiement enregistré', MESSAGE_SENT: 'Message envoyé', NOTIFICATION_SENT: 'Notification envoyée', SETTINGS_UPDATE: 'Paramètres mis à jour', SYSTEM: 'Système'
+};
+
+const AUDIT_MODULE_LABELS: Record<string, string> = {
+  AUTH: 'Authentification', USER: 'Utilisateurs', OWNER: 'Propriétaires', COMPANY: 'Entreprises', TECHNICIAN: 'Techniciens', EQUIPMENT: 'Engins', REQUEST: 'Demandes', TENDER: 'Appels d’offres', TENDER_LOT: 'Lots d’appel d’offres', PROPOSAL: 'Propositions', CONTRACT: 'Contrats', INVOICE: 'Factures', PAYMENT: 'Paiements', DOCUMENT: 'Documents', MISSION: 'Missions', MISSION_REPORT: 'Rapports mission', MAINTENANCE: 'Maintenance', PLANNING: 'Planning', SCORING: 'Scoring', REPORT: 'Rapports / Exports', SETTINGS: 'Paramètres', NOTIFICATION: 'Notifications', MESSAGE: 'Messages', SYSTEM: 'Système'
+};
+
+const SEVERITY_LABELS: Record<string, string> = { LOW: 'Faible', NORMAL: 'Normale', HIGH: 'Élevée', CRITICAL: 'Critique' };
+const SEVERITY_VARIANTS: Record<string, string> = { LOW: 'neutral', NORMAL: 'info', HIGH: 'warning', CRITICAL: 'danger' };
+
+export function getAuditActionLabel(action?: string | null) { return AUDIT_ACTION_LABELS[normalizeStatus(action)] || action || 'Système'; }
+export function getAuditModuleLabel(module?: string | null) { return AUDIT_MODULE_LABELS[normalizeStatus(module)] || module || 'Système'; }
+export function getSeverityLabel(severity?: string | null) { return SEVERITY_LABELS[normalizeStatus(severity)] || severity || 'Normale'; }
+export function getSeverityVariant(severity?: string | null) { return SEVERITY_VARIANTS[normalizeStatus(severity)] || 'neutral'; }

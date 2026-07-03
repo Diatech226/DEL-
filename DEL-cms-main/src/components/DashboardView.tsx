@@ -180,6 +180,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <button onClick={() => onNavigate('Paramètres')} className="border border-amber-300 bg-amber-50 text-amber-800 font-bold px-4 py-2 rounded-md text-xs">Modifier les paramètres</button>
       </div>
 
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Audit & Exports</span>
+          <h2 className="text-lg font-bold text-slate-900 mt-1">Traçabilité DEL-api et sauvegardes administratives</h2>
+          <p className="text-xs text-slate-500 mt-1">Accès rapide au journal d’audit, aux exports CSV/JSON et au full backup JSON administratif.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => onNavigate('Audit')} className="border border-slate-300 bg-white text-slate-800 font-bold px-4 py-2 rounded-md text-xs">Voir l’audit</button>
+          <button onClick={() => onNavigate('Exports')} className="bg-slate-900 text-white font-bold px-4 py-2 rounded-md text-xs">Exports</button>
+        </div>
+      </div>
+
       {/* Main Grid: Alerts / Operations & Fleet Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column (2/3): Alerts and Actions & Recent Requests */}
