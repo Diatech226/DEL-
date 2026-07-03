@@ -1,7 +1,9 @@
 const LABELS: Record<string, string> = {
-  DRAFT: 'Brouillon', PENDING_REVIEW: 'En validation', AVAILABLE: 'Disponible', RESERVED: 'Réservé', PLACED: 'Placé', UNDER_MAINTENANCE: 'En maintenance', SOLD: 'Vendu', REJECTED: 'Rejeté', ARCHIVED: 'Archivé',
-  SUBMITTED: 'Soumis', UNDER_REVIEW: 'En revue', MATCHING: 'Matching', PROPOSAL_SENT: 'Proposition envoyée', ACCEPTED: 'Accepté', CONTRACTED: 'Contractualisé', ACTIVE: 'Actif', COMPLETED: 'Terminé', CANCELLED: 'Annulé',
-  SENT: 'Envoyé', READY_FOR_CONTRACT: 'Prêt pour contrat', PENDING_COMPANY: 'En attente entreprise', PENDING_OWNERS: 'En attente propriétaires', CONTRACT_CREATED: 'Contrat créé', UNKNOWN: 'Inconnu',
+  DRAFT: 'Brouillon', PENDING_REVIEW: 'En validation', AVAILABLE: 'Disponible', RESERVED: 'Réservé', PLACED: 'Placé', UNDER_MAINTENANCE: 'En maintenance', SOLD: 'Vendu', ARCHIVED: 'Archivé',
+  SUBMITTED: 'Soumis', UNDER_REVIEW: 'En revue', MATCHING: 'Matching', PROPOSAL_SENT: 'Proposition envoyée', CONTRACTED: 'Contractualisé',
+  SENT: 'Envoyée', ACCEPTED: 'Acceptée', REJECTED: 'Rejetée', CANCELLED: 'Annulé', EXPIRED: 'Expirée',
+  PENDING_COMPANY: 'En attente entreprise', PENDING_OWNERS: 'En attente propriétaires', READY_FOR_CONTRACT: 'Prête pour contrat', REJECTED_BY_COMPANY: 'Refusée par entreprise', REJECTED_BY_OWNER: 'Refusée par propriétaire', CONTRACT_CREATED: 'Contrat créé',
+  PENDING_SIGNATURE: 'En attente signature', ACTIVE: 'Actif', COMPLETED: 'Terminé', UNKNOWN: 'Inconnu',
 };
 
 export function normalizeStatus(status?: string | null) {
@@ -14,9 +16,9 @@ export function getStatusLabel(status?: string | null) {
 
 export function getStatusVariant(status?: string | null) {
   const normalized = normalizeStatus(status);
-  if (['AVAILABLE', 'ACTIVE', 'COMPLETED', 'ACCEPTED', 'READY_FOR_CONTRACT'].includes(normalized)) return 'success';
-  if (['PENDING_REVIEW', 'UNDER_REVIEW', 'MATCHING', 'PROPOSAL_SENT', 'SENT', 'PENDING_COMPANY', 'PENDING_OWNERS'].includes(normalized)) return 'warning';
-  if (['REJECTED', 'CANCELLED'].includes(normalized)) return 'danger';
+  if (['ACCEPTED', 'READY_FOR_CONTRACT', 'ACTIVE', 'COMPLETED', 'AVAILABLE'].includes(normalized)) return 'success';
+  if (['SENT', 'PENDING_COMPANY', 'PENDING_OWNERS', 'PENDING_SIGNATURE', 'DRAFT', 'PENDING_REVIEW', 'UNDER_REVIEW', 'MATCHING', 'PROPOSAL_SENT'].includes(normalized)) return 'warning';
+  if (['REJECTED', 'REJECTED_BY_COMPANY', 'REJECTED_BY_OWNER', 'CANCELLED'].includes(normalized)) return 'danger';
   if (['RESERVED', 'PLACED', 'CONTRACTED', 'CONTRACT_CREATED'].includes(normalized)) return 'info';
   return 'neutral';
 }

@@ -1,444 +1,71 @@
-import React, { useState } from 'react';
-import { Proposal, Contract, PdfReport } from '../types';
-import { 
-  FileText, 
-  Check, 
-  X, 
-  FileSignature, 
-  PenTool, 
-  CheckCircle, 
-  AlertCircle, 
-  Download, 
-  Calendar, 
-  ShieldCheck, 
-  ArrowRight,
-  TrendingUp,
-  FileCheck2,
-  ArrowDownToLine,
-  RefreshCw
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Proposal, Contract } from '../types';
+import { getStatusLabel, getStatusVariant, normalizeStatus } from '../constants/status';
+import { Search, Eye, ArrowLeft, FileSignature, Check, X } from 'lucide-react';
 
-interface CommercialViewProps {
+interface Props {
   proposals: Proposal[];
   contracts: Contract[];
-  pdfReports: PdfReport[];
-  onDownloadReport: (id: string) => void;
-  onAcceptProposal: (id: string) => void;
-  onRejectProposal: (id: string) => void;
-  onGenerateContract: (proposalId: string) => void;
-  onSignContract: (id: string) => void;
-  onActivateContract: (id: string) => void;
+  loading?: boolean;
+  error?: string | null;
+  initialTab?: 'proposals' | 'contracts';
+  selectedProposalId?: string | null;
+  selectedContractId?: string | null;
+  onSelectProposal: (id: string | null) => void;
+  onSelectContract: (id: string | null) => void;
+  onRefresh: () => void;
+  onCompanyDecision: (id: string, status: 'ACCEPTED' | 'REJECTED') => Promise<void>;
+  onOwnerDecision: (id: string, index: number, status: 'ACCEPTED' | 'REJECTED') => Promise<void>;
+  onCreateContract: (proposalId: string, payload: any) => Promise<Contract | void>;
+  onContractStatus: (id: string, status: string) => Promise<void>;
 }
 
-export const CommercialView: React.FC<CommercialViewProps> = ({
-  proposals,
-  contracts,
-  pdfReports,
-  onDownloadReport,
-  onAcceptProposal,
-  onRejectProposal,
-  onGenerateContract,
-  onSignContract,
-  onActivateContract
-}) => {
-  const [activeTab, setActiveTab] = useState<'proposals' | 'contracts'>('proposals');
+const Badge = ({ status }: { status?: string }) => <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${getStatusVariant(status) === 'success' ? 'bg-emerald-100 text-emerald-800' : getStatusVariant(status) === 'warning' ? 'bg-amber-100 text-amber-800' : getStatusVariant(status) === 'danger' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'}`}>{getStatusLabel(status)}</span>;
+const money = (amount?: number, currency = 'XOF') => new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(amount || 0));
+const date = (value?: string) => value ? value.slice(0, 10) : '—';
+
+export const CommercialView: React.FC<Props> = ({ proposals, contracts, loading, error, initialTab = 'proposals', selectedProposalId, selectedContractId, onSelectProposal, onSelectContract, onRefresh, onCompanyDecision, onOwnerDecision, onCreateContract, onContractStatus }) => {
+  const [activeTab, setActiveTab] = useState<'proposals' | 'contracts'>(initialTab);
   const [search, setSearch] = useState('');
-  const [showReportSelector, setShowReportSelector] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [form, setForm] = useState({ title: 'Contrat lié à la proposition', startDate: '', endDate: '', amount: '', currency: 'XOF', paymentTerms: '', conditions: '', responsibilities: '' });
 
-  const triggerMockDownload = (report: PdfReport) => {
-    // Increment download count and trigger standard text blob file download
-    onDownloadReport(report.id);
+  useEffect(() => setActiveTab(initialTab), [initialTab]);
+  const selectedProposal = proposals.find((p) => p.id === selectedProposalId) || null;
+  const selectedContract = contracts.find((c) => c.id === selectedContractId) || null;
+  useEffect(() => {
+    if (selectedProposal) setForm((f) => ({ ...f, amount: String(selectedProposal.finalPrice || selectedProposal.totalEstimated || 0), currency: selectedProposal.currency || 'XOF' }));
+  }, [selectedProposal]);
 
-    const content = `DEL-cms - Rapport PDF d'Activité Officiel\n` +
-      `===========================================\n\n` +
-      `ID Rapport: ${report.id}\n` +
-      `Titre: ${report.title}\n` +
-      `Type de document: ${report.type}\n` +
-      `Période de synthèse: ${report.period}\n` +
-      `Date d'impression: ${new Date().toLocaleString('fr-FR')}\n` +
-      `Compilateur: Moteur de Rendu PDF DEL-Report® (v2.5)\n` +
-      `Téléchargements cumulés: ${report.downloadCount + 1}\n\n` +
-      `-------------------------------------------\n` +
-      `CONFIDENTIALITÉ COMMERCIALE & INDUSTRIELLE\n` +
-      `-------------------------------------------\n\n` +
-      `Ce document atteste de l'évaluation officielle des performances, des propositions, ou du bilan d'exploitation de la plateforme DEL.\n` +
-      `Généré automatiquement par le système d'administration de DEL-cms.\n`;
+  const filteredProposals = useMemo(() => proposals.filter((p) => [p.title, p.requestTitle, p.companyName, p.workflowStatus, p.status].join(' ').toLowerCase().includes(search.toLowerCase())), [proposals, search]);
+  const filteredContracts = useMemo(() => contracts.filter((c) => [c.contractNumber, c.title, c.companyName, c.status].join(' ').toLowerCase().includes(search.toLowerCase())), [contracts, search]);
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${report.title.replace(/[\s']+/g, '_')}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const run = async (fn: () => Promise<any>, ok: string) => { setActionError(null); setSuccess(null); try { const result = await fn(); setSuccess(ok); onRefresh(); return result; } catch (e: any) { setActionError(e?.message || 'Action impossible depuis DEL-api.'); } };
 
-  // Filter lists
-  const filteredProposals = proposals.filter(p => 
-    p.code.toLowerCase().includes(search.toLowerCase()) ||
-    p.companyName.toLowerCase().includes(search.toLowerCase()) ||
-    p.requestTitle.toLowerCase().includes(search.toLowerCase())
-  );
+  if (selectedProposal) {
+    const ready = normalizeStatus(selectedProposal.workflowStatus) === 'READY_FOR_CONTRACT' || normalizeStatus(selectedProposal.status) === 'ACCEPTED';
+    return <div className="space-y-5">
+      <button onClick={() => onSelectProposal(null)} className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"><ArrowLeft size={14}/>Retour aux propositions</button>
+      {(actionError || success) && <div className={`rounded border p-3 text-xs font-semibold ${actionError ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>{actionError || success}</div>}
+      <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+        <div className="flex justify-between gap-3 flex-wrap"><div><h2 className="font-black text-slate-950">{selectedProposal.title || selectedProposal.requestTitle}</h2><p className="text-xs text-slate-500 font-mono">{selectedProposal.code}</p></div><div className="flex gap-2"><Badge status={selectedProposal.status}/><Badge status={selectedProposal.workflowStatus}/></div></div>
+        <div className="grid md:grid-cols-4 gap-3 text-xs"><Info label="Entreprise" value={selectedProposal.companyName}/><Info label="Montant" value={money(selectedProposal.finalPrice || selectedProposal.totalEstimated, selectedProposal.currency)}/><Info label="Durée" value={`${selectedProposal.durationMonths || 0} mois`}/><Info label="Créée le" value={date(selectedProposal.createdAt)}/></div>
+      </section>
+      <Grid title="Demande / appel d’offres lié" items={[['requestId', selectedProposal.requestId], ['tenderId', selectedProposal.tenderId], ['tenderLotId', selectedProposal.tenderLotId]]}/>
+      <Grid title="Engins proposés" items={(selectedProposal.equipmentIds || []).map((id, i) => [`Engin ${i + 1}`, id])}/>
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-3"><h3 className="font-bold text-sm">Décision entreprise</h3><Decision d={selectedProposal.companyDecision}/><div className="flex gap-2"><button onClick={() => run(() => onCompanyDecision(selectedProposal.id, 'ACCEPTED'), 'Décision entreprise acceptée.')} className="bg-emerald-500 text-white rounded px-3 py-1.5 text-xs font-bold flex items-center gap-1"><Check size={12}/>Accepter entreprise</button><button onClick={() => run(() => onCompanyDecision(selectedProposal.id, 'REJECTED'), 'Décision entreprise refusée.')} className="bg-rose-500 text-white rounded px-3 py-1.5 text-xs font-bold flex items-center gap-1"><X size={12}/>Refuser entreprise</button></div></section>
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-3"><h3 className="font-bold text-sm">Décisions propriétaires</h3>{(selectedProposal.ownerDecisions || []).length ? selectedProposal.ownerDecisions?.map((d, i) => <div key={i} className="border rounded-lg p-3 space-y-2"><Decision d={{ ownerName: selectedProposal.ownerNames?.[i], ...d }}/><div className="flex gap-2"><button onClick={() => run(() => onOwnerDecision(selectedProposal.id, i, 'ACCEPTED'), 'Décision propriétaire acceptée.')} className="bg-emerald-500 text-white rounded px-3 py-1.5 text-xs font-bold flex items-center gap-1">Accepter</button><button onClick={() => run(() => onOwnerDecision(selectedProposal.id, i, 'REJECTED'), 'Décision propriétaire refusée.')} className="bg-rose-500 text-white rounded px-3 py-1.5 text-xs font-bold flex items-center gap-1">Refuser</button></div></div>) : <p className="text-xs text-slate-500">Aucune décision propriétaire reçue.</p>}</section>
+      <section className="bg-white border border-slate-200 rounded-xl p-5 space-y-3"><h3 className="font-bold text-sm flex gap-2"><FileSignature size={16}/>Créer contrat</h3>{!ready && <p className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded p-3">Le contrat pourra être créé après acceptation de l’entreprise et des propriétaires.</p>}{ready && <div className="grid md:grid-cols-2 gap-3">{(['title','startDate','endDate','amount','currency','paymentTerms','conditions','responsibilities'] as const).map(k => <input key={k} type={k.includes('Date') ? 'date' : 'text'} value={form[k]} onChange={e => setForm({...form, [k]: e.target.value})} placeholder={k} className="border rounded px-3 py-2 text-xs" />)}<button className="md:col-span-2 bg-amber-500 text-slate-950 font-black rounded px-4 py-2 text-xs" onClick={() => run(async () => { const c = await onCreateContract(selectedProposal.id, { ...form, amount: Number(form.amount) }); if (c?.id) onSelectContract(c.id); }, 'Contrat créé depuis la proposition.')}>Créer le contrat</button></div>}</section>
+    </div>;
+  }
 
-  const filteredContracts = contracts.filter(c => 
-    c.code.toLowerCase().includes(search.toLowerCase()) ||
-    c.companyName.toLowerCase().includes(search.toLowerCase()) ||
-    c.engineName.toLowerCase().includes(search.toLowerCase())
-  );
+  if (selectedContract) return <div className="space-y-5"><button onClick={() => onSelectContract(null)} className="text-xs font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"><ArrowLeft size={14}/>Retour aux contrats</button>{(actionError || success) && <div className={`rounded border p-3 text-xs font-semibold ${actionError ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>{actionError || success}</div>}<section className="bg-white border rounded-xl p-5 space-y-4"><div className="flex justify-between"><div><h2 className="font-black">{selectedContract.title}</h2><p className="text-xs font-mono text-slate-500">{selectedContract.contractNumber}</p></div><Badge status={selectedContract.status}/></div><div className="grid md:grid-cols-3 gap-3 text-xs"><Info label="Entreprise" value={selectedContract.companyName}/><Info label="Propriétaires" value={(selectedContract.ownerNames || []).join(', ') || '—'}/><Info label="Engins" value={(selectedContract.equipmentIds || []).join(', ') || selectedContract.engineName}/><Info label="Montant" value={money(selectedContract.amount || selectedContract.totalAmount, selectedContract.currency)}/><Info label="Commission" value={`${selectedContract.platformCommissionRate || 0}% · ${money(selectedContract.platformCommissionAmount, selectedContract.currency)}`}/><Info label="Part propriétaires" value={money(selectedContract.ownerAmount, selectedContract.currency)}/><Info label="Début" value={date(selectedContract.startDate)}/><Info label="Fin" value={date(selectedContract.endDate)}/><Info label="Paiement" value={selectedContract.paymentTerms || '—'}/></div><Grid title="Conditions" items={[['conditions', selectedContract.conditions], ['responsabilités', selectedContract.responsibilities]]}/><div className="flex flex-wrap gap-2">{['PENDING_SIGNATURE','ACTIVE','COMPLETED','CANCELLED'].map(s => <button key={s} onClick={() => run(() => onContractStatus(selectedContract.id, s), `Statut contrat changé en ${getStatusLabel(s)}.`)} className="bg-slate-900 text-white rounded px-3 py-1.5 text-xs font-bold">{getStatusLabel(s)}</button>)}</div><p className="text-xs text-slate-500 border-t pt-3">Les factures seront connectées dans l’itération suivante.</p></section></div>;
 
-  return (
-    <div id="commercial-view" className="space-y-6">
-      {/* Tab Switcher & Search Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 text-white p-4 rounded-lg border border-slate-800">
-        <div className="flex gap-2">
-          <button
-            id="tab-proposals"
-            onClick={() => { setActiveTab('proposals'); setSearch(''); }}
-            className={`px-4 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-              activeTab === 'proposals' 
-                ? 'bg-amber-500 text-slate-950 font-black' 
-                : 'text-slate-300 hover:bg-slate-800/60'
-            }`}
-          >
-            Propositions Commerciales ({proposals.length})
-          </button>
-          <button
-            id="tab-contracts"
-            onClick={() => { setActiveTab('contracts'); setSearch(''); }}
-            className={`px-4 py-2 text-xs font-bold rounded-md transition-all cursor-pointer ${
-              activeTab === 'contracts' 
-                ? 'bg-amber-500 text-slate-950 font-black' 
-                : 'text-slate-300 hover:bg-slate-800/60'
-            }`}
-          >
-            Contrats d'Exploitation ({contracts.length})
-          </button>
-        </div>
-
-        <div className="w-full sm:w-72">
-          <input
-            id="commercial-search-input"
-            type="text"
-            placeholder={activeTab === 'proposals' ? "Filtrer les propositions..." : "Filtrer les contrats..."}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded px-3 py-2 focus:outline-none focus:border-amber-500 font-mono"
-          />
-        </div>
-      </div>
-
-      {/* Main tab content */}
-      {activeTab === 'proposals' ? (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Registre des propositions commerciales</h2>
-              <p className="text-xs text-slate-500">De l'offre tarifaire brute jusqu'à la validation définitive de l'entreprise cliente.</p>
-            </div>
-            <button
-              id="btn-download-report-commercial"
-              onClick={() => setShowReportSelector(true)}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded text-xs cursor-pointer shadow-sm flex items-center gap-1.5 border border-slate-800"
-            >
-              <Download size={14} className="text-amber-500" />
-              Télécharger Rapport PDF
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {filteredProposals.map(prop => (
-              <div key={prop.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-300 transition-colors">
-                
-                {/* Details */}
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-slate-950 text-amber-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
-                      {prop.code}
-                    </span>
-                    <span className="text-slate-400 text-xs font-mono">• Créée le {prop.createdAt}</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                      prop.status === 'Brouillon' ? 'bg-slate-100 text-slate-600' :
-                      prop.status === 'Envoyée' ? 'bg-amber-100 text-amber-800' :
-                      prop.status === 'Acceptée' ? 'bg-emerald-100 text-emerald-800' :
-                      'bg-rose-100 text-rose-800 font-semibold'
-                    }`}>
-                      {prop.status}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 text-sm leading-snug">{prop.requestTitle}</h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1.5 text-xs">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Client destinataire :</span>
-                      <span className="font-semibold text-slate-800 font-mono">{prop.companyName}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Machine assignée :</span>
-                      <span className="font-semibold text-slate-800 font-mono">{prop.engineName}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Validité de l'offre :</span>
-                      <span className="font-semibold text-rose-700 font-mono">jusqu'au {prop.validUntil}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pricing / Financial summaries */}
-                <div className="border-t md:border-t-0 md:border-l border-slate-100 pt-3.5 md:pt-0 md:pl-5 space-y-2 text-right shrink-0 w-full md:w-auto">
-                  <div className="font-mono">
-                    <span className="text-slate-400 text-[10px] block">Taux jour négocié :</span>
-                    <span className="text-base font-black text-slate-950">{prop.dailyRate} € HT</span>
-                  </div>
-                  <div className="font-mono text-xs text-slate-500">
-                    Transport : {prop.transportCost} € • Logistique : {prop.otherCosts} €
-                  </div>
-                  <div className="bg-slate-50 px-3 py-1.5 rounded border border-slate-100 inline-block font-mono font-bold text-xs text-indigo-950">
-                    Total Estimé : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(prop.totalEstimated)}
-                  </div>
-
-                  {/* Actions buttons */}
-                  <div className="flex gap-2 justify-end pt-2">
-                    <button
-                      onClick={() => alert(`Téléchargement du document d'offre PDF pour la proposition ${prop.code}`)}
-                      className="p-1.5 border border-slate-300 hover:bg-slate-50 text-slate-600 rounded cursor-pointer transition-all"
-                      title="Télécharger l'offre PDF"
-                    >
-                      <Download size={14} />
-                    </button>
-
-                    {prop.status === 'Envoyée' && (
-                      <>
-                        <button
-                          onClick={() => onRejectProposal(prop.id)}
-                          className="px-2.5 py-1.5 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded text-[11px] cursor-pointer transition-all flex items-center gap-1"
-                        >
-                          <X size={12} />
-                          Refuser
-                        </button>
-                        <button
-                          onClick={() => onAcceptProposal(prop.id)}
-                          className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded text-[11px] cursor-pointer transition-all flex items-center gap-1 shadow-sm"
-                        >
-                          <Check size={12} />
-                          Accepter (Client)
-                        </button>
-                      </>
-                    )}
-
-                    {prop.status === 'Acceptée' && (
-                      <button
-                        onClick={() => onGenerateContract(prop.id)}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded text-[11px] cursor-pointer transition-all flex items-center gap-1 shadow-sm"
-                      >
-                        <FileSignature size={12} />
-                        Générer le contrat d'exploitation
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        // Screen 8: Contrats Tab
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Registre des Contrats de Location</h2>
-              <p className="text-xs text-slate-500">Supervisez l'exécution légale, vérifiez les polices d'assurance et activez la facturation automatique.</p>
-            </div>
-            <button
-              id="btn-download-report-contracts"
-              onClick={() => setShowReportSelector(true)}
-              className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded text-xs cursor-pointer shadow-sm flex items-center gap-1.5 border border-slate-800"
-            >
-              <Download size={14} className="text-amber-500" />
-              Télécharger Rapport PDF
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {filteredContracts.map(ctr => (
-              <div key={ctr.id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-300 transition-colors">
-                
-                {/* Contract Content */}
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-slate-950 text-amber-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
-                      {ctr.code}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                      ctr.status === 'Brouillon' ? 'bg-slate-100 text-slate-600' :
-                      ctr.status === 'En Signature' ? 'bg-amber-100 text-amber-800' :
-                      ctr.status === 'Signé' ? 'bg-teal-100 text-teal-800' :
-                      ctr.status === 'Actif' ? 'bg-emerald-100 text-emerald-800 font-semibold' :
-                      'bg-slate-100 text-slate-700'
-                    }`}>
-                      {ctr.status}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 text-sm leading-snug">
-                    Location : {ctr.engineName}
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1.5 text-xs font-mono">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Locataire :</span>
-                      <span className="font-semibold text-slate-800">{ctr.companyName}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Période de location :</span>
-                      <span className="font-semibold text-slate-700 flex items-center gap-1">
-                        <Calendar size={12} className="text-slate-400" />
-                        {ctr.startDate} au {ctr.endDate}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Attestation RC décennale :</span>
-                      <span className="font-semibold text-slate-700 flex items-center gap-1">
-                        <ShieldCheck size={12} className="text-indigo-500" />
-                        {ctr.insuranceNumber}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Financial overview & contract triggers */}
-                <div className="border-t md:border-t-0 md:border-l border-slate-100 pt-3.5 md:pt-0 md:pl-5 text-right shrink-0 w-full md:w-auto space-y-2">
-                  <div className="font-mono">
-                    <span className="text-slate-400 text-[10px] block">Montant du contrat :</span>
-                    <span className="text-base font-black text-slate-950">
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(ctr.totalAmount)}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block">Basé sur {ctr.dailyRate} €/jour d'exploitation</span>
-                  </div>
-
-                  {ctr.signedAt && (
-                    <p className="text-[10px] text-emerald-600 font-semibold font-mono">✓ Signé électroniquement le {ctr.signedAt}</p>
-                  )}
-
-                  <div className="flex gap-2 justify-end pt-1">
-                    <button
-                      onClick={() => alert(`Téléchargement de la charte contractuelle PDF pour le contrat ${ctr.code}`)}
-                      className="p-1.5 border border-slate-300 hover:bg-slate-50 text-slate-600 rounded cursor-pointer"
-                      title="Télécharger le contrat juridique signé"
-                    >
-                      <Download size={14} />
-                    </button>
-
-                    {ctr.status === 'En Signature' && (
-                      <button
-                        onClick={() => onSignContract(ctr.id)}
-                        className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] px-3 py-1.5 rounded cursor-pointer transition-all flex items-center gap-1 shadow-sm"
-                      >
-                        <PenTool size={12} />
-                        Signer le contrat
-                      </button>
-                    )}
-
-                    {ctr.status === 'Signé' && (
-                      <button
-                        onClick={() => onActivateContract(ctr.id)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] px-3 py-1.5 rounded cursor-pointer transition-all flex items-center gap-1 shadow-sm"
-                      >
-                        <CheckCircle size={12} />
-                        Activer & Mettre en service
-                      </button>
-                    )}
-
-                    {ctr.status === 'Actif' && (
-                      <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded border border-emerald-200">
-                        <FileCheck2 size={12} />
-                        Contrat Actif / Facturation en cours
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PDF Report Selector Modal */}
-      {showReportSelector && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 rounded-xl max-w-lg w-full overflow-hidden shadow-lg animate-in zoom-in-95 duration-150 text-slate-900">
-            <div className="bg-slate-950 px-5 py-4 border-b border-slate-800 flex justify-between items-center text-white">
-              <div className="flex items-center gap-2">
-                <FileText className="text-amber-500" size={18} />
-                <h3 className="font-bold text-sm uppercase tracking-wider text-amber-500">Centre de Rapports PDF</h3>
-              </div>
-              <button onClick={() => setShowReportSelector(false)} className="text-slate-400 hover:text-white font-bold cursor-pointer text-sm">✕</button>
-            </div>
-            
-            <div className="p-5 space-y-4">
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-1">Rapports d'activité disponibles</h4>
-                <p className="text-slate-500 text-[11px]">Sélectionnez un document officiel pour lancer la simulation de téléchargement sécurisé du fichier PDF.</p>
-              </div>
-
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {pdfReports.map(rep => (
-                  <div 
-                    key={rep.id} 
-                    className="border border-slate-100 rounded-lg p-3 hover:bg-slate-50 hover:border-slate-300 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50/40"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="bg-slate-100 text-slate-700 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
-                          {rep.type}
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold font-mono ${
-                          rep.status === 'Prêt' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800 animate-pulse'
-                        }`}>
-                          {rep.status}
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-slate-900 text-xs">{rep.title}</h5>
-                      <p className="text-slate-400 text-[10px] font-mono">Période: {rep.period} • Téléchargements : {rep.downloadCount}</p>
-                    </div>
-
-                    {rep.status === 'Prêt' ? (
-                      <button
-                        onClick={() => {
-                          triggerMockDownload(rep);
-                          alert(`Téléchargement de "${rep.title}" démarré avec succès !`);
-                        }}
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded text-[10px] cursor-pointer flex items-center gap-1 shrink-0 self-end sm:self-auto"
-                      >
-                        <ArrowDownToLine size={12} className="text-amber-400" />
-                        Télécharger
-                      </button>
-                    ) : (
-                      <span className="text-amber-600 flex items-center gap-1 text-[10px] font-mono shrink-0">
-                        <RefreshCw size={11} className="animate-spin" />
-                        Génération...
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-end">
-              <button 
-                onClick={() => setShowReportSelector(false)} 
-                className="border border-slate-200 text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-md text-xs font-bold cursor-pointer"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-5"><div className="flex flex-col sm:flex-row justify-between gap-3 bg-slate-900 text-white p-4 rounded-lg"><div className="flex gap-2"><button onClick={() => setActiveTab('proposals')} className={`px-4 py-2 rounded text-xs font-black ${activeTab === 'proposals' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800'}`}>Propositions ({proposals.length})</button><button onClick={() => setActiveTab('contracts')} className={`px-4 py-2 rounded text-xs font-black ${activeTab === 'contracts' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800'}`}>Contrats ({contracts.length})</button></div><label className="relative"><Search size={13} className="absolute left-3 top-2.5 text-slate-500"/><input value={search} onChange={e => setSearch(e.target.value)} className="bg-slate-950 border border-slate-700 rounded py-2 pl-8 pr-3 text-xs" placeholder="Filtrer..."/></label></div>{loading && <p className="text-xs text-slate-500">Chargement DEL-api…</p>}{error && <p className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded text-xs font-semibold">{error}</p>}{activeTab === 'proposals' ? <Table empty="Aucune proposition pour le moment." rows={filteredProposals.map(p => [p.title || p.requestTitle, p.companyName, (p.ownerNames || []).join(', ') || '—', money(p.finalPrice || p.totalEstimated, p.currency), <Badge status={p.status}/>, <Badge status={p.workflowStatus}/>, date(p.createdAt), <button onClick={() => onSelectProposal(p.id)} className="text-indigo-700 font-bold flex items-center gap-1"><Eye size={13}/>Voir détail</button>])} headers={['Titre','Entreprise','Propriétaires','Montant','Statut','Workflow','Création','Action']}/> : <Table empty="Aucun contrat pour le moment." rows={filteredContracts.map(c => [c.contractNumber || c.code, c.title || 'Contrat DEL', c.companyName, (c.ownerNames || []).join(', ') || '—', money(c.amount || c.totalAmount, c.currency), <Badge status={c.status}/>, date(c.startDate), date(c.endDate), <button onClick={() => onSelectContract(c.id)} className="text-indigo-700 font-bold flex items-center gap-1"><Eye size={13}/>Voir détail</button>])} headers={['Numéro','Titre','Entreprise','Propriétaires','Montant','Statut','Début','Fin','Action']}/>}</div>;
 };
+
+function Info({ label, value }: { label: string; value: any; key?: any }) { return <div><span className="text-slate-400 block text-[10px] uppercase">{label}</span><span className="font-semibold text-slate-800 font-mono">{value || '—'}</span></div>; }
+function Decision({ d }: { d: any }) { return <div className="grid md:grid-cols-4 gap-3 text-xs"><Info label="Nom" value={d?.ownerName}/><Info label="Statut" value={<Badge status={d?.status}/>}/><Info label="Date" value={date(d?.decidedAt)}/><Info label="Notes / rejet" value={d?.notes || d?.rejectionReason || '—'}/></div>; }
+function Grid({ title, items }: { title: string; items: any[] }) { return <section className="bg-white border border-slate-200 rounded-xl p-5"><h3 className="font-bold text-sm mb-3">{title}</h3><div className="grid md:grid-cols-3 gap-3 text-xs">{items.length ? items.map(([l, v], i) => <Info key={i} label={l} value={v}/>) : <p className="text-slate-500">Aucune donnée.</p>}</div></section>; }
+function Table({ headers, rows, empty }: { headers: string[]; rows: any[][]; empty: string }) { return <div className="bg-white border rounded-xl overflow-x-auto"><table className="w-full text-xs"><thead className="bg-slate-50 text-slate-500"><tr>{headers.map(h => <th key={h} className="text-left p-3 font-bold">{h}</th>)}</tr></thead><tbody>{rows.length ? rows.map((r, i) => <tr key={i} className="border-t">{r.map((c, j) => <td key={j} className="p-3 align-top">{c}</td>)}</tr>) : <tr><td colSpan={headers.length} className="p-8 text-center text-slate-500">{empty}</td></tr>}</tbody></table></div>; }

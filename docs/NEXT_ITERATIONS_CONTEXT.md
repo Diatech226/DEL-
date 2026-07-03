@@ -343,3 +343,14 @@ CMS (`DEL-cms`) :
 - Pages non touchées/connectées : propositions globales, contrats, factures, paiements, missions, maintenance, documents, audit, exports, paramètres, PDF, utilisateurs, propriétaires, entreprises, techniciens.
 - Mocks restants : tous les modules hors périmètre continuent d’utiliser `DEL-cms-main/src/data.ts` pour ne pas élargir cette itération.
 - Prochaine étape recommandée : ajouter un endpoint dashboard agrégé côté `DEL-api`, puis connecter les propositions de façon contrôlée avant les contrats et factures.
+
+## DEL-cms-main — Itération 2 Propositions & Contrats
+
+- Liste propositions connectée à `GET /api/proposals` dans le nouveau CMS autonome `DEL-cms-main`.
+- Détail proposition connecté à `GET /api/proposals/:id`, avec affichage des décisions entreprise/propriétaires et actions admin disponibles.
+- Création contrat depuis proposition connectée à `POST /api/proposals/:id/contracts`, seulement quand la proposition est `READY_FOR_CONTRACT` ou `ACCEPTED`.
+- Liste contrats connectée à `GET /api/contracts`.
+- Détail contrat connecté à `GET /api/contracts/:id`, avec montants, parties, engins, dates, conditions et changement de statut via `PATCH /api/contracts/:id/status`.
+- Factures non connectées dans cette itération ; placeholder conservé pour l'itération suivante.
+- Missions non connectées dans cette itération ; module laissé tel quel.
+- `DEL-cms` et `DEL-web` ne sont pas modifiés.

@@ -69,9 +69,23 @@ export interface Proposal {
   transportCost: number;
   otherCosts: number;
   totalEstimated: number;
-  status: 'Brouillon' | 'Envoyée' | 'Acceptée' | 'Refusée';
+  status: 'Brouillon' | 'Envoyée' | 'Acceptée' | 'Refusée' | string;
   validUntil: string;
   createdAt: string;
+  title?: string;
+  tenderId?: string;
+  tenderLotId?: string;
+  companyUserId?: string;
+  equipmentIds?: string[];
+  ownerNames?: string[];
+  ownerUserIds?: string[];
+  finalPrice?: number;
+  currency?: string;
+  durationMonths?: number;
+  workflowStatus?: string;
+  companyDecision?: any;
+  ownerDecisions?: any[];
+  updatedAt?: string;
 }
 
 export interface Contract {
@@ -84,9 +98,24 @@ export interface Contract {
   endDate: string;
   dailyRate: number;
   totalAmount: number;
-  status: 'Brouillon' | 'En Signature' | 'Signé' | 'Actif' | 'Terminé' | 'Résilié';
+  status: 'Brouillon' | 'En Signature' | 'Signé' | 'Actif' | 'Terminé' | 'Résilié' | string;
   signedAt?: string;
   insuranceNumber: string;
+  contractNumber?: string;
+  title?: string;
+  requestId?: string;
+  ownerNames?: string[];
+  equipmentIds?: string[];
+  amount?: number;
+  platformCommissionRate?: number;
+  platformCommissionAmount?: number;
+  ownerAmount?: number;
+  currency?: string;
+  paymentTerms?: string;
+  conditions?: string;
+  responsibilities?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Invoice {
