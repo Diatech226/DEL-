@@ -121,28 +121,56 @@ export interface Contract {
 export interface Invoice {
   id: string;
   code: string;
+  invoiceNumber?: string;
+  title?: string;
   contractId: string;
+  proposalId?: string;
+  requestId?: string;
   companyName: string;
+  ownerNames?: string[];
+  equipmentIds?: string[];
   amountExclTax: number;
+  subtotal?: number;
+  taxRate?: number;
   taxAmount: number;
   totalAmount: number;
-  status: 'Brouillon' | 'Envoyée' | 'Payée' | 'En Retard' | 'Annulée';
+  platformCommissionRate?: number;
+  platformCommissionAmount?: number;
+  ownerAmount?: number;
+  amountPaid?: number;
+  balanceDue?: number;
+  currency?: string;
+  status: string;
   issuedAt: string;
   dueDate: string;
+  periodStart?: string;
+  periodEnd?: string;
+  paymentTerms?: string;
+  notes?: string;
   paidAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Payment {
   id: string;
   code: string;
+  paymentNumber?: string;
   invoiceId: string;
   invoiceCode: string;
+  contractId?: string;
   companyName: string;
   amount: number;
-  method: 'Virement bancaire' | 'Carte bancaire' | 'Prélèvement SEPA';
-  status: 'Réussi' | 'En Cours' | 'Échoué';
+  currency?: string;
+  method: string;
+  paymentDate?: string;
+  proofUrl?: string;
+  status: string;
   transactionDate: string;
   reference: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Mission {
