@@ -329,4 +329,14 @@ export interface GlobalParams {
   autoMatchingMinScore: number;
   enableSmsAlerts: boolean;
   maintenanceAlertThresholdHours: number;
+  platformName?: string;
+  legalName?: string;
+  defaultCurrency?: string;
+  enabledCurrencies?: string[];
+  defaultPlatformCommissionRate?: number;
+  defaultTaxRate?: number;
+  enablePdfReports?: boolean;
+  enableNotifications?: boolean;
+  enableScoring?: boolean;
+  enableTenderModule?: boolean;
 }

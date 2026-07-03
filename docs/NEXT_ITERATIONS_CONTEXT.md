@@ -382,3 +382,14 @@ CMS (`DEL-cms`) :
 - `.env.example` harmonisés pour `DEL-api`, `DEL-web`, `DEL-web-main`, `DEL-cms` et `DEL-cms-main`.
 - Documents non connectés dans cette itération.
 - Audit, exports, settings, notifications, messages et scoring non connectés dans cette itération.
+
+## DEL-cms-main — Itération 6 Paramètres (2026-07-03)
+
+- Paramètres admin connectés dans `DEL-cms-main` via `GET /api/settings/admin`.
+- Modification des paramètres connectée via `PATCH /api/settings/admin`.
+- Reset des paramètres par défaut connecté via `POST /api/settings/reset` avec confirmation avant exécution.
+- `settings.service.ts` et `settings.mapper.ts` ajoutés dans `DEL-cms-main` avec fallbacks DEL/XOF.
+- La page Paramètres affiche les sections identité, coordonnées, informations légales, financier, options métier, textes légaux et textes publics.
+- Le dashboard affiche un résumé minimal des paramètres plateforme et un lien vers la modification.
+- Le header utilise minimalement `platformName`; quelques affichages financiers utilisent `defaultCurrency` comme fallback local.
+- Audit, exports, notifications, messages et scoring restent non connectés dans cette itération.
