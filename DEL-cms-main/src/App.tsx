@@ -615,6 +615,9 @@ function CmsShell() {
             onUpdateMissionProgress={handleUpdateMissionProgress}
             onAddMaintenance={handleAddMaintenance}
             onCompleteMaintenance={handleCompleteMaintenance}
+            initialTab={currentView === 'Maintenance' ? 'maintenance' : 'missions'}
+            onMissionsLoaded={setMissions}
+            onMaintenancesLoaded={setMaintenances}
           />
         );
       case 'Documents':

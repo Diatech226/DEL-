@@ -368,3 +368,17 @@ CMS (`DEL-cms`) :
 - Missions non connectées dans cette itération.
 - Documents non connectés dans cette itération.
 - PDF avancés non connectés ; un placeholder indique une prochaine itération.
+
+## DEL-cms-main — Itération 4 Missions & Maintenance + env
+
+- Liste missions connectée à `GET /api/missions` via `mission.service` et `mission.mapper`.
+- Détail mission connecté à `GET /api/missions/:id` avec informations opérationnelles, liens métier, site, dates, totaux et maintenance liée.
+- Création mission depuis détail contrat via `POST /api/contracts/:id/missions`.
+- Changement de statut mission via `PATCH /api/missions/:id/status`.
+- Liste maintenance connectée à `GET /api/maintenance` via `maintenance.service` et `maintenance.mapper`.
+- Détail maintenance connecté à `GET /api/maintenance/:id` avec diagnostic, coûts, parties et statut.
+- Création ticket maintenance depuis une mission via `POST /api/maintenance`, puis rechargement des tickets liés.
+- Changement de statut maintenance via `PATCH /api/maintenance/:id/status`.
+- `.env.example` harmonisés pour `DEL-api`, `DEL-web`, `DEL-web-main`, `DEL-cms` et `DEL-cms-main`.
+- Documents non connectés dans cette itération.
+- Audit, exports, settings, notifications, messages et scoring non connectés dans cette itération.

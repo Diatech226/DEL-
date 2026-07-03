@@ -184,10 +184,31 @@ export interface Mission {
   engineName: string;
   title: string;
   description: string;
-  status: 'Planifiée' | 'En Cours' | 'Terminée' | 'Suspendue';
+  status: string;
   startDate: string;
   endDate: string;
   progress: number;
+  missionNumber?: string;
+  requestId?: string;
+  proposalId?: string;
+  equipmentIds?: string[];
+  companyName?: string;
+  ownerNames?: string[];
+  missionType?: string;
+  country?: string;
+  city?: string;
+  siteName?: string;
+  siteLocationText?: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  totalDistanceKm?: number;
+  totalEngineHours?: number;
+  totalFuelLiters?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Maintenance {
@@ -197,13 +218,31 @@ export interface Maintenance {
   engineName: string;
   technicianId: string;
   technicianName: string;
-  type: 'Préventive' | 'Corrective' | 'Urgente';
+  type: string;
   title: string;
   description: string;
-  status: 'Planifiée' | 'En Cours' | 'Terminée';
+  status: string;
   scheduledDate: string;
   completedDate?: string;
   cost: number;
+  ticketNumber?: string;
+  equipmentId?: string;
+  equipmentTitle?: string;
+  missionId?: string;
+  contractId?: string;
+  ownerName?: string;
+  companyName?: string;
+  issueType?: string;
+  severity?: string;
+  diagnostic?: string;
+  estimatedCost?: number;
+  finalCost?: number;
+  currency?: string;
+  workshop?: string;
+  actualDowntimeHours?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Document {
