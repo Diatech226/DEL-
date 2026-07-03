@@ -332,3 +332,14 @@ CMS (`DEL-cms`) :
 - Connexions réelles démarrées : auth, catalogue engins, création d'engin, création de demande, dashboards utilisateur via `/api/me/*` quand l'utilisateur est authentifié.
 - Restent partiellement mockés : maintenance globale, appels d'offres affichés, certaines actions métier de propositions/contrats/factures et les données de secours visuelles en cas d'API indisponible.
 - Prochaine étape recommandée : remplacer les handlers simulés restants par les mutations DEL-api et introduire un vrai router React sans convertir en Next.js.
+
+## DEL-cms-main — Itération 1 API
+
+- Login admin connecté à `DEL-api` via `POST /api/auth/login` puis `GET /api/auth/me`, avec refus explicite des comptes non `ADMIN`.
+- Dashboard connecté partiellement aux listes API `GET /api/equipment` et `GET /api/requests` pour alimenter les cartes principales existantes.
+- Engins connectés via services et mappers dédiés ; changement de statut synchronisé si l’endpoint admin est disponible.
+- Demandes connectées via services et mappers dédiés ; détail demande rechargé depuis l’API quand un id est sélectionné.
+- Matching de demande conservé dans la section existante ; création de proposition branchée uniquement sur le bouton déjà présent.
+- Pages non touchées/connectées : propositions globales, contrats, factures, paiements, missions, maintenance, documents, audit, exports, paramètres, PDF, utilisateurs, propriétaires, entreprises, techniciens.
+- Mocks restants : tous les modules hors périmètre continuent d’utiliser `DEL-cms-main/src/data.ts` pour ne pas élargir cette itération.
+- Prochaine étape recommandée : ajouter un endpoint dashboard agrégé côté `DEL-api`, puis connecter les propositions de façon contrôlée avant les contrats et factures.

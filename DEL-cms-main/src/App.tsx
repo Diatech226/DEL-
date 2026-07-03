@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   initialEngines, 
   initialRequests, 
@@ -46,6 +46,12 @@ import { OperationsView } from './components/OperationsView';
 import { DocumentsView } from './components/DocumentsView';
 import { UsersView } from './components/UsersView';
 import { AdminView } from './components/AdminView';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AdminGuard } from './components/auth/AdminGuard';
+import { getAdminDashboardData } from './services/dashboard.service';
+import { updateEquipmentStatus as updateApiEquipmentStatus } from './services/equipment.service';
+import { getRequestById, updateRequestStatus as updateApiRequestStatus } from './services/request.service';
+import { createProposalFromRequest } from './services/matching.service';
 
 // Icons
 import { 
@@ -71,7 +77,7 @@ import {
   X
 } from 'lucide-react';
 
-export default function App() {
+function CmsShell() {
   // Main States
   const [currentView, setCurrentView] = useState<string>('Dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -93,10 +99,37 @@ export default function App() {
   const [exports, setExports] = useState<ExportJob[]>(initialExports);
   const [pdfReports, setPdfReports] = useState<PdfReport[]>(initialPdfReports);
   const [params, setParams] = useState<GlobalParams>(defaultParams);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const { admin, logout } = useAuth();
 
   // Selection references for detail view routing
   const [selectedEngineId, setSelectedEngineId] = useState<string | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setApiLoading(true);
+    getAdminDashboardData()
+      .then((data) => {
+        if (cancelled) return;
+        setEngines(data.equipment);
+        setRequests(data.requests);
+        setApiError(data.errors.length ? data.errors.filter(Boolean).join(' · ') : null);
+      })
+      .catch((error) => {
+        if (!cancelled) setApiError(error?.message || 'Impossible de charger les données DEL-api.');
+      })
+      .finally(() => { if (!cancelled) setApiLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedRequestId) return;
+    getRequestById(selectedRequestId)
+      .then((request) => setRequests((prev) => prev.map((item) => item.id === selectedRequestId ? request : item)))
+      .catch((error) => setApiError(error?.message || 'Impossible de charger le détail de la demande.'));
+  }, [selectedRequestId]);
 
   // Logging utility helper
   const logAction = (action: string, category: AuditLog['category'], details: string) => {
@@ -126,6 +159,8 @@ export default function App() {
   };
 
   const handleUpdateEngineStatus = (id: string, status: Engine['status']) => {
+    const apiStatus = status === 'Disponible' ? 'AVAILABLE' : status === 'En Mission' ? 'PLACED' : status === 'En Maintenance' ? 'UNDER_MAINTENANCE' : 'REJECTED';
+    updateApiEquipmentStatus(id, apiStatus).catch((error) => setApiError(error?.message || 'Statut engin non synchronisé.'));
     setEngines(prev => prev.map(e => e.id === id ? { ...e, status } : e));
     const target = engines.find(e => e.id === id);
     if (target) {
@@ -155,6 +190,8 @@ export default function App() {
   };
 
   const handleAdvanceWorkflow = (id: string, nextStatus: ClientRequest['status']) => {
+    const apiStatusMap: Record<ClientRequest['status'], string> = { Nouvelle: 'SUBMITTED', Qualification: 'UNDER_REVIEW', Matching: 'MATCHING', Proposition: 'PROPOSAL_SENT', Contrat: 'CONTRACTED', Active: 'ACTIVE', Terminée: 'COMPLETED' };
+    updateApiRequestStatus(id, apiStatusMap[nextStatus]).catch((error) => setApiError(error?.message || 'Statut demande non synchronisé.'));
     setRequests(prev => prev.map(r => {
       if (r.id === id) {
         const updatedWorkflow = r.workflow.map(w => {
@@ -180,6 +217,8 @@ export default function App() {
     // Advanced request workflow to Proposition
     handleAdvanceWorkflow(requestId, 'Proposition');
     
+    createProposalFromRequest(requestId, { equipmentIds: [engineId], title: 'Proposition DEL CMS', finalPrice: dailyRate, currency: 'EUR', durationMonths: 1, conditions: 'Création depuis le détail demande DEL-cms-main.' })
+      .catch((error) => setApiError(error?.message || 'Création proposition reportée.'));
     // Create Proposal
     const req = requests.find(r => r.id === requestId);
     const eng = engines.find(e => e.id === engineId);
@@ -657,9 +696,10 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-2">
+            <button onClick={logout} className="text-[10px] text-slate-300 hover:text-white border border-slate-700 rounded px-2 py-1">Déconnexion</button>
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-semibold text-slate-200">Jean-Pierre L.</p>
-              <p className="text-[10px] text-amber-500 font-mono">Superviseur Principal</p>
+              <p className="text-xs font-semibold text-slate-200">{admin?.fullName || admin?.email || 'Admin DEL'}</p>
+              <p className="text-[10px] text-amber-500 font-mono">Administrateur DEL-api</p>
             </div>
             <div className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-sm text-slate-200">
               JP
@@ -728,10 +768,23 @@ export default function App() {
           className="flex-1 bg-slate-50 p-6 overflow-y-auto h-[calc(100vh-64px)]"
           onClick={() => setMobileMenuOpen(false)}
         >
+          {apiLoading && <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Chargement des données DEL-api…</div>}
+          {apiError && <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">{apiError}</div>}
           {renderViewContent()}
         </main>
       </div>
 
     </div>
+  );
+}
+
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AdminGuard>
+        <CmsShell />
+      </AdminGuard>
+    </AuthProvider>
   );
 }
