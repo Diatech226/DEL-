@@ -46,6 +46,8 @@ import { OperationsView } from './components/OperationsView';
 import { DocumentsView } from './components/DocumentsView';
 import { UsersView } from './components/UsersView';
 import { AdminView } from './components/AdminView';
+import { NotificationsView } from './components/NotificationsView';
+import { MessagesView } from './components/MessagesView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AdminGuard } from './components/auth/AdminGuard';
 import { getAdminDashboardData } from './services/dashboard.service';
@@ -75,6 +77,8 @@ import {
   Download, 
   FileText,
   UserCheck2,
+  Bell,
+  MessageSquare,
   Menu,
   X
 } from 'lucide-react';
@@ -621,6 +625,10 @@ function CmsShell() {
             onMaintenancesLoaded={setMaintenances}
           />
         );
+      case 'Notifications':
+        return <NotificationsView />;
+      case 'Messages':
+        return <MessagesView />;
       case 'Documents':
         return (
           <DocumentsView 
@@ -698,6 +706,8 @@ function CmsShell() {
       group: "Ressources",
       items: [
         { name: "Documents", label: "Coffre-fort Doc", icon: FolderOpen },
+        { name: "Notifications", label: "Notifications", icon: Bell },
+        { name: "Messages", label: "Messages", icon: MessageSquare },
         { name: "Propriétaires", label: "Propriétaires", icon: Contact },
         { name: "Entreprises", label: "Entreprises BTP", icon: Building2 },
         { name: "Techniciens", label: "Techniciens", icon: BadgeCheck }
