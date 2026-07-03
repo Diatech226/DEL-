@@ -10,7 +10,9 @@
     "install:all": "npm install --prefix DEL-api && npm install --prefix DEL-web && npm install --prefix DEL-cms",
     "build:all": "npm run build --prefix DEL-web && npm run build --prefix DEL-cms",
     "dev:design-web": "npm run dev --prefix DEL-web-main",
-    "install:design-web": "npm install --prefix DEL-web-main"
+    "install:design-web": "npm install --prefix DEL-web-main",
+    "dev:main-cms": "npm run dev --prefix DEL-cms-main",
+    "install:main-cms": "npm install --prefix DEL-cms-main"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
