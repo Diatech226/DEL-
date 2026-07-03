@@ -536,12 +536,10 @@ function CmsShell() {
             proposals={proposals}
             contracts={contracts}
             pdfReports={pdfReports}
+            initialTab={currentView === 'Contrats' ? 'contracts' : 'proposals'}
             onDownloadReport={handleDownloadPdfReport}
-            onAcceptProposal={handleAcceptProposal}
-            onRejectProposal={handleRejectProposal}
-            onGenerateContract={handleGenerateContract}
-            onSignContract={handleSignContract}
-            onActivateContract={handleActivateContract}
+            onProposalsLoaded={setProposals}
+            onContractsLoaded={setContracts}
           />
         );
       case 'Factures':

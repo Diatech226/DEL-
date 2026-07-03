@@ -60,33 +60,62 @@ export interface MatchingResult {
 export interface Proposal {
   id: string;
   code: string;
+  title?: string;
   requestId: string;
   requestTitle: string;
+  tenderId?: string;
+  tenderLotId?: string;
   engineId: string;
   engineName: string;
+  equipmentIds?: string[];
   companyName: string;
+  companyUserId?: string;
+  ownerNames?: string[];
+  ownerUserIds?: string[];
   dailyRate: number;
   transportCost: number;
   otherCosts: number;
   totalEstimated: number;
-  status: 'Brouillon' | 'Envoyée' | 'Acceptée' | 'Refusée';
+  finalPrice?: number;
+  currency?: string;
+  durationMonths?: number;
+  status: string;
+  workflowStatus?: string;
+  companyDecision?: any;
+  ownerDecisions?: any[];
   validUntil: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Contract {
   id: string;
   code: string;
+  contractNumber?: string;
+  title?: string;
   proposalId: string;
+  requestId?: string;
   companyName: string;
+  ownerNames?: string[];
+  equipmentIds?: string[];
   engineName: string;
   startDate: string;
   endDate: string;
   dailyRate: number;
   totalAmount: number;
-  status: 'Brouillon' | 'En Signature' | 'Signé' | 'Actif' | 'Terminé' | 'Résilié';
+  amount?: number;
+  platformCommissionRate?: number;
+  platformCommissionAmount?: number;
+  ownerAmount?: number;
+  currency?: string;
+  status: string;
   signedAt?: string;
   insuranceNumber: string;
+  paymentTerms?: string;
+  conditions?: string;
+  responsibilities?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Invoice {
