@@ -354,3 +354,52 @@ export interface GlobalParams {
   enableScoring?: boolean;
   enableTenderModule?: boolean;
 }
+
+export interface Notification {
+  id: string;
+  recipientUserId: string;
+  recipientRole: string;
+  recipientName: string;
+  title: string;
+  message: string;
+  type: string;
+  relatedEntityType: string;
+  relatedEntityId: string;
+  actionUrl: string;
+  priority: string;
+  isRead: boolean;
+  readAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  senderUserId: string;
+  senderRole: string;
+  senderName: string;
+  body: string;
+  attachments: unknown[];
+  isInternalNote: boolean;
+  readBy: unknown[];
+  createdAt?: string;
+}
+
+export interface Conversation {
+  id: string;
+  subject: string;
+  type: string;
+  relatedEntityType: string;
+  relatedEntityId: string;
+  participants: any[];
+  createdByUserId: string;
+  createdByRole: string;
+  lastMessage: string;
+  lastMessageAt?: string;
+  status: string;
+  priority: string;
+  createdAt?: string;
+  updatedAt?: string;
+  messages: ConversationMessage[];
+}

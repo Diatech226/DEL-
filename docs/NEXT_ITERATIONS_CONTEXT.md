@@ -404,3 +404,12 @@ CMS (`DEL-cms`) :
 - Le full backup JSON administratif utilise `GET /api/exports/full-backup` et n’envoie jamais `format=csv`.
 - Le dashboard `DEL-cms-main` ajoute une carte rapide `Audit & Exports` vers les deux vues.
 - Notifications, messages, scoring et utilisateurs avancés restent non connectés dans cette itération.
+
+## DEL-cms-main — Itération 8 Notifications & Messages
+
+- Notifications administratives connectées dans `DEL-cms-main` via `GET /api/notifications`, `POST /api/notifications` et `DELETE /api/notifications/:id`.
+- Ajout d’un service notification, d’un mapper notification, de helpers labels/variantes et d’une vue Notifications avec loading/error/empty, filtres locaux, création manuelle et suppression confirmée.
+- Inspection API messages : aucune route/modèle Conversation ou Message dédié n’existe actuellement dans `DEL-api`; `/api/conversations` et `/api/messages` sont absents.
+- Ajout d’une page Messages placeholder claire dans `DEL-cms-main` : « Messages à connecter après création API ».
+- Ajout d’une façade service/mapper/helpers conversation prêts pour une future API, mais non branchés dans l’UI tant que les endpoints backend sont absents.
+- Scoring, utilisateurs avancés, propriétaires, entreprises, techniciens, upload réel, signature électronique et paiement réel restent non connectés dans cette itération.
