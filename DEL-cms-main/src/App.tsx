@@ -258,7 +258,7 @@ function CmsShell() {
     // Advanced request workflow to Proposition
     handleAdvanceWorkflow(requestId, 'Proposition');
     
-    createProposalFromRequest(requestId, { equipmentIds: [engineId], title: 'Proposition DEL CMS', finalPrice: dailyRate, currency: 'EUR', durationMonths: 1, conditions: 'Création depuis le détail demande DEL-cms-main.' })
+    createProposalFromRequest(requestId, { equipmentIds: [engineId], title: 'Proposition DEL CMS', finalPrice: dailyRate, currency: params.defaultCurrency || 'XOF', durationMonths: 1, conditions: 'Création depuis le détail demande DEL-cms-main.' })
       .catch((error) => setApiError(error?.message || 'Création proposition reportée.'));
     // Create Proposal
     const req = requests.find(r => r.id === requestId);
@@ -283,7 +283,7 @@ function CmsShell() {
       };
       
       setProposals(prev => [newProp, ...prev]);
-      logAction(`Émission proposition ${newProp.code}`, 'Contrat', `Proposition commerciale de ${newProp.totalEstimated} € TTC envoyée à ${newProp.companyName}.`);
+      logAction(`Émission proposition ${newProp.code}`, 'Contrat', `Proposition commerciale de ${newProp.totalEstimated} ${params.defaultCurrency || 'XOF'} TTC envoyée à ${newProp.companyName}.`);
       setCurrentView('Propositions');
     }
   };
@@ -374,7 +374,7 @@ function CmsShell() {
       code: `FAC-2026-00${invoices.length + 1}`
     };
     setInvoices(prev => [newInv, ...prev]);
-    logAction(`Création facture ${newInv.code}`, 'Facturation', `Brouillon de facture de ${newInv.totalAmount} € émis pour ${newInv.companyName}.`);
+    logAction(`Création facture ${newInv.code}`, 'Facturation', `Brouillon de facture de ${newInv.totalAmount} ${params.defaultCurrency || 'XOF'} émis pour ${newInv.companyName}.`);
   };
 
   const handlePayInvoice = (id: string, method: Payment['method']) => {
@@ -397,7 +397,7 @@ function CmsShell() {
       };
 
       setPayments(prev => [newPay, ...prev]);
-      logAction(`Encaissement facture ${inv.code}`, 'Facturation', `Règlement de ${inv.totalAmount} € reçu avec succès.`);
+      logAction(`Encaissement facture ${inv.code}`, 'Facturation', `Règlement de ${inv.totalAmount} ${inv.currency || params.defaultCurrency || 'XOF'} reçu avec succès.`);
     }
   };
 
@@ -550,6 +550,7 @@ function CmsShell() {
             contracts={contracts} 
             invoices={invoices} 
             maintenances={maintenances}
+            params={params}
             onNavigate={handleNavigate}
           />
         );
@@ -654,6 +655,7 @@ function CmsShell() {
             onUpdateParams={handleUpdateParams}
             onAddExportJob={handleAddExportJob}
             onGeneratePdfReport={handleGeneratePdfReport}
+            initialTab={currentView === 'Audit' ? 'audit' : currentView === 'Exports' ? 'exports' : currentView === 'Rapports PDF' ? 'reports' : 'params'}
           />
         );
       default:
@@ -729,7 +731,7 @@ function CmsShell() {
             <span className="bg-amber-500 text-slate-950 font-black p-1.5 rounded text-xs tracking-wider">
               DEL
             </span>
-            <span className="font-bold text-sm tracking-widest font-sans uppercase">DEL-cms</span>
+            <span className="font-bold text-sm tracking-widest font-sans uppercase">{params.platformName || 'DEL'}-cms</span>
           </div>
         </div>
 

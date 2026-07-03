@@ -877,5 +877,15 @@ export const defaultParams: GlobalParams = {
   defaultPaymentTermDays: 30,
   autoMatchingMinScore: 75, // min score to alert admin
   enableSmsAlerts: true,
-  maintenanceAlertThresholdHours: 50 // notify when within 50 hrs
+  maintenanceAlertThresholdHours: 50, // notify when within 50 hrs
+  platformName: 'DEL',
+  legalName: 'DEL',
+  defaultCurrency: 'XOF',
+  enabledCurrencies: ['XOF', 'USD', 'EUR'],
+  defaultPlatformCommissionRate: 10,
+  defaultTaxRate: 0,
+  enablePdfReports: true,
+  enableNotifications: false,
+  enableScoring: false,
+  enableTenderModule: false
 };

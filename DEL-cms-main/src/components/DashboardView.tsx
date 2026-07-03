@@ -1,5 +1,5 @@
 import React from 'react';
-import { Engine, ClientRequest, Contract, Invoice, Maintenance } from '../types';
+import { Engine, ClientRequest, Contract, Invoice, Maintenance, GlobalParams } from '../types';
 import { 
   Wrench, 
   TrendingUp, 
@@ -20,6 +20,7 @@ interface DashboardViewProps {
   contracts: Contract[];
   invoices: Invoice[];
   maintenances: Maintenance[];
+  params: GlobalParams;
   onNavigate: (view: string, targetId?: string) => void;
 }
 
@@ -29,6 +30,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   contracts,
   invoices,
   maintenances,
+  params,
   onNavigate
 }) => {
   // Stats calculations
@@ -119,7 +121,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Encours contrats</span>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-slate-900">
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(activeContractsAmount)}
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: params.defaultCurrency || 'EUR', maximumFractionDigits: 0 }).format(activeContractsAmount)}
               </span>
             </div>
             <p className="text-xs text-slate-400 font-mono">
@@ -154,7 +156,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Retards Paiement</span>
             <div className="flex items-baseline gap-2">
               <span className={`text-3xl font-bold ${lateInvoicesCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(lateInvoicesAmount)}
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: params.defaultCurrency || 'EUR', maximumFractionDigits: 0 }).format(lateInvoicesAmount)}
               </span>
             </div>
             <p className="text-xs text-slate-400 font-mono">
@@ -165,6 +167,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <DollarSign size={20} />
           </div>
         </div>
+      </div>
+
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Paramètres plateforme</span>
+          <h2 className="text-lg font-bold text-slate-900 mt-1">{params.platformName || 'DEL'}</h2>
+          <p className="text-xs text-slate-500 mt-1">Devise {params.defaultCurrency || 'XOF'} · Commission {params.defaultPlatformCommissionRate ?? params.platformFeeRate}%</p>
+          <p className="text-[11px] text-slate-400 mt-2">Modules actifs : PDF {params.enablePdfReports ? '✓' : '—'} · Notifications {params.enableNotifications ? '✓' : '—'} · Scoring {params.enableScoring ? '✓' : '—'} · Tenders {params.enableTenderModule ? '✓' : '—'}</p>
+        </div>
+        <button onClick={() => onNavigate('Paramètres')} className="border border-amber-300 bg-amber-50 text-amber-800 font-bold px-4 py-2 rounded-md text-xs">Modifier les paramètres</button>
       </div>
 
       {/* Main Grid: Alerts / Operations & Fleet Distribution */}
@@ -234,7 +247,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <span className="text-xs font-semibold font-mono text-slate-700">{i.code}</span>
                     </div>
                     <p className="text-sm font-semibold text-slate-900">Retard de paiement • {i.companyName}</p>
-                    <p className="text-xs text-slate-500 font-mono">Montant : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(i.totalAmount)} • Échéance : {i.dueDate}</p>
+                    <p className="text-xs text-slate-500 font-mono">Montant : {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: params.defaultCurrency || 'EUR' }).format(i.totalAmount)} • Échéance : {i.dueDate}</p>
                   </div>
                   <button 
                     onClick={() => onNavigate('Paiements')} 
@@ -281,7 +294,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <div className="text-[10px] text-slate-400">{r.category} ({r.minPower} kW min)</div>
                       </td>
                       <td className="px-5 py-3 text-right font-semibold text-slate-900">
-                        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(r.budget)}
+                        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: params.defaultCurrency || 'EUR', maximumFractionDigits: 0 }).format(r.budget)}
                       </td>
                       <td className="px-5 py-3">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${

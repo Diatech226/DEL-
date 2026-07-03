@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlobalParams, AuditLog, ExportJob, PdfReport } from '../types';
+import { getAdminSettings, resetSettingsToDefault, updateAdminSettings } from '../services/settings.service';
+import { defaultAdminSettingsForm, mapApiSettingsToAdminForm, type AdminSettingsForm } from '../mappers/settings.mapper';
 import { 
   Sliders, 
   ShieldAlert, 
@@ -25,7 +27,23 @@ interface AdminViewProps {
   onUpdateParams: (newParams: GlobalParams) => void;
   onAddExportJob: (job: Omit<ExportJob, 'id' | 'timestamp' | 'status' | 'size'>) => void;
   onGeneratePdfReport: (report: Omit<PdfReport, 'id' | 'generatedAt' | 'status' | 'downloadCount'>) => void;
+  initialTab?: 'params' | 'audit' | 'exports' | 'reports';
 }
+
+type Field = keyof AdminSettingsForm;
+const textFields = (items: Array<[Field, string, string?]>, form: AdminSettingsForm, setValue: (field: Field, value: string | number | boolean | string[]) => void) => items.map(([field, label, type = 'text']) => (
+  <div key={field}>
+    <label className="block font-semibold text-slate-700 mb-1">{label}</label>
+    <input type={type} value={String(form[field] ?? '')} onChange={(e) => setValue(field, type === 'number' ? Number(e.target.value) : e.target.value)} className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-amber-500" />
+  </div>
+));
+
+const textAreas = (items: Array<[Field, string]>, form: AdminSettingsForm, setValue: (field: Field, value: string) => void) => items.map(([field, label]) => (
+  <div key={field}>
+    <label className="block font-semibold text-slate-700 mb-1">{label}</label>
+    <textarea rows={3} value={String(form[field] ?? '')} onChange={(e) => setValue(field, e.target.value)} className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-amber-500" />
+  </div>
+));
 
 export const AdminView: React.FC<AdminViewProps> = ({
   params,
@@ -34,12 +52,18 @@ export const AdminView: React.FC<AdminViewProps> = ({
   pdfReports,
   onUpdateParams,
   onAddExportJob,
-  onGeneratePdfReport
+  onGeneratePdfReport,
+  initialTab = 'params'
 }) => {
-  const [adminTab, setAdminTab] = useState<'params' | 'audit' | 'exports' | 'reports'>('params');
+  const [adminTab, setAdminTab] = useState<'params' | 'audit' | 'exports' | 'reports'>(initialTab);
 
   // Parameters form state
-  const [formParams, setFormParams] = useState<GlobalParams>({ ...params });
+  const [formParams, setFormParams] = useState<AdminSettingsForm>(defaultAdminSettingsForm);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsResetting, setSettingsResetting] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
   // Exports form state
   const [exportFormat, setExportFormat] = useState<'CSV' | 'Excel' | 'JSON'>('Excel');
@@ -50,10 +74,49 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [reportType, setReportType] = useState<'Mensuel' | 'Annuel' | 'Performance' | 'Financier'>('Performance');
   const [reportPeriod, setReportPeriod] = useState('Troisième Trimestre 2026');
 
-  const handleParamsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdateParams(formParams);
-    alert("Les réglages généraux de la plateforme DEL ont été sauvegardés.");
+  useEffect(() => setAdminTab(initialTab), [initialTab]);
+
+  const syncParentParams = (form: AdminSettingsForm) => onUpdateParams({
+    ...params,
+    platformName: form.platformName,
+    legalName: form.legalName,
+    defaultCurrency: form.defaultCurrency,
+    enabledCurrencies: form.enabledCurrencies,
+    defaultPlatformCommissionRate: form.defaultPlatformCommissionRate,
+    defaultTaxRate: form.defaultTaxRate,
+    platformFeeRate: form.defaultPlatformCommissionRate,
+    taxRate: form.defaultTaxRate,
+    enablePdfReports: form.enablePdfReports,
+    enableNotifications: form.enableNotifications,
+    enableScoring: form.enableScoring,
+    enableTenderModule: form.enableTenderModule
+  });
+
+  const loadSettings = () => {
+    setSettingsLoading(true); setSettingsError(null);
+    getAdminSettings()
+      .then((payload) => { const form = mapApiSettingsToAdminForm(payload); setFormParams(form); syncParentParams(form); })
+      .catch((error) => setSettingsError(error?.message || 'Impossible de charger les paramètres admin.'))
+      .finally(() => setSettingsLoading(false));
+  };
+
+  useEffect(loadSettings, []);
+
+  const setValue = (field: Field, value: string | number | boolean | string[]) => setFormParams((prev) => ({ ...prev, [field]: value }));
+
+  const handleParamsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); setSettingsSaving(true); setSettingsError(null); setSettingsSuccess(null);
+    try { const saved = await updateAdminSettings(formParams); const form = mapApiSettingsToAdminForm(saved); setFormParams(form); syncParentParams(form); setSettingsSuccess('Paramètres plateforme sauvegardés.'); }
+    catch (error: any) { setSettingsError(error?.message || 'Sauvegarde des paramètres impossible.'); }
+    finally { setSettingsSaving(false); }
+  };
+
+  const handleResetSettings = async () => {
+    if (!window.confirm('Réinitialiser les paramètres DEL aux valeurs par défaut ?')) return;
+    setSettingsResetting(true); setSettingsError(null); setSettingsSuccess(null);
+    try { const reset = await resetSettingsToDefault(); const form = mapApiSettingsToAdminForm(reset); setFormParams(form); syncParentParams(form); setSettingsSuccess('Paramètres réinitialisés par défaut.'); }
+    catch (error: any) { setSettingsError(error?.message || 'Réinitialisation des paramètres impossible.'); }
+    finally { setSettingsResetting(false); }
   };
 
   const handleExportSubmit = (e: React.FormEvent) => {
@@ -125,118 +188,41 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       {/* Screen 17: Paramètres */}
       {adminTab === 'params' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-150">
-          
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-6">
+        <form onSubmit={handleParamsSubmit} className="space-y-6 animate-in fade-in duration-150 text-xs">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Variables de Configuration Plateforme</h2>
-              <p className="text-xs text-slate-500">Ajustez les taux d'intermédiation financiers par défaut, la fiscalité de la plateforme, et les seuils d'alertes.</p>
+              <h2 className="text-base font-bold text-slate-900">Paramètres plateforme connectés à DEL-api</h2>
+              <p className="text-xs text-slate-500">Lecture, modification et reset via les endpoints admin protégés.</p>
             </div>
-
-            <form onSubmit={handleParamsSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Taux de Commission Plateforme par défaut (%)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formParams.platformFeeRate}
-                    onChange={(e) => setFormParams({ ...formParams, platformFeeRate: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Prélèvement brut appliqué aux propriétaires</span>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Taux de Taxe / TVA appliqué (%)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={formParams.taxRate}
-                    onChange={(e) => setFormParams({ ...formParams, taxRate: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">TVA légale sur la facturation de prestations</span>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Délai par défaut de paiement de factures (jours)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={formParams.defaultPaymentTermDays}
-                    onChange={(e) => setFormParams({ ...formParams, defaultPaymentTermDays: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Nombre de jours maximum avant mise en retard</span>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Seuil minimal d'Auto-Matching (%)</label>
-                  <input
-                    type="number"
-                    min="10"
-                    max="100"
-                    value={formParams.autoMatchingMinScore}
-                    onChange={(e) => setFormParams({ ...formParams, autoMatchingMinScore: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-slate-200 rounded text-slate-900 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Score requis pour que le moteur de matching propose une alerte</span>
-                </div>
-
-                <div className="col-span-1 sm:col-span-2 pt-2 border-t border-slate-100 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-slate-700">Activer les alertes SMS automatisées</p>
-                      <p className="text-[10px] text-slate-400">Notifie instantanément les techniciens d'urgences de pannes critiques par SMS</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={formParams.enableSmsAlerts}
-                      onChange={(e) => setFormParams({ ...formParams, enableSmsAlerts: e.target.checked })}
-                      className="w-5 h-5 accent-amber-500 rounded cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-slate-700">Seuil d'alerte de maintenance anticipée (heures compteur)</p>
-                      <p className="text-[10px] text-slate-400">Émet une notification d'intervention quand la machine approche d'un cycle</p>
-                    </div>
-                    <input
-                      type="number"
-                      value={formParams.maintenanceAlertThresholdHours}
-                      onChange={(e) => setFormParams({ ...formParams, maintenanceAlertThresholdHours: Number(e.target.value) })}
-                      className="p-2 border border-slate-200 rounded w-20 text-right focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4 border-t border-slate-100">
-                <button
-                  type="submit"
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2.5 rounded-md transition-all shadow-sm cursor-pointer"
-                >
-                  Sauvegarder les réglages plateforme
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-slate-950 text-slate-100 border border-slate-900 rounded-xl p-5 shadow-sm space-y-4">
-              <h3 className="font-bold text-xs uppercase tracking-wider text-amber-500">Moteur Automatisé</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                La plateforme s'exécute de façon décentralisée. En configurant un seuil d'auto-matching minimal élevé, vous limitez le volume de propositions envoyées aux clients, mais améliorez le taux de transformation de 18% en moyenne.
-              </p>
+            <div className="flex gap-2">
+              <button type="button" onClick={handleResetSettings} disabled={settingsResetting || settingsSaving} className="border border-slate-300 text-slate-700 font-bold px-4 py-2.5 rounded-md disabled:opacity-60">{settingsResetting ? 'Réinitialisation…' : 'Réinitialiser par défaut'}</button>
+              <button type="submit" disabled={settingsSaving || settingsResetting} className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2.5 rounded-md disabled:opacity-60">{settingsSaving ? 'Enregistrement…' : 'Enregistrer'}</button>
             </div>
           </div>
+          {settingsLoading && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">Chargement des paramètres…</div>}
+          {settingsError && <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700">{settingsError}</div>}
+          {settingsSuccess && <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-700">{settingsSuccess}</div>}
 
-        </div>
+          {[
+            ['Identité DEL', [['platformName','Nom plateforme'],['legalName','Nom légal'],['slogan','Slogan'],['description','Description'],['logoUrl','Logo URL'],['faviconUrl','Favicon URL'],['primaryColor','Couleur primaire'],['secondaryColor','Couleur secondaire'],['accentColor','Couleur accent']]],
+            ['Coordonnées', [['email','Email'],['phone','Téléphone'],['whatsapp','WhatsApp'],['website','Site web'],['address','Adresse'],['country','Pays'],['city','Ville']]],
+            ['Informations légales', [['rccm','RCCM'],['ifu','IFU'],['taxNumber','Numéro fiscal'],['registrationNumber','Numéro enregistrement']]],
+            ['Paramètres financiers', [['defaultCurrency','Devise par défaut'],['invoicePrefix','Préfixe facture'],['contractPrefix','Préfixe contrat'],['paymentPrefix','Préfixe paiement'],['defaultPlatformCommissionRate','Commission plateforme (%)','number'],['defaultTaxRate','Taxe (%)','number']]]
+          ].map(([title, fields]) => (
+            <section key={title as string} className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+              <h3 className="font-bold text-slate-900">{title as string}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{textFields(fields as Array<[Field,string,string?]>, formParams, setValue)}</div>
+              {title === 'Paramètres financiers' && <div><label className="block font-semibold text-slate-700 mb-1">Devises activées (séparées par virgules)</label><input value={formParams.enabledCurrencies.join(', ')} onChange={(e) => setValue('enabledCurrencies', e.target.value.split(',').map(v => v.trim()).filter(Boolean))} className="w-full p-2.5 border border-slate-200 rounded text-slate-900" /></div>}
+            </section>
+          ))}
+
+          <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+            <h3 className="font-bold text-slate-900">Options métier</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{(['allowPublicEquipmentSubmission','allowPublicRequestSubmission','requireAdminApprovalForEquipment','requireAdminApprovalForRequests','requireDocumentsForVerification','enableTenderModule','enableTenderSubmissions','enableScoring','enablePdfReports','enableInternalMessaging','enableNotifications'] as Field[]).map((field) => <label key={field} className="flex items-center justify-between gap-3 rounded border border-slate-100 p-3"><span className="font-semibold text-slate-700">{field}</span><input type="checkbox" checked={Boolean(formParams[field])} onChange={(e) => setValue(field, e.target.checked)} className="w-5 h-5 accent-amber-500" /></label>)}</div>
+          </section>
+          <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4"><h3 className="font-bold text-slate-900">Textes légaux</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{textAreas([['termsOfService','Conditions générales'],['privacyPolicy','Politique confidentialité'],['rentalTerms','Conditions location'],['ownerTerms','Conditions propriétaires'],['companyTerms','Conditions entreprises'],['investmentDisclaimer','Disclaimer investissement'],['paymentTerms','Conditions paiement'],['contractLegalNotice','Mention contrat'],['invoiceLegalNotice','Mention facture']], formParams, (f,v)=>setValue(f,v))}</div></section>
+          <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4"><h3 className="font-bold text-slate-900">Textes publics</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{textAreas([['homepageHeroTitle','Titre hero'],['homepageHeroSubtitle','Sous-titre hero'],['homepageCtaText','Texte CTA'],['equipmentSubmissionNotice','Notice dépôt engin'],['requestSubmissionNotice','Notice demande'],['tenderSubmissionNotice','Notice appel d’offres']], formParams, (f,v)=>setValue(f,v))}</div></section>
+        </form>
       )}
 
       {/* Screen 18: Audit (Security Log) */}
