@@ -393,3 +393,14 @@ CMS (`DEL-cms`) :
 - Le dashboard affiche un résumé minimal des paramètres plateforme et un lien vers la modification.
 - Le header utilise minimalement `platformName`; quelques affichages financiers utilisent `defaultCurrency` comme fallback local.
 - Audit, exports, notifications, messages et scoring restent non connectés dans cette itération.
+
+## DEL-cms-main — Itération 7 Audit & Exports
+
+- `DEL-cms-main` connecte maintenant la liste Audit à `GET /api/audit-logs` avec filtres `module`, `action`, `actorRole`, `entityType`, `severity`, `dateFrom`, `dateTo` et `limit`.
+- Le détail Audit est connecté à `GET /api/audit-logs/:id` et affiche action, module, sévérité, date, acteur, entité, message, `oldValue`, `newValue`, IP et user agent.
+- Un mapper local `audit.mapper.ts` normalise les logs API vers le modèle admin avec fallbacks système.
+- Les helpers locaux d’audit et de sévérité sont ajoutés dans `DEL-cms-main/src/constants/status.ts`.
+- La page Exports télécharge les exports CSV/JSON via `GET /api/exports/:resource`, avec filtres globaux `dateFrom`, `dateTo`, `status` et `limit`.
+- Le full backup JSON administratif utilise `GET /api/exports/full-backup` et n’envoie jamais `format=csv`.
+- Le dashboard `DEL-cms-main` ajoute une carte rapide `Audit & Exports` vers les deux vues.
+- Notifications, messages, scoring et utilisateurs avancés restent non connectés dans cette itération.

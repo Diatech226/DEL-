@@ -294,13 +294,27 @@ export interface Technician {
 
 export interface AuditLog {
   id: string;
-  user: string;
+  actorUserId?: string;
+  actorName?: string;
+  actorRole?: string;
   action: string;
+  module?: string;
+  entityType?: string;
+  entityId?: string;
+  entityLabel?: string;
+  oldValue?: unknown;
+  newValue?: unknown;
+  message?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  severity?: string;
+  createdAt?: string;
+  user: string;
   category: 'Engin' | 'Demande' | 'Contrat' | 'Facturation' | 'Sécurité' | 'Système';
   timestamp: string;
   details: string;
-  ipAddress: string;
 }
+
 
 export interface ExportJob {
   id: string;

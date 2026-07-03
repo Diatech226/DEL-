@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { GlobalParams, AuditLog, ExportJob, PdfReport } from '../types';
 import { getAdminSettings, resetSettingsToDefault, updateAdminSettings } from '../services/settings.service';
+import { getAuditLogById, getAuditLogs, type AuditFilters } from '../services/audit.service';
+import { downloadExport, type ExportFormat, type ExportResource } from '../services/export.service';
+import { getAuditActionLabel, getAuditModuleLabel, getSeverityLabel, getSeverityVariant } from '../constants/status';
 import { defaultAdminSettingsForm, mapApiSettingsToAdminForm, type AdminSettingsForm } from '../mappers/settings.mapper';
 import { 
   Sliders, 
@@ -56,6 +59,15 @@ export const AdminView: React.FC<AdminViewProps> = ({
   initialTab = 'params'
 }) => {
   const [adminTab, setAdminTab] = useState<'params' | 'audit' | 'exports' | 'reports'>(initialTab);
+  const [apiAuditLogs, setApiAuditLogs] = useState<AuditLog[]>(auditLogs);
+  const [auditFilters, setAuditFilters] = useState<AuditFilters>({ limit: 100 });
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [selectedAudit, setSelectedAudit] = useState<AuditLog | null>(null);
+  const [auditDetailLoading, setAuditDetailLoading] = useState(false);
+  const [exportFilters, setExportFilters] = useState({ dateFrom: '', dateTo: '', status: '', limit: '5000' });
+  const [exportLoading, setExportLoading] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Parameters form state
   const [formParams, setFormParams] = useState<AdminSettingsForm>(defaultAdminSettingsForm);
@@ -65,9 +77,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
 
-  // Exports form state
-  const [exportFormat, setExportFormat] = useState<'CSV' | 'Excel' | 'JSON'>('Excel');
-  const [exportTarget, setExportTarget] = useState('Registre_Engins_Complet');
+
 
   // PDF report form state
   const [reportTitle, setReportTitle] = useState('Rapport de Performances Plateforme T3');
@@ -119,14 +129,37 @@ export const AdminView: React.FC<AdminViewProps> = ({
     finally { setSettingsResetting(false); }
   };
 
-  const handleExportSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddExportJob({
-      name: `${exportTarget}_${new Date().toISOString().split('T')[0]}`,
-      format: exportFormat,
-      recordsCount: exportTarget.includes('Engins') ? 8 : exportTarget.includes('Factures') ? 4 : 15
-    });
-    alert(`Lancement de l'exportation au format ${exportFormat}. Le traitement s'effectue en arrière-plan.`);
+  const loadAuditLogs = () => {
+    setAuditLoading(true); setAuditError(null);
+    getAuditLogs(auditFilters)
+      .then(setApiAuditLogs)
+      .catch((error) => setAuditError(error?.message || 'Impossible de charger l’audit depuis l’API DEL.'))
+      .finally(() => setAuditLoading(false));
+  };
+
+  useEffect(() => { if (adminTab === 'audit') loadAuditLogs(); }, [adminTab]);
+
+  const setAuditFilter = (field: keyof AuditFilters, value: string) => setAuditFilters((prev) => ({ ...prev, [field]: value }));
+  const setExportFilter = (field: keyof typeof exportFilters, value: string) => setExportFilters((prev) => ({ ...prev, [field]: value }));
+
+  const openAuditDetail = async (id: string) => {
+    setAuditDetailLoading(true); setAuditError(null);
+    try { setSelectedAudit(await getAuditLogById(id)); }
+    catch (error: any) { setAuditError(error?.message || 'Impossible de charger le détail audit depuis l’API DEL.'); }
+    finally { setAuditDetailLoading(false); }
+  };
+
+  const prettyJson = (value: unknown) => {
+    if (value === undefined || value === null || value === '') return '—';
+    try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+  };
+
+  const runExport = async (resource: ExportResource, format: ExportFormat = 'csv') => {
+    const key = `${resource}-${format}`;
+    setExportLoading(key); setExportError(null);
+    try { await downloadExport(resource, format, exportFilters); }
+    catch (error: any) { setExportError(error?.message || 'Téléchargement export impossible depuis DEL-api.'); }
+    finally { setExportLoading(null); }
   };
 
   const handlePdfSubmit = (e: React.FormEvent) => {
@@ -228,46 +261,48 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {/* Screen 18: Audit (Security Log) */}
       {adminTab === 'audit' && (
         <div className="space-y-4 animate-in fade-in duration-150">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Journal de traçabilité d'Audit Sécurité</h2>
-            <p className="text-xs text-slate-500">Registre réglementaire inaltérable listant l'ensemble des actions initiées par les administrateurs et exploitants.</p>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Journal de traçabilité d'Audit Sécurité</h2>
+              <p className="text-xs text-slate-500">Logs administrateur chargés depuis DEL-api avec filtres simples.</p>
+            </div>
+            <button onClick={loadAuditLogs} disabled={auditLoading} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-60">{auditLoading ? 'Chargement…' : 'Rafraîchir'}</button>
           </div>
+
+          <form onSubmit={(e)=>{e.preventDefault(); loadAuditLogs();}} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 text-xs">
+            {(['module','action','actorRole','entityType','severity','dateFrom','dateTo','limit'] as Array<keyof AuditFilters>).map((field) => (
+              <div key={field}>
+                <label className="block font-bold text-slate-600 mb-1">{field}</label>
+                <input type={field.toString().startsWith('date') ? 'date' : field === 'limit' ? 'number' : 'text'} value={String(auditFilters[field] ?? '')} onChange={(e)=>setAuditFilter(field, e.target.value)} className="w-full border border-slate-200 rounded p-2" placeholder={field === 'limit' ? '100' : ''} />
+              </div>
+            ))}
+            <button className="col-span-2 md:col-span-4 lg:col-span-8 bg-amber-500 text-slate-950 rounded p-2 font-black">Appliquer les filtres</button>
+          </form>
+          {auditLoading && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800 text-xs">Chargement de l’audit DEL-api…</div>}
+          {auditError && <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700 text-xs">{auditError || 'Impossible de charger l’audit depuis l’API DEL.'}</div>}
+          {auditDetailLoading && <div className="rounded-lg border border-slate-200 bg-white p-3 text-slate-500 text-xs">Chargement du détail audit…</div>}
+
+          {selectedAudit && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4 text-xs">
+              <div className="flex justify-between gap-3"><h3 className="font-bold text-slate-900">Détail audit #{selectedAudit.id}</h3><button onClick={()=>setSelectedAudit(null)} className="text-slate-600 underline">Retour à la liste</button></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <section><h4 className="font-bold mb-2">Action</h4><p>{getAuditActionLabel(selectedAudit.action)}</p><p>{getAuditModuleLabel(selectedAudit.module)}</p><p>{getSeverityLabel(selectedAudit.severity)}</p><p>{selectedAudit.createdAt}</p></section>
+                <section><h4 className="font-bold mb-2">Acteur</h4><p>{selectedAudit.actorName}</p><p>{selectedAudit.actorRole}</p><p>{selectedAudit.actorUserId || '—'}</p></section>
+                <section><h4 className="font-bold mb-2">Entité</h4><p>{selectedAudit.entityType || '—'}</p><p>{selectedAudit.entityId || '—'}</p><p>{selectedAudit.entityLabel || '—'}</p></section>
+              </div>
+              <section><h4 className="font-bold mb-2">Message</h4><p className="text-slate-700">{selectedAudit.message || selectedAudit.details}</p></section>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4"><section><h4 className="font-bold mb-2">Ancienne valeur</h4><pre className="bg-slate-950 text-slate-100 rounded p-3 overflow-auto text-[11px]">{prettyJson(selectedAudit.oldValue)}</pre></section><section><h4 className="font-bold mb-2">Nouvelle valeur</h4><pre className="bg-slate-950 text-slate-100 rounded p-3 overflow-auto text-[11px]">{prettyJson(selectedAudit.newValue)}</pre></section></div>
+              <section><h4 className="font-bold mb-2">Contexte technique</h4><p>IP : {selectedAudit.ipAddress || '—'}</p><p className="break-all">User agent : {selectedAudit.userAgent || '—'}</p></section>
+            </div>
+          )}
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    <th className="px-5 py-3.5 font-mono">ID Log</th>
-                    <th className="px-5 py-3.5 font-mono">Date & Heure</th>
-                    <th className="px-5 py-3.5">Auteur exploitant</th>
-                    <th className="px-5 py-3.5">Action tracée</th>
-                    <th className="px-5 py-3.5">Module</th>
-                    <th className="px-5 py-3.5">Détails techniques</th>
-                    <th className="px-5 py-3.5 font-mono">Adresse IP</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs font-mono">
-                  {auditLogs.map(log => (
-                    <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-5 py-3 text-slate-400 font-bold">{log.id}</td>
-                      <td className="px-5 py-3 text-slate-500">{log.timestamp}</td>
-                      <td className="px-5 py-3 font-sans font-semibold text-slate-900">{log.user}</td>
-                      <td className="px-5 py-3 font-sans font-medium text-slate-800">{log.action}</td>
-                      <td className="px-5 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-sans font-bold ${
-                          log.category === 'Sécurité' ? 'bg-rose-100 text-rose-800' :
-                          log.category === 'Facturation' ? 'bg-emerald-100 text-emerald-800' :
-                          log.category === 'Demande' ? 'bg-amber-100 text-amber-800' :
-                          'bg-slate-100 text-slate-600'
-                        }`}>
-                          {log.category}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 font-sans text-slate-500 max-w-xs truncate" title={log.details}>{log.details}</td>
-                      <td className="px-5 py-3 text-slate-600 font-medium">{log.ipAddress}</td>
-                    </tr>
-                  ))}
+                <thead><tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-wider text-slate-400"><th className="px-4 py-3">Date</th><th className="px-4 py-3">Acteur</th><th className="px-4 py-3">Rôle</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">Module</th><th className="px-4 py-3">Entité</th><th className="px-4 py-3">Message</th><th className="px-4 py-3">Sévérité</th><th className="px-4 py-3">Détail</th></tr></thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {!auditLoading && apiAuditLogs.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">Aucun log d’audit pour le moment.</td></tr>}
+                  {apiAuditLogs.map(log => <tr key={log.id} className="hover:bg-slate-50/50"><td className="px-4 py-3 font-mono text-slate-500">{log.createdAt || log.timestamp}</td><td className="px-4 py-3 font-semibold">{log.actorName || log.user}</td><td className="px-4 py-3">{log.actorRole || 'SYSTEM'}</td><td className="px-4 py-3">{getAuditActionLabel(log.action)}</td><td className="px-4 py-3">{getAuditModuleLabel(log.module)}</td><td className="px-4 py-3">{log.entityLabel || log.entityType || '—'}</td><td className="px-4 py-3 max-w-xs truncate" title={log.message || log.details}>{log.message || log.details}</td><td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getSeverityVariant(log.severity) === 'danger' ? 'bg-rose-100 text-rose-800' : getSeverityVariant(log.severity) === 'warning' ? 'bg-amber-100 text-amber-800' : getSeverityVariant(log.severity) === 'info' ? 'bg-sky-100 text-sky-800' : 'bg-slate-100 text-slate-700'}`}>{getSeverityLabel(log.severity)}</span></td><td className="px-4 py-3"><button onClick={()=>openAuditDetail(log.id)} className="text-amber-700 font-bold hover:underline">Voir détail</button></td></tr>)}
                 </tbody>
               </table>
             </div>
@@ -277,103 +312,16 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
       {/* Screen 19: Exports Center */}
       {adminTab === 'exports' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-150">
-          
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4 self-start">
-            <div className="flex items-center gap-2 text-slate-900 border-b border-slate-100 pb-3">
-              <Database size={16} className="text-amber-500" />
-              <h3 className="font-bold text-sm">Générer une extraction de base</h3>
-            </div>
-
-            <form onSubmit={handleExportSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Données cibles à exporter</label>
-                <select
-                  value={exportTarget}
-                  onChange={(e) => setExportTarget(e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded text-slate-900"
-                >
-                  <option value="Registre_Engins_Complet">Registre complet du parc d'engins</option>
-                  <option value="Historique_Factures_Annee">Registre financier des factures émises</option>
-                  <option value="Contrats_Locataires_Actifs">Registre des baux et contrats locataires</option>
-                  <option value="Audit_Securite_Systeme">Journal complet des accès d'audit</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Format de fichier</label>
-                <div className="grid grid-cols-3 gap-2 text-center font-mono font-bold">
-                  {(['Excel', 'CSV', 'JSON'] as const).map(fmt => (
-                    <button
-                      key={fmt}
-                      type="button"
-                      onClick={() => setExportFormat(fmt)}
-                      className={`py-2 rounded border transition-all cursor-pointer ${
-                        exportFormat === fmt 
-                          ? 'bg-amber-500 text-slate-950 border-amber-500 font-black' 
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      {fmt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded transition-all cursor-pointer text-xs"
-              >
-                Lancer l'extraction de données
-              </button>
-            </form>
-          </div>
-
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Centre d'Exports et Téléchargements</h2>
-              <p className="text-xs text-slate-500">Téléchargez les exports bruts générés pour les analyser sur vos outils BI ou comptables.</p>
-            </div>
-
-            <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg">
-              {exports.map(job => (
-                <div key={job.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-slate-900 text-amber-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
-                        {job.format}
-                      </span>
-                      <span className="font-bold text-slate-900">{job.name}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-mono">Généré le {job.timestamp} • {job.recordsCount} lignes extraites</p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-slate-500">{job.size || '34 KB'}</span>
-                    
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                      job.status === 'Terminé' ? 'bg-emerald-100 text-emerald-800' :
-                      job.status === 'En Cours' ? 'bg-amber-100 text-amber-800 animate-pulse' :
-                      'bg-rose-100 text-rose-800 font-semibold'
-                    }`}>
-                      {job.status}
-                    </span>
-
-                    {job.status === 'Terminé' && (
-                      <button
-                        onClick={() => alert(`Téléchargement de l'export de base de données : ${job.name}.${job.format.toLowerCase()}`)}
-                        className="p-1.5 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded cursor-pointer"
-                        title="Télécharger l'extraction"
-                      >
-                        <ArrowDownToLine size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div><h2 className="text-base font-bold text-slate-900">Centre d'Exports DEL-api</h2><p className="text-xs text-slate-500">Exports CSV/JSON administratifs sans ouvrir de page blanche.</p></div>
+          <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">{(['dateFrom','dateTo','status','limit'] as const).map(field => <div key={field}><label className="block font-bold text-slate-600 mb-1">{field}</label><input type={field.startsWith('date') ? 'date' : field === 'limit' ? 'number' : 'text'} value={exportFilters[field]} onChange={(e)=>setExportFilter(field, e.target.value)} className="w-full border border-slate-200 rounded p-2" /></div>)}</div>
+          {exportError && <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-700 text-xs">{exportError}</div>}
+          {[
+            ['Données opérationnelles', [['Engins','equipment'], ['Demandes','requests'], ['Appels d’offres','tenders'], ['Propositions','proposals'], ['Contrats','contracts'], ['Missions','missions'], ['Maintenance','maintenance']]],
+            ['Finance', [['Factures','invoices'], ['Paiements','payments']]],
+            ['Administration', [['Documents','documents'], ['Utilisateurs','users'], ['Audit logs','audit-logs']]],
+          ].map(([title, rows]) => <section key={title as string} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs"><h3 className="font-bold text-slate-900 mb-4">{title as string}</h3><div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">{(rows as string[][]).map(([label, resource]) => <div key={resource} className="border border-slate-100 rounded-lg p-4 flex items-center justify-between gap-3"><span className="font-semibold text-sm">{label}</span><div className="flex gap-2"><button onClick={()=>runExport(resource as ExportResource, 'csv')} disabled={!!exportLoading} className="px-3 py-1.5 rounded bg-slate-900 text-white text-[11px] font-bold disabled:opacity-60">{exportLoading === `${resource}-csv` ? '…' : 'CSV'}</button><button onClick={()=>runExport(resource as ExportResource, 'json')} disabled={!!exportLoading} className="px-3 py-1.5 rounded bg-amber-500 text-slate-950 text-[11px] font-bold disabled:opacity-60">{exportLoading === `${resource}-json` ? '…' : 'JSON'}</button></div></div>)}</div></section>)}
+          <section className="bg-slate-950 text-white border border-slate-900 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h3 className="font-bold">Sauvegarde administrative</h3><p className="text-xs text-slate-300 mt-1">La sauvegarde complète JSON est un export administratif, pas une restauration MongoDB complète.</p></div><button onClick={()=>runExport('full-backup', 'json')} disabled={!!exportLoading} className="bg-amber-500 text-slate-950 px-4 py-2 rounded-lg text-xs font-black disabled:opacity-60">{exportLoading === 'full-backup-json' ? 'Téléchargement…' : 'Full backup JSON'}</button></section>
         </div>
       )}
 
