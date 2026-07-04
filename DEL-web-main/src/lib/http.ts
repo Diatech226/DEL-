@@ -15,7 +15,7 @@ export function getErrorMessage(error: unknown) {
   const e = error as ApiError;
   if (e?.isNetworkError) return 'Impossible de joindre l’API DEL.';
   if (e?.status === 401) return 'Votre session a expiré. Veuillez vous reconnecter.';
-  if (e?.status === 403) return 'Vous n’êtes pas autorisé à effectuer cette action.';
+  if (e?.status === 403) return 'Vous n’êtes pas autorisé à accéder à cette ressource.';
   if (e?.status && e.status >= 500) return 'Une erreur serveur est survenue.';
   return e?.message || 'Une erreur est survenue.';
 }
