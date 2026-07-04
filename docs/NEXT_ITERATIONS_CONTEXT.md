@@ -413,3 +413,11 @@ CMS (`DEL-cms`) :
 - Ajout d’une page Messages placeholder claire dans `DEL-cms-main` : « Messages à connecter après création API ».
 - Ajout d’une façade service/mapper/helpers conversation prêts pour une future API, mais non branchés dans l’UI tant que les endpoints backend sont absents.
 - Scoring, utilisateurs avancés, propriétaires, entreprises, techniciens, upload réel, signature électronique et paiement réel restent non connectés dans cette itération.
+
+## DEL-web-main — Itération 2 Auth + formulaires
+
+- Login/register connectés à `DEL-api` via `POST /api/auth/login`, `POST /api/auth/register` et `GET /api/auth/me`.
+- Dépôt d’engin connecté à `POST /api/equipment` avec mapper frontend vers payload API.
+- Demande d’engins connectée à `POST /api/requests` avec mapper frontend vers payload API.
+- Dashboard résumé minimal limité à `/api/me/summary`, `/api/me/equipment` et `/api/me/requests`.
+- Propositions, contrats, factures et missions restent non connectés volontairement.

@@ -74,6 +74,7 @@ export default function App() {
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>(INITIAL_MAINTENANCE_LOGS);
   const [contracts, setContracts] = useState<Contract[]>(INITIAL_CONTRACTS);
   const [tenders, setTenders] = useState<Tender[]>(INITIAL_TENDERS);
+  const [requests, setRequests] = useState<any[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>(INITIAL_PROPOSALS);
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
   const [documents, setDocuments] = useState<DocumentFile[]>(INITIAL_DOCUMENTS);
@@ -97,9 +98,9 @@ export default function App() {
   // activeScreen reste temporaire jusqu'à la migration router complète.
   const equipmentList = useEquipmentList();
   const dashboardData = useMyDashboardData(auth.isAuthenticated);
-  useEffect(() => { if (auth.user) setUser(prev => ({ ...prev, ...auth.user, role: prev.role })); }, [auth.user]);
+  useEffect(() => { if (auth.user) setUser(prev => { const apiUser = auth.user as any; const apiRole = String(apiUser.role || '').toUpperCase(); return { ...prev, ...apiUser, fullName: apiUser.fullName || apiUser.name || prev.fullName, role: apiRole === 'COMPANY' ? 'locataire' : apiRole === 'OWNER' ? 'proprietaire' : prev.role }; }); }, [auth.user]);
   useEffect(() => { if (equipmentList.data?.length) { setMachines(equipmentList.data); setSelectedMachine(equipmentList.data[0]); } }, [equipmentList.data]);
-  useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.contracts)) setContracts(d.contracts as Contract[]); if (Array.isArray(d.proposals)) setProposals(d.proposals as Proposal[]); if (Array.isArray(d.invoices)) setInvoices(d.invoices as Invoice[]); if (Array.isArray(d.documents)) setDocuments(d.documents as DocumentFile[]); if (Array.isArray(d.missions)) setMissions(d.missions as Mission[]); }, [dashboardData.data]);
+  useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.requests)) setRequests(d.requests); }, [dashboardData.data]);
 
   // Trigger automatic email simulation when a critical maintenance is detected
   React.useEffect(() => {
@@ -119,7 +120,7 @@ export default function App() {
 
         newEmails.push({
           id: emailId,
-          to: user.email || 'diaexpressofficial@gmail.com',
+          to: user.email || 'contact@del.local',
           subject: `⚠️ ALERTE CRITIQUE : Entretien obligatoire requis pour ${m.brand} ${m.model}`,
           body: `Bonjour ${user.fullName},\n\n` +
                 `Le système de surveillance DEL-web a détecté une échéance de maintenance critique pour votre matériel :\n` +
@@ -127,7 +128,7 @@ export default function App() {
                 `- Date d'échéance : ${m.nextMaintenanceDate}\n` +
                 `- Statut : ${isOverdue ? `EN RETARD DE ${Math.abs(diffDays)} JOUR(S)` : `Dans ${diffDays} jours (J-${diffDays})`}\n\n` +
                 `Conformément aux exigences de sécurité DEL-web et à la réglementation en vigueur, une planification d'entretien est requise immédiatement.\n\n` +
-                `Cet e-mail a été envoyé automatiquement à l'adresse de votre profil : ${user.email || 'diaexpressofficial@gmail.com'}.\n\n` +
+                `Cet e-mail a été envoyé automatiquement à l'adresse de votre profil : ${user.email || 'contact@del.local'}.\n\n` +
                 `Cordialement,\nService Automatique d'Alertes Techniques — DEL-web`,
           dateSent: '02/07/2026 à 08:54',
           machineId: m.id,
@@ -407,6 +408,7 @@ export default function App() {
             contracts={contracts} 
             missions={missions} 
             proposals={proposals} 
+            requests={requests}
             onNavigate={setActiveScreen} 
           />
         );

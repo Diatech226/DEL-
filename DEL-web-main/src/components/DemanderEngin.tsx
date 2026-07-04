@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createEquipmentRequest } from '../services/request.service';
 import { getErrorMessage } from '../lib/http';
+import { mapDesignRequestToApiPayload } from '../mappers/request.mapper';
 import { ShieldAlert, Plus, HelpCircle, MapPin, Calendar, Coins, ArrowRight } from 'lucide-react';
 
 interface DemanderEnginProps {
@@ -18,6 +19,7 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
   const [location, setLocation] = useState('Lyon (69)');
   const [description, setDescription] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,13 +44,13 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
 
     setSubmitting(true);
     setSubmitError(null);
+    setSubmitSuccess(null);
     try {
-      await createEquipmentRequest({ title, equipmentType: machineType, minWeight: Number(minWeight), maxBudgetPerDay: Number(maxBudget), startDate, durationMonths: Number(duration), location, description });
+      await createEquipmentRequest(mapDesignRequestToApiPayload(newTender));
       onAddTender(newTender);
-      onNavigate('Appels d\'Offres - DEL-web');
-      alert('Votre besoin B2B a été publié dans DEL-api.');
+      setSubmitSuccess('Votre demande a été transmise à DEL. L’équipe analysera les engins compatibles.');
     } catch (error) {
-      setSubmitError(getErrorMessage(error));
+      setSubmitError(`${'Impossible d’envoyer la demande à l’API DEL.'} ${getErrorMessage(error)}`);
     } finally {
       setSubmitting(false);
     }
@@ -67,6 +69,7 @@ export default function DemanderEngin({ onAddTender, onNavigate }: DemanderEngin
         <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {submitError && <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-bold text-red-700">{submitError}</div>}
+            {submitSuccess && <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-xs font-bold text-green-700">{submitSuccess}</div>}
             <div className="space-y-4">
               <h3 className="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Caractéristiques de la Mission</h3>
 

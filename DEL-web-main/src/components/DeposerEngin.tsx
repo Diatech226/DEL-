@@ -24,6 +24,7 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
   const [nextMaint, setNextMaint] = useState('2026-09-01');
   const [enginePower, setEnginePower] = useState('120 ch');
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,13 +55,13 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
 
     setSubmitting(true);
     setSubmitError(null);
+    setSubmitSuccess(null);
     try {
       await createEquipment(mapDesignEquipmentToApiPayload(newMachine));
       onAddMachine(newMachine);
-      onNavigate('Dashboard Propriétaire Personnalisé - DEL-web');
-      alert('Votre engin de chantier a été enregistré dans DEL-api.');
+      setSubmitSuccess('Votre engin a été soumis à DEL. L’équipe vérifiera les informations avant publication.');
     } catch (error) {
-      setSubmitError(getErrorMessage(error));
+      setSubmitError(`${'Impossible d’envoyer l’engin à l’API DEL.'} ${getErrorMessage(error)}`);
     } finally {
       setSubmitting(false);
     }
@@ -79,6 +80,7 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
         <div className="lg:col-span-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {submitError && <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-xs font-bold text-red-700">{submitError}</div>}
+            {submitSuccess && <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-xs font-bold text-green-700">{submitSuccess}</div>}
             
             <div className="space-y-4">
               <h3 className="font-sans text-xs font-bold text-gray-400 uppercase tracking-wider">Identifiants constructeur</h3>
@@ -247,9 +249,10 @@ export default function DeposerEngin({ onAddMachine, onNavigate }: DeposerEnginP
             <div className="flex justify-end pt-4 border-t border-gray-100">
               <button
                 type="submit"
+                disabled={submitting}
                 className="rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 px-6 py-3 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/10"
               >
-                Enregistrer sur la plateforme
+                {submitting ? 'Envoi vers DEL-api…' : 'Enregistrer sur la plateforme'}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
