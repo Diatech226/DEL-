@@ -20,6 +20,7 @@ interface DashboardEntrepriseProps {
   contracts: Contract[];
   missions: Mission[];
   proposals: Proposal[];
+  requests?: any[];
   onNavigate: (screen: string) => void;
 }
 
@@ -28,6 +29,7 @@ export default function DashboardEntreprise({
   contracts, 
   missions, 
   proposals, 
+  requests = [],
   onNavigate 
 }: DashboardEntrepriseProps) {
 
@@ -105,14 +107,14 @@ export default function DashboardEntreprise({
         {/* Metric 3 */}
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500 uppercase">Devis en attente</span>
+            <span className="text-xs font-bold text-gray-500 uppercase">Demandes API</span>
             <div className="rounded-lg bg-amber-50 p-2 text-amber-600">
               <FileText className="h-4 w-4" />
             </div>
           </div>
           <div>
-            <h3 className="font-sans text-2xl font-black text-gray-950">{pendingQuotesCount} Offres</h3>
-            <p className="text-[10px] text-gray-400 mt-1">À étudier pour vos appels d'offres</p>
+            <h3 className="font-sans text-2xl font-black text-gray-950">{requests.length} Demandes</h3>
+            <p className="text-[10px] text-gray-400 mt-1">Demandes chargées depuis DEL-api</p>
           </div>
         </div>
 
