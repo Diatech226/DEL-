@@ -421,3 +421,14 @@ CMS (`DEL-cms`) :
 - Demande d’engins connectée à `POST /api/requests` avec mapper frontend vers payload API.
 - Dashboard résumé minimal limité à `/api/me/summary`, `/api/me/equipment` et `/api/me/requests`.
 - Propositions, contrats, factures et missions restent non connectés volontairement.
+
+## DEL-web-main — Itération 3 Propositions & Contrats
+
+- Propositions utilisateur connectées à `GET /api/me/proposals` dans `DEL-web-main`.
+- Acceptation/refus entreprise connecté via `PATCH /api/me/proposals/:id/company-decision`.
+- Acceptation/refus propriétaire connecté via `PATCH /api/me/proposals/:id/owner-decision`.
+- Contrats utilisateur connectés à `GET /api/me/contracts` avec détail simple alimenté depuis la liste utilisateur.
+- PDF contrat branché sur `GET /api/reports/contracts/:id/pdf` lorsque l'endpoint est autorisé.
+- Signature électronique non connectée : l'interface indique “Signature électronique à venir.”
+- Factures, paiements et missions non connectés pendant cette itération.
+- Documents, notifications, messages, maintenance et appels d'offres avancés restent hors périmètre.

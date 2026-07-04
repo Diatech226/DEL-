@@ -1,11 +1,20 @@
 export const EQUIPMENT_STATUS = ['DRAFT','PENDING_REVIEW','AVAILABLE','RESERVED','PLACED','UNDER_MAINTENANCE','SOLD','REJECTED','ARCHIVED','UNKNOWN'] as const;
 export const REQUEST_STATUS = ['SUBMITTED','UNDER_REVIEW','MATCHING','PROPOSAL_SENT','ACCEPTED','CONTRACTED','ACTIVE','COMPLETED','CANCELLED','REJECTED'] as const;
-export const PROPOSAL_STATUS = ['SENT','ACCEPTED','REJECTED','CANCELLED','EXPIRED','READY_FOR_CONTRACT','PENDING_COMPANY','PENDING_OWNERS'] as const;
-export const CONTRACT_STATUS = ['DRAFT','SENT','ACTIVE','COMPLETED','CANCELLED'] as const;
+export const PROPOSAL_STATUS = ['SENT','ACCEPTED','REJECTED','CANCELLED','EXPIRED','PENDING_COMPANY','PENDING_OWNERS','READY_FOR_CONTRACT','REJECTED_BY_COMPANY','REJECTED_BY_OWNER','CONTRACT_CREATED','UNKNOWN'] as const;
+export const CONTRACT_STATUS = ['DRAFT','PENDING_SIGNATURE','ACTIVE','COMPLETED','CANCELLED','UNKNOWN'] as const;
 export const INVOICE_STATUS = ['DRAFT','SENT','PARTIALLY_PAID','PAID','OVERDUE','CANCELLED'] as const;
 export const MISSION_STATUS = ['PLANNED','IN_TRANSIT','ON_SITE','PAUSED','COMPLETED','CANCELLED'] as const;
 export const PAYMENT_STATUS = ['PENDING','PROCESSING','PAID','FAILED','REFUNDED','CANCELLED'] as const;
-const labels: Record<string,string> = { UNKNOWN:'Inconnu', DRAFT:'Brouillon', PENDING_REVIEW:'En revue', AVAILABLE:'Disponible', RESERVED:'Réservé', PLACED:'Loué', UNDER_MAINTENANCE:'Maintenance', SOLD:'Vendu', REJECTED:'Refusé', ARCHIVED:'Archivé', SUBMITTED:'Soumise', UNDER_REVIEW:'En étude', MATCHING:'Matching', PROPOSAL_SENT:'Proposition envoyée', ACCEPTED:'Accepté', CONTRACTED:'Contractualisé', ACTIVE:'Actif', COMPLETED:'Terminé', CANCELLED:'Annulé', SENT:'Envoyé', EXPIRED:'Expiré', READY_FOR_CONTRACT:'Prêt contrat', PENDING_COMPANY:'Attente entreprise', PENDING_OWNERS:'Attente propriétaires', PARTIALLY_PAID:'Partiellement payé', PAID:'Payé', OVERDUE:'En retard', PLANNED:'Planifié', IN_TRANSIT:'Transit', ON_SITE:'Sur site', PAUSED:'En pause' };
+
+const labels: Record<string,string> = {
+  UNKNOWN:'Inconnu', DRAFT:'Brouillon', PENDING_REVIEW:'En revue', AVAILABLE:'Disponible', RESERVED:'Réservé', PLACED:'Loué', UNDER_MAINTENANCE:'Maintenance', SOLD:'Vendu', REJECTED:'Rejetée', ARCHIVED:'Archivé', SUBMITTED:'Soumise', UNDER_REVIEW:'En étude', MATCHING:'Matching', PROPOSAL_SENT:'Proposition envoyée', ACCEPTED:'Acceptée', CONTRACTED:'Contractualisé', ACTIVE:'Actif', COMPLETED:'Terminé', CANCELLED:'Annulé', SENT:'Envoyée', EXPIRED:'Expirée', PENDING_SIGNATURE:'En attente signature', READY_FOR_CONTRACT:'Prête pour contrat', PENDING_COMPANY:'En attente entreprise', PENDING_OWNERS:'En attente propriétaires', REJECTED_BY_COMPANY:'Refusée par entreprise', REJECTED_BY_OWNER:'Refusée par propriétaire', CONTRACT_CREATED:'Contrat créé', PARTIALLY_PAID:'Partiellement payé', PAID:'Payé', OVERDUE:'En retard', PLANNED:'Planifié', IN_TRANSIT:'Transit', ON_SITE:'Sur site', PAUSED:'En pause'
+};
 export function normalizeStatus(status?: string | null) { return String(status || 'UNKNOWN').trim().toUpperCase().replace(/[\s-]+/g, '_'); }
 export function getStatusLabel(status?: string | null) { return labels[normalizeStatus(status)] || labels.UNKNOWN; }
-export function getStatusVariant(status?: string | null) { const s=normalizeStatus(status); if(['AVAILABLE','ACCEPTED','ACTIVE','PAID','COMPLETED','ON_SITE'].includes(s)) return 'success'; if(['REJECTED','CANCELLED','OVERDUE','FAILED'].includes(s)) return 'danger'; if(['UNDER_MAINTENANCE','PENDING_REVIEW','UNDER_REVIEW','PENDING_COMPANY','PENDING_OWNERS','SENT'].includes(s)) return 'warning'; return 'neutral'; }
+export function getStatusVariant(status?: string | null) {
+  const s=normalizeStatus(status);
+  if(['ACCEPTED','READY_FOR_CONTRACT','ACTIVE','COMPLETED','AVAILABLE','PAID','ON_SITE'].includes(s)) return 'success';
+  if(['SENT','PENDING_COMPANY','PENDING_OWNERS','PENDING_SIGNATURE','DRAFT','PENDING_REVIEW','UNDER_REVIEW','UNDER_MAINTENANCE'].includes(s)) return 'warning';
+  if(['REJECTED','REJECTED_BY_COMPANY','REJECTED_BY_OWNER','CANCELLED','OVERDUE','FAILED'].includes(s)) return 'danger';
+  return 'neutral';
+}

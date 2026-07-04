@@ -100,7 +100,7 @@ export default function App() {
   const dashboardData = useMyDashboardData(auth.isAuthenticated);
   useEffect(() => { if (auth.user) setUser(prev => { const apiUser = auth.user as any; const apiRole = String(apiUser.role || '').toUpperCase(); return { ...prev, ...apiUser, fullName: apiUser.fullName || apiUser.name || prev.fullName, role: apiRole === 'COMPANY' ? 'locataire' : apiRole === 'OWNER' ? 'proprietaire' : prev.role }; }); }, [auth.user]);
   useEffect(() => { if (equipmentList.data?.length) { setMachines(equipmentList.data); setSelectedMachine(equipmentList.data[0]); } }, [equipmentList.data]);
-  useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.requests)) setRequests(d.requests); }, [dashboardData.data]);
+  useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.requests)) setRequests(d.requests); if (Array.isArray((d as any).proposals)) setProposals((d as any).proposals as any); if (Array.isArray((d as any).contracts)) setContracts((d as any).contracts as any); }, [dashboardData.data]);
 
   // Trigger automatic email simulation when a critical maintenance is detected
   React.useEffect(() => {
