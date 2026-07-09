@@ -31,3 +31,5 @@ export async function downloadReport(path: string, filename: string) {
 }
 
 export const downloadContractPdf = (id: string) => downloadReport(`/api/reports/contracts/${id}/pdf`, `contrat-${id}.pdf`);
+
+export const downloadInvoicePdf = (id: string) => downloadReport(`/api/reports/invoices/${id}/pdf`, `facture-${id}.pdf`);

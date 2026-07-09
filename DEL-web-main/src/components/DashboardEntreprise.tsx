@@ -21,6 +21,7 @@ interface DashboardEntrepriseProps {
   missions: Mission[];
   proposals: Proposal[];
   requests?: any[];
+  financialSummary?: { invoiceCount: number; totalDue: number; amountPaid: number; balanceDue: number; paymentCount: number; currency: string };
   onNavigate: (screen: string) => void;
 }
 
@@ -30,6 +31,7 @@ export default function DashboardEntreprise({
   missions, 
   proposals, 
   requests = [],
+  financialSummary,
   onNavigate 
 }: DashboardEntrepriseProps) {
 
@@ -39,6 +41,8 @@ export default function DashboardEntreprise({
   const pendingQuotesCount = proposals.filter(p => p.bidderName !== 'Jean-Marc Mercier' && p.status === 'En attente').length;
   
   const totalBudgetSpent = contracts.reduce((sum, c) => sum + c.totalPrice, 0);
+  const financialCurrency = financialSummary?.currency || 'XOF';
+  const formatMoney = (amount: number) => `${Number(amount || 0).toLocaleString('fr-FR')} ${financialCurrency}`;
 
   return (
     <div className="flex-1 bg-gray-50 overflow-y-auto p-6 space-y-6" id="screen-dashboard-entreprise">
@@ -132,6 +136,26 @@ export default function DashboardEntreprise({
           </div>
         </div>
       </div>
+
+
+      {financialSummary && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h3 className="font-sans text-sm font-black text-gray-950">Résumé financier minimal</h3>
+              <p className="text-[11px] text-gray-500">Calculé depuis vos factures et paiements DEL-api.</p>
+            </div>
+            <button onClick={() => onNavigate('Factures - DEL-web')} className="rounded-lg bg-amber-500 px-3 py-2 text-[11px] font-black text-gray-950 hover:bg-amber-600">Voir factures</button>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+            <div><span className="block text-[9px] font-bold uppercase text-gray-400">Factures</span><strong>{financialSummary.invoiceCount}</strong></div>
+            <div><span className="block text-[9px] font-bold uppercase text-gray-400">Total dû</span><strong>{formatMoney(financialSummary.totalDue)}</strong></div>
+            <div><span className="block text-[9px] font-bold uppercase text-gray-400">Payé</span><strong>{formatMoney(financialSummary.amountPaid)}</strong></div>
+            <div><span className="block text-[9px] font-bold uppercase text-gray-400">Solde</span><strong>{formatMoney(financialSummary.balanceDue)}</strong></div>
+            <div><span className="block text-[9px] font-bold uppercase text-gray-400">Paiements</span><strong>{financialSummary.paymentCount}</strong></div>
+          </div>
+        </div>
+      )}
 
       {/* Renter Specific Section: Shortcuts & Quick List */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
