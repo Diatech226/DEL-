@@ -432,3 +432,12 @@ CMS (`DEL-cms`) :
 - Signature électronique non connectée : l'interface indique “Signature électronique à venir.”
 - Factures, paiements et missions non connectés pendant cette itération.
 - Documents, notifications, messages, maintenance et appels d'offres avancés restent hors périmètre.
+
+## DEL-web-main — Itération 4 Factures & Paiements
+
+- Factures utilisateur connectées à `GET /api/me/invoices` dans `DEL-web-main`.
+- Paiements utilisateur connectés à `GET /api/me/payments` dans `DEL-web-main`.
+- PDF facture connecté à `GET /api/reports/invoices/:id/pdf` avec gestion d'erreurs utilisateur.
+- Résumé financier minimal ajouté côté dashboard entreprise à partir des factures et paiements.
+- Paiement réel en ligne non connecté : il reste à venir après validation MVP.
+- Missions, documents, notifications, messages et maintenance restent non connectés dans cette itération.

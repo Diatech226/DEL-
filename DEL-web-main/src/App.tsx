@@ -46,6 +46,11 @@ import { useAuth } from './context/AuthContext';
 import { useEquipmentList } from './hooks/useEquipment';
 import { useMyDashboardData } from './hooks/useDashboardData';
 import { LoadingState, ErrorState, EmptyState } from './components/common/States';
+import { getMyInvoices } from './services/invoice.service';
+import { getMyPayments } from './services/payment.service';
+import { unwrapData } from './lib/http';
+import { mapApiInvoiceListToDesign } from './mappers/invoice.mapper';
+import { mapApiPaymentListToDesign } from './mappers/payment.mapper';
 
 // Lucide icons
 import { 
@@ -98,9 +103,27 @@ export default function App() {
   // activeScreen reste temporaire jusqu'à la migration router complète.
   const equipmentList = useEquipmentList();
   const dashboardData = useMyDashboardData(auth.isAuthenticated);
+  const [financialSummary, setFinancialSummary] = useState({ invoiceCount: 0, totalDue: 0, amountPaid: 0, balanceDue: 0, paymentCount: 0, currency: 'XOF' });
   useEffect(() => { if (auth.user) setUser(prev => { const apiUser = auth.user as any; const apiRole = String(apiUser.role || '').toUpperCase(); return { ...prev, ...apiUser, fullName: apiUser.fullName || apiUser.name || prev.fullName, role: apiRole === 'COMPANY' ? 'locataire' : apiRole === 'OWNER' ? 'proprietaire' : prev.role }; }); }, [auth.user]);
   useEffect(() => { if (equipmentList.data?.length) { setMachines(equipmentList.data); setSelectedMachine(equipmentList.data[0]); } }, [equipmentList.data]);
   useEffect(() => { const d = dashboardData.data; if (!d) return; if (d.equipment?.length) setMachines(d.equipment as Machine[]); if (Array.isArray(d.requests)) setRequests(d.requests); if (Array.isArray((d as any).proposals)) setProposals((d as any).proposals as any); if (Array.isArray((d as any).contracts)) setContracts((d as any).contracts as any); }, [dashboardData.data]);
+  useEffect(() => {
+    if (!auth.isAuthenticated) return;
+    let mounted = true;
+    async function loadFinancialSummary() {
+      try {
+        const [invoiceResponse, paymentResponse] = await Promise.all([getMyInvoices(), getMyPayments()]);
+        if (!mounted) return;
+        const apiInvoices = mapApiInvoiceListToDesign(unwrapData(invoiceResponse));
+        const apiPayments = mapApiPaymentListToDesign(unwrapData(paymentResponse));
+        setFinancialSummary({ invoiceCount: apiInvoices.length, totalDue: apiInvoices.reduce((sum, item) => sum + item.totalAmount, 0), amountPaid: apiInvoices.reduce((sum, item) => sum + item.amountPaid, 0), balanceDue: apiInvoices.reduce((sum, item) => sum + item.balanceDue, 0), paymentCount: apiPayments.length, currency: apiInvoices[0]?.currency || apiPayments[0]?.currency || 'XOF' });
+      } catch {
+        if (mounted) setFinancialSummary({ invoiceCount: 0, totalDue: 0, amountPaid: 0, balanceDue: 0, paymentCount: 0, currency: 'XOF' });
+      }
+    }
+    void loadFinancialSummary();
+    return () => { mounted = false; };
+  }, [auth.isAuthenticated]);
 
   // Trigger automatic email simulation when a critical maintenance is detected
   React.useEffect(() => {
@@ -409,6 +432,7 @@ export default function App() {
             missions={missions} 
             proposals={proposals} 
             requests={requests}
+            financialSummary={financialSummary}
             onNavigate={setActiveScreen} 
           />
         );
