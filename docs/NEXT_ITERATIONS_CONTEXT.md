@@ -4,11 +4,13 @@
 
 DEL est une plateforme numérique pour commercialiser et opérer des engins industriels : placement, location, vente, suivi, maintenance, facturation, administration et reporting. Les secteurs visés sont les mines, le BTP, la logistique et les grands chantiers.
 
-Le dépôt contient trois applications indépendantes :
+Le dépôt contient trois applications actives indépendantes :
 
 - `DEL-api` : backend Express.js + MongoDB.
-- `DEL-web` : site public + espace utilisateur Next.js.
-- `DEL-cms` : back-office administrateur Next.js.
+- `DEL-web-main` : application Web Main Vite/React.
+- `DEL-cms-main` : back-office administrateur CMS Main Vite/React.
+
+Les dossiers `DEL-web` et `DEL-cms` sont conservés uniquement comme versions historiques. Toutes les prochaines itérations concernent exclusivement `DEL-web-main` et `DEL-cms-main` pour les frontends actifs.
 
 Le modèle métier principal relie propriétaires d'engins, entreprises clientes, administrateurs et techniciens autour d'un workflow : inventaire d'engins → demandes/appels d'offres → matching → propositions → contrats → documents → factures/paiements → missions/maintenance → reporting.
 
@@ -17,28 +19,31 @@ Le modèle métier principal relie propriétaires d'engins, entreprises clientes
 ```text
 DEL/
 ├── DEL-api/
-├── DEL-cms/
-├── DEL-web/
+├── DEL-cms-main/        # CMS actif
+├── DEL-web-main/        # Web actif
+├── DEL-cms/             # ancienne version historique
+├── DEL-web/             # ancienne version historique
 ├── docs/
 ├── package.json
 ├── README.md
 └── .gitignore
 ```
 
-Ports :
+Ports actifs :
 
 - API : `5000`, healthcheck `GET /api/health`.
-- Web : `3000`.
-- CMS : `3001`.
+- Web Main : `5173` (port Vite par défaut de `DEL-web-main`).
+- CMS Main : `5174` (`vite --port 5174` dans `DEL-cms-main`).
 
-Scripts racine :
+Scripts racine actifs :
 
-- `npm run dev` lance les trois apps avec `concurrently`.
-- `npm run dev:api`, `npm run dev:web`, `npm run dev:cms` lancent une app.
-- `npm run install:all` installe les dépendances des trois apps.
-- `npm run build:all` build Web puis CMS.
+- `npm run dev` lance `DEL-api`, `DEL-web-main` et `DEL-cms-main` avec `concurrently`.
+- `npm run dev:api`, `npm run dev:web`, `npm run dev:cms` lancent respectivement `DEL-api`, `DEL-web-main` et `DEL-cms-main`.
+- `npm run install:all` installe les dépendances de `DEL-api`, `DEL-web-main` et `DEL-cms-main`.
+- `npm run build:all` build `DEL-web-main` puis `DEL-cms-main`.
+- `npm run lint:all` vérifie `DEL-web-main` puis `DEL-cms-main`.
 
-Dépendances principales : Express, Mongoose, JWT, PDFKit côté API ; Next.js 15, React 19 et Tailwind côté frontends.
+Dépendances principales : Express, Mongoose, JWT et PDFKit côté API ; Vite, React 19, TypeScript et Tailwind côté frontends actifs.
 
 ## 3. État réel des apps
 
@@ -52,21 +57,21 @@ Non validé dans l'environnement d'audit : `npm install` API a échoué avec `40
 
 Points fragiles : routes publiques trop permissives, absence de tests, absence de MongoDB dans l'environnement, workflows complexes sans tests bout-en-bout.
 
-### DEL-web
+### DEL-web-main
 
-Ce qui marche : App Router, layout, homepage, pages publiques, dashboard, appels d'offres, équipement, demandes, documents, contrats, factures, paiements, missions, notifications, profil. Le build Next passe.
+Ce qui marche : application Vite/React, homepage, écrans publics, dashboard, appels d'offres, équipement, demandes, documents, contrats, factures, paiements, missions, notifications, profil. Le build Vite/TypeScript passe.
 
 Partiellement fait : design premium, UX de formulaires, états vides homogènes, messages.
 
 Points fragiles : dépendance forte à l'API ; si l'API renvoie des erreurs ou manque de données, l'expérience peut être pauvre même si le build passe.
 
-### DEL-cms
+### DEL-cms-main
 
-Ce qui marche : App Router, dashboard, AdminSidebar, AdminGuard, nombreuses pages admin, `lib/api.js`, build Next validé sur 28 pages.
+Ce qui marche : application Vite/React, dashboard, nombreuses vues admin, services/mappers API progressifs et build Vite/TypeScript.
 
 Partiellement fait : messages, scoring et tender submissions sont encore très légers ; certaines pages nécessitent meilleure pagination/filtres/actions.
 
-Points fragiles : erreurs API à mieux afficher, besoin d'un vrai modèle de permissions admin, risque d'EPERM Windows sur `.next`.
+Points fragiles : erreurs API à mieux afficher, besoin d'un vrai modèle de permissions admin, risques liés aux dépendances API et aux endpoints encore incomplets.
 
 ## 4. Modules présents
 
@@ -175,7 +180,7 @@ Style recommandé : industriel premium, fiable, sobre. Palette : bleu nuit/graph
 
 1. Stabilisation CMS + build + API install/démarrage.
 2. Refonte UI dashboard CMS.
-3. Refonte page accueil DEL-web.
+3. Refonte page accueil DEL-web-main.
 4. Finalisation workflow engin/demande/matching/proposition.
 5. Finalisation contrats/factures/paiements.
 6. Finalisation documents/KYC.
@@ -188,7 +193,7 @@ Style recommandé : industriel premium, fiable, sobre. Palette : bleu nuit/graph
 
 État exact : structure correcte, pas de workspace, pas de packages partagés, builds Web/CMS validés, API non validée à cause d'un blocage npm registry sur `jsonwebtoken` dans l'environnement courant.
 
-Fichiers à regarder en priorité : `DEL-api/server.js`, `DEL-api/src/routes/*`, `DEL-api/src/middlewares/auth.middleware.js`, `DEL-web/src/lib/api.js`, `DEL-cms/src/lib/api.js`, `DEL-cms/src/components/AdminSidebar.jsx`, `DEL-web/src/app/page.jsx`, `DEL-cms/src/app/page.jsx`.
+Fichiers à regarder en priorité : `DEL-api/server.js`, `DEL-api/src/routes/*`, `DEL-api/src/middlewares/auth.middleware.js`, `DEL-web-main/src/lib/http.ts`, `DEL-web-main/src/services/*`, `DEL-cms-main/src/lib/http.ts`, `DEL-cms-main/src/services/*` et `DEL-cms-main/src/App.tsx`.
 
 Bugs/risques restants : installation API bloquée par registry, absence de tests, pages messages/scoring/tender-submissions placeholders, permissions à durcir.
 
@@ -241,19 +246,19 @@ curl http://localhost:5000/api/health
 ### Ce qui a été amélioré
 
 - Identité visuelle DEL renforcée : palette bleu nuit/graphite, accent chantier, cartes blanches, statuts lisibles et tonalité industrielle premium.
-- DEL-web dispose maintenant d’une page d’accueil plus claire, orientée propriétaires, entreprises, appels d’offres et pilotage opérationnel.
-- DEL-cms dispose d’un dashboard admin plus exploitable avec indicateurs, alertes, raccourcis et activité récente.
-- Navigation améliorée sur DEL-web et DEL-cms, avec menus responsive.
+- DEL-web-main dispose maintenant d’une page d’accueil plus claire, orientée propriétaires, entreprises, appels d’offres et pilotage opérationnel.
+- DEL-cms-main dispose d’un dashboard admin plus exploitable avec indicateurs, alertes, raccourcis et activité récente.
+- Navigation améliorée sur DEL-web-main et DEL-cms-main, avec menus responsive.
 
 ### Pages refondues
 
-- DEL-web : accueil, navbar, footer.
-- DEL-cms : dashboard administrateur, sidebar admin, nouvelle page `/workflows`.
+- DEL-web-main : accueil, navbar, footer.
+- DEL-cms-main : dashboard administrateur, sidebar admin, nouvelle page `/workflows`.
 
 ### Composants ajoutés
 
-- DEL-web : composants UI locaux dans `DEL-web/src/components/ui` et statut local dans `DEL-web/src/lib/status.js`.
-- DEL-cms : composants UI locaux dans `DEL-cms/src/components/ui` et statut local dans `DEL-cms/src/lib/status.js`.
+- DEL-web-main : composants UI locaux dans `DEL-web-main/src/components/ui` et statut local dans `DEL-web-main/src/lib/status.js`.
+- DEL-cms-main : composants UI locaux dans `DEL-cms-main/src/components/ui` et statut local dans `DEL-cms-main/src/lib/status.js`.
 - Aucun package partagé, workspace ou librairie UI lourde n’a été ajouté.
 
 ### Problèmes restants
@@ -281,20 +286,22 @@ API (`DEL-api`) :
 - `ADMIN_EMAILS` pour le seed des comptes administrateurs.
 - `APP_URL`, `CMS_URL`, `API_URL` pour documenter les URLs publiques des trois services.
 
-Web (`DEL-web`) :
+Web Main (`DEL-web-main`) :
 
-- `NEXT_PUBLIC_API_URL`
-- `NEXT_PUBLIC_APP_NAME=DEL`
+- `VITE_API_URL`
+- `VITE_APP_NAME=DEL`
+- `VITE_CMS_MAIN_URL`
 
-CMS (`DEL-cms`) :
+CMS Main (`DEL-cms-main`) :
 
-- `NEXT_PUBLIC_API_URL`
-- `NEXT_PUBLIC_APP_NAME=DEL`
-- `NEXT_PUBLIC_WEB_URL`
+- `VITE_API_URL`
+- `VITE_APP_NAME=DEL CMS`
+- `VITE_WEB_URL`
+- `VITE_WEB_MAIN_URL`
 
 ### État de préparation
 
-- Les scripts de production restent indépendants par app : `npm start` côté API, `next build` puis `next start -p 3000` côté Web, `next build` puis `next start -p 3001` côté CMS.
+- Les scripts de production restent indépendants par app : `npm start` côté API, `Vite build/preview côté Web Main et CMS Main.
 - `CORS_ORIGINS` supporte plusieurs domaines séparés par virgule et conserve des valeurs localhost par défaut hors production.
 - `helmet` est activé dans Express.
 - `express.json` est limité à `1mb`.
@@ -317,15 +324,15 @@ CMS (`DEL-cms`) :
 1. Créer le cluster MongoDB Atlas et configurer l'IP access.
 2. Déployer DEL-api sur Render, Railway ou Fly.io avec les variables de production.
 3. Vérifier `GET /api/health` sur l'URL publique API.
-4. Déployer DEL-web sur Vercel avec `Root Directory: DEL-web`.
-5. Déployer DEL-cms sur Vercel avec `Root Directory: DEL-cms`.
+4. Déployer DEL-web-main sur Vercel avec `Root Directory: DEL-web-main`.
+5. Déployer DEL-cms-main sur Vercel avec `Root Directory: DEL-cms-main`.
 6. Mettre à jour `CORS_ORIGINS` côté API avec les deux URLs Vercel finales.
 7. Lancer `npm run seed:admin` puis `npm run seed:settings` dans l'environnement API production.
 8. Tester login CMS, workflow simple, PDF et exports.
 
 ## DEL-web-main connecté à DEL-api
 
-- `DEL-web-main` reste une application Vite/React autonome, séparée de `DEL-web`, `DEL-api` et `DEL-cms`.
+- `DEL-web-main` reste une application Vite/React autonome, séparée de `DEL-api` et du CMS actif `DEL-cms-main`; `DEL-web` reste historique.
 - Une couche HTTP centralisée (`src/lib/http.ts`) lit `VITE_API_URL`, ajoute le bearer token, normalise les erreurs et conserve le token dans `localStorage`.
 - Les services API ont été créés pour auth, settings, equipment, requests, tenders, proposals, contracts, invoices, payments, missions, documents, maintenance et notifications.
 - Les mappers design/API ont été ajoutés pour éviter que les composants premium consomment directement les payloads bruts.
@@ -379,7 +386,7 @@ CMS (`DEL-cms`) :
 - Détail maintenance connecté à `GET /api/maintenance/:id` avec diagnostic, coûts, parties et statut.
 - Création ticket maintenance depuis une mission via `POST /api/maintenance`, puis rechargement des tickets liés.
 - Changement de statut maintenance via `PATCH /api/maintenance/:id/status`.
-- `.env.example` harmonisés pour `DEL-api`, `DEL-web`, `DEL-web-main`, `DEL-cms` et `DEL-cms-main`.
+- `.env.example` harmonisés pour `DEL-api`, `DEL-web-main`, `DEL-web-main`, `DEL-cms-main` et `DEL-cms-main`.
 - Documents non connectés dans cette itération.
 - Audit, exports, settings, notifications, messages et scoring non connectés dans cette itération.
 

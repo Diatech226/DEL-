@@ -8,7 +8,7 @@ Le dossier `DEL-web-main` contient un prototype Vite/React TypeScript centré su
 
 Qualité visuelle : élevée. Le design apporte une direction graphique plus premium que l'interface actuelle : cartes denses, dashboard riche, sidebar métier, interactions avec `motion`, icônes `lucide-react`, graphiques `recharts`, typographie Inter/JetBrains Mono et états visuels complets pour maintenance, conformité VGP, finance et opérations.
 
-Point important : ce n'est pas une application Next.js. C'est une SPA Vite avec routage simulé en état React (`activeScreen`) et données mockées en mémoire. Il ne faut donc pas copier directement `src/App.tsx` dans `DEL-web`; il faut extraire les composants/sections utiles, les adapter au routing App Router de Next.js 15 et remplacer les mocks par `DEL-web/src/lib/api.js`.
+Point important : ce n'est pas une application Next.js. C'est une SPA Vite avec routage simulé en état React (`activeScreen`) et données mockées en mémoire. Il ne faut donc pas copier directement `src/App.tsx` dans `DEL-web-main`; il faut extraire les composants/sections utiles, les adapter au routing App Router de Next.js 15 et remplacer les mocks par `DEL-web-main/src/lib/api.js`.
 
 ### Framework et dépendances détectés
 
@@ -91,11 +91,11 @@ DEL-web-main/
 
 Le design n'a pas de vraie librairie UI séparée. Les composants embarquent directement beaucoup de classes Tailwind. Les patterns réutilisables à extraire sont : cartes KPI, badges de statut, tables financières, cartes équipement, panneaux d'alerte, layout dashboard, sidebar, hero premium, formulaires sectionnés.
 
-## 3. Comparaison avec `DEL-web`
+## 3. Comparaison avec `DEL-web-main`
 
-### État actuel de `DEL-web`
+### État actuel de `DEL-web-main`
 
-`DEL-web` est déjà une application Next.js 15 App Router avec React 19, Tailwind 3, routes publiques et dashboard. Elle contient aussi une couche API prête dans `src/lib/api.js` avec authentification token/localStorage protégée côté client, endpoints `me`, equipment, requests, tenders, proposals, contracts, invoices, payments, missions, documents et rapports PDF.
+`DEL-web-main` est déjà une application Next.js 15 App Router avec React 19, Tailwind 3, routes publiques et dashboard. Elle contient aussi une couche API prête dans `src/lib/api.js` avec authentification token/localStorage protégée côté client, endpoints `me`, equipment, requests, tenders, proposals, contracts, invoices, payments, missions, documents et rapports PDF.
 
 Routes déjà présentes :
 
@@ -132,20 +132,20 @@ Routes déjà présentes :
 - Écrans métier plus immersifs : suivi mission, conformité VGP, coffre-fort, factures exportables visuellement.
 - Composants premium réutilisables : Sidebar, Header, AlertPanel, cartes KPI, badges, panneaux de détail.
 
-### Ce qu'il faut garder dans `DEL-web`
+### Ce qu'il faut garder dans `DEL-web-main`
 
 - App Router Next.js et structure de routes existante.
 - `src/lib/api.js`, déjà aligné avec `DEL-api`.
 - `AuthGuard`, layout dashboard, états `LoadingState`, `ErrorState`, `EmptyState`, composants `Button`, `Card`, `Badge`, `StatusBadge`.
 - Pages légales et logique d'authentification actuelle.
-- Séparation DEL-api / DEL-web / DEL-cms : aucun workspace ou package partagé à créer.
+- Séparation DEL-api / DEL-web-main / DEL-cms-main : aucun workspace ou package partagé à créer.
 
 ### Conflits et incompatibilités
 
-- `DEL-web-main` est Vite SPA; `DEL-web` est Next App Router.
-- `DEL-web-main` utilise Tailwind 4; `DEL-web` utilise Tailwind 3. Migrer Tailwind dans cette étape serait risqué; mieux vaut adapter les classes compatibles ou migrer Tailwind dans une phase dédiée.
+- `DEL-web-main` est Vite SPA; `DEL-web-main` est Next App Router.
+- `DEL-web-main` utilise Tailwind 4; `DEL-web-main` utilise Tailwind 3. Migrer Tailwind dans cette étape serait risqué; mieux vaut adapter les classes compatibles ou migrer Tailwind dans une phase dédiée.
 - `motion` est importé depuis `motion/react`; il faudra installer `motion` ou remplacer par transitions CSS.
-- `recharts` et `lucide-react` manquent dans `DEL-web`.
+- `recharts` et `lucide-react` manquent dans `DEL-web-main`.
 - Les composants du prototype sont probablement tous client-side; dans Next, il faudra ajouter `"use client"` seulement aux composants interactifs.
 - Les données prototype utilisent des statuts français/minuscules (`available`, `rented`, `En attente`) alors que l'API utilise des enums anglais/majuscules (`AVAILABLE`, `RESERVED`, `PENDING_REVIEW`, etc.).
 
@@ -158,7 +158,7 @@ Routes déjà présentes :
 | Détail engin | `/equipment/[id]` | engin, documents liés, maintenance liée, disponibilité | `GET /api/equipment/:id`, `GET /api/documents/entity/equipment/:id`, `GET /api/maintenance/equipment/:equipmentId`, `GET /api/equipment-schedules/equipment/:equipmentId/availability` | prêt partiel | Adapter fiche technique; masquer les champs VGP si absents; ajouter loading/error/empty. |
 | Déposer engin | `/deposer-un-engin` | formulaire propriétaire/engin/services/documents | `POST /api/equipment`, `POST /api/documents` | prêt partiel | Mapper formulaire vers modèle Equipment; upload réel absent, documents actuellement URLs. |
 | Demande engins | `/demander-des-engins` | besoin entreprise, quantité, dates, options | `POST /api/requests` | prêt | Mapper vers EquipmentRequest (`equipmentCategory`, `quantity`, `workSiteLocation`, `driverRequired`, etc.). |
-| Appels d'offres | `/appels-offres/nouveau`, éventuellement `/dashboard/tenders` | tender, lots, budget, conditions | `GET/POST /api/tenders`, `GET/POST /api/tenders/:id/lots` | prêt partiel | Le design liste des AO; `DEL-web` a surtout création et dashboard. Créer une page publique/liste si validé. |
+| Appels d'offres | `/appels-offres/nouveau`, éventuellement `/dashboard/tenders` | tender, lots, budget, conditions | `GET/POST /api/tenders`, `GET/POST /api/tenders/:id/lots` | prêt partiel | Le design liste des AO; `DEL-web-main` a surtout création et dashboard. Créer une page publique/liste si validé. |
 | Login/Register | `/login`, `/register` | email, password, profil | `POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/me` | prêt | Ne pas migrer la simulation; conserver flux token existant et améliorer UI. |
 | Dashboard | `/dashboard` | résumé utilisateur, finance, opérations, notifications | `GET /api/me/summary`, `/api/me/financial-summary`, `/api/me/operations-summary`, `/api/me/notifications` | prêt | Remplacer widgets actuels progressivement par cartes premium. |
 | Propositions | `/dashboard/proposals` | propositions reçues/envoyées, décisions | `GET /api/me/proposals`, `PATCH /api/me/proposals/:id/company-decision`, `PATCH /api/me/proposals/:id/owner-decision` | prêt | Mapper statuts et actions; ne pas générer contrat côté frontend. |
@@ -167,7 +167,7 @@ Routes déjà présentes :
 | Missions | `/dashboard/missions` | missions, statut, rapports | `GET /api/me/missions`, `GET /api/reports/missions/:id/pdf`, `/api/mission-reports` | prêt partiel | Mapper télémétrie design; fuel/currentTask souvent absents ou dans rapports. |
 | Documents | `/dashboard/documents` | documents utilisateur/entity, statut, expiration | `GET /api/me/documents`, `POST /api/documents`, `GET /api/documents/entity/:type/:id` | prêt partiel | Upload fichier réel absent; coffre-fort peut démarrer avec URLs/metadata. |
 | Profil | `/dashboard/profile` | utilisateur, profils owner/company/technician | `GET/PATCH /api/auth/me`, `/api/owner-profiles`, `/api/company-profiles`, `/api/technician-profiles` | prêt | Adapter `UserProfile` vers User API et profils séparés. |
-| Maintenance | `/dashboard/equipment` ou future `/dashboard/maintenance` | tickets, calendrier, alertes | `GET/POST /api/maintenance`, `GET /api/maintenance/equipment/:equipmentId` | prêt partiel | `DEL-web` n'a pas de route maintenance dédiée; créer après validation. |
+| Maintenance | `/dashboard/equipment` ou future `/dashboard/maintenance` | tickets, calendrier, alertes | `GET/POST /api/maintenance`, `GET /api/maintenance/equipment/:equipmentId` | prêt partiel | `DEL-web-main` n'a pas de route maintenance dédiée; créer après validation. |
 
 ## 5. Mapping composants
 
@@ -213,7 +213,7 @@ Tous les mocks principaux sont dans `DEL-web-main/src/data.ts` et sont typés da
 
 ## 7. Fonctions API frontend à créer ou adapter
 
-`DEL-web/src/lib/api.js` contient déjà beaucoup de fonctions nécessaires : `getPublicSettings`, `login`, `register`, `getMe`, `updateMe`, `getMySummary`, `getMyEquipment`, `getMyRequests`, `getMyDocuments`, `getMyProposals`, `getMyContracts`, `getMyInvoices`, `getMyPayments`, `getMyMissions`, `getEquipmentList`, `getEquipmentById`, `createEquipment`, `createEquipmentRequest`, `createTender`, `getMyTenders`, `getMyTenderLots`, `getTenderById`, `getTenderLotsByTender`, `downloadReport`.
+`DEL-web-main/src/lib/api.js` contient déjà beaucoup de fonctions nécessaires : `getPublicSettings`, `login`, `register`, `getMe`, `updateMe`, `getMySummary`, `getMyEquipment`, `getMyRequests`, `getMyDocuments`, `getMyProposals`, `getMyContracts`, `getMyInvoices`, `getMyPayments`, `getMyMissions`, `getEquipmentList`, `getEquipmentById`, `createEquipment`, `createEquipmentRequest`, `createTender`, `getMyTenders`, `getMyTenderLots`, `getTenderById`, `getTenderLotsByTender`, `downloadReport`.
 
 Fonctions utiles à ajouter ou vérifier pour l'intégration du design :
 
@@ -263,12 +263,12 @@ Ne pas créer maintenant; à envisager après validation fonctionnelle :
 
 ## 10. Plan d'intégration étape par étape
 
-### Phase 1 — Préparer `DEL-web`
+### Phase 1 — Préparer `DEL-web-main`
 
 - Sauvegarder l'existant par commit/branche.
 - Installer uniquement les dépendances validées : `lucide-react`, `motion` si animations conservées, `recharts` si graphiques conservés.
 - Ne pas migrer Tailwind 3 vers 4 immédiatement; adapter les classes compatibles.
-- Créer des adaptateurs de mapping API dans `DEL-web` (ex. `mapEquipmentToDesignCard`) plutôt que modifier l'API pour chaque besoin visuel.
+- Créer des adaptateurs de mapping API dans `DEL-web-main` (ex. `mapEquipmentToDesignCard`) plutôt que modifier l'API pour chaque besoin visuel.
 - Définir quels composants deviennent client components.
 
 ### Phase 2 — Migrer layout public
@@ -300,7 +300,7 @@ Ne pas créer maintenant; à envisager après validation fonctionnelle :
 
 ### Phase 6 — Tests
 
-- `npm run build` dans `DEL-web`.
+- `npm run build` dans `DEL-web-main`.
 - `npm run dev` pour vérification manuelle.
 - Workflow démo : inscription/login, dépôt engin, catalogue, demande, dashboard, PDF.
 
@@ -309,7 +309,7 @@ Ne pas créer maintenant; à envisager après validation fonctionnelle :
 - Casser l'auth si la simulation `Connexion` remplace le flux token existant.
 - Casser les routes si la navigation `activeScreen` est copiée au lieu d'utiliser Next App Router.
 - Conflit Tailwind 4 vs Tailwind 3.
-- Dépendances lourdes/inutiles (`@google/genai`, `express`, `dotenv`) à ne pas importer dans `DEL-web`.
+- Dépendances lourdes/inutiles (`@google/genai`, `express`, `dotenv`) à ne pas importer dans `DEL-web-main`.
 - Composants très client-side : risque d'erreurs hydration si `window/localStorage/Date` sont utilisés dans des server components.
 - Statuts et champs non alignés entre mocks et API.
 - Images externes Unsplash : config Next Image à vérifier ou remplacer par `<img>`/domaines configurés.
@@ -341,11 +341,11 @@ Interprétation : le build n'a pas pu être lancé car l'environnement/registre 
 
 ## 13. Recommandation finale
 
-Recommandation : fusion progressive, pas remplacement complet de `DEL-web`.
+Recommandation : fusion progressive, pas remplacement complet de `DEL-web-main`.
 
 Justification :
 
-- `DEL-web` est déjà compatible avec `DEL-api`, utilise Next App Router et dispose de routes/API helpers fonctionnels.
+- `DEL-web-main` est déjà compatible avec `DEL-api`, utilise Next App Router et dispose de routes/API helpers fonctionnels.
 - `DEL-web-main` apporte surtout une meilleure couche visuelle et UX, mais sa navigation, son état et ses données sont des mocks SPA.
 - Un remplacement complet risquerait de casser auth, routing, build et intégration API.
 - La bonne stratégie est d'extraire les composants visuels les plus qualitatifs, de les convertir progressivement en composants Next, et de les brancher aux endpoints existants avec adaptateurs de champs.

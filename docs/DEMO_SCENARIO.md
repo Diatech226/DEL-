@@ -2,8 +2,8 @@
 
 ## URLs de démonstration
 
-- Web : http://localhost:3000
-- CMS : http://localhost:3001
+- Web Main : http://localhost:5173
+- CMS Main : http://localhost:5174
 - API health : http://localhost:5000/api/health
 
 ## Comptes de démonstration

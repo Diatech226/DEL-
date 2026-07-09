@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Connecter progressivement le prototype premium `DEL-web-main` à `DEL-api` sans modifier `DEL-web`, sans workspace et sans package partagé.
+Connecter progressivement le prototype premium `DEL-web-main` à `DEL-api` sans modifier `DEL-web-main`, sans workspace et sans package partagé.
 
 ## Variables d'environnement
 

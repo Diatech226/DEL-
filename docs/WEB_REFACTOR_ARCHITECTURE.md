@@ -18,7 +18,7 @@ Cette architecture prépare la migration du prototype premium `DEL-web-main` ver
 ## Arborescence cible
 
 ```text
-DEL-web/
+DEL-web-main/
 └── src/
     ├── app/
     │   ├── (public)/

@@ -49,9 +49,9 @@ Connecter progressivement `DEL-cms-main` à `DEL-api` pour les seuls modules Mis
 
 ## Fichiers `.env.example` mis à jour
 - `DEL-api/.env.example`
-- `DEL-web/.env.example`
 - `DEL-web-main/.env.example`
-- `DEL-cms/.env.example`
+- `DEL-web-main/.env.example`
+- `DEL-cms-main/.env.example`
 - `DEL-cms-main/.env.example`
 
 ## Mocks restants
@@ -65,8 +65,8 @@ La validation fonctionnelle complète dépend d'une API lancée avec MongoDB et 
 - `npm run build --prefix DEL-cms-main`
 - `npm run dev --prefix DEL-api`
 - `curl http://localhost:5000/api/health`
-- `git diff -- DEL-cms`
-- `git diff -- DEL-web`
+- `git diff -- DEL-cms-main`
+- `git diff -- DEL-web-main`
 - `git diff -- DEL-web-main`
 
 ## Prochaine itération recommandée
