@@ -1,7 +1,7 @@
 # DEL-web-main — Itération 3 Propositions & Contrats
 
 ## Objectif
-Connecter `DEL-web-main` à `DEL-api` uniquement pour les modules utilisateur Propositions et Contrats, sans modifier `DEL-web`, `DEL-cms` ni `DEL-cms-main`.
+Connecter `DEL-web-main` à `DEL-api` uniquement pour les modules utilisateur Propositions et Contrats, sans modifier `DEL-web-main`, `DEL-cms-main` ni `DEL-cms-main`.
 
 ## Propositions connectées
 - Liste utilisateur via `GET /api/me/proposals`.
@@ -61,8 +61,8 @@ npm install
 npm run build
 npm run dev
 
-git diff -- DEL-web
-git diff -- DEL-cms
+git diff -- DEL-web-main
+git diff -- DEL-cms-main
 git diff -- DEL-cms-main
 ```
 

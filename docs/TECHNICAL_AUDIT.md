@@ -2,24 +2,24 @@
 
 ## Synthèse
 
-Le dépôt respecte la structure attendue : `DEL-api`, `DEL-web`, `DEL-cms`, `package.json`, `README.md`, `.gitignore`. Aucun dossier `packages/*`, workspace ou dépôt `.git` imbriqué inutile n'a été détecté. Les apps conservent leurs `package.json` indépendants.
+Le dépôt respecte la structure attendue : `DEL-api`, `DEL-web-main`, `DEL-cms-main`, `package.json`, `README.md`, `.gitignore`. Aucun dossier `packages/*`, workspace ou dépôt `.git` imbriqué inutile n'a été détecté. Les apps conservent leurs `package.json` indépendants.
 
 ## Erreurs trouvées
 
 - `npm install` dans `DEL-api` échoue dans l'environnement courant avec `403 Forbidden - GET https://registry.npmjs.org/jsonwebtoken`.
 - Le démarrage API n'a pas pu être validé car `express` n'était pas installé localement après l'échec d'installation.
-- `DEL-web` et `DEL-cms` buildent correctement.
+- `DEL-web-main` et `DEL-cms-main` buildent correctement.
 - Les pages CMS `messages`, `scoring` et `tender-submissions` existent mais sont très minimales.
 
 ## Fichiers corrigés ou mis à jour
 
 - `README.md`
 - `DEL-api/README.md`
-- `DEL-web/README.md`
-- `DEL-cms/README.md`
+- `DEL-web-main/README.md`
+- `DEL-cms-main/README.md`
 - `DEL-api/.env.example`
-- `DEL-web/.env.example`
-- `DEL-cms/.env.example`
+- `DEL-web-main/.env.example`
+- `DEL-cms-main/.env.example`
 - `docs/NEXT_ITERATIONS_CONTEXT.md`
 - `docs/TECHNICAL_AUDIT.md`
 - `docs/PRODUCT_REVIEW.md`
@@ -43,7 +43,7 @@ Aucune route cassée par import n'a été confirmée dans l'audit statique. Les 
 
 ## Fonctions frontend manquantes ou fragiles
 
-`DEL-web/src/lib/api.js` et `DEL-cms/src/lib/api.js` couvrent la plupart des appels utilisés. Les zones à compléter restent liées aux modules non finalisés : tender submissions, scoring détaillé et conversations/messages.
+`DEL-web-main/src/lib/api.js` et `DEL-cms-main/src/lib/api.js` couvrent la plupart des appels utilisés. Les zones à compléter restent liées aux modules non finalisés : tender submissions, scoring détaillé et conversations/messages.
 
 ## Pages cassées ou incomplètes
 
@@ -144,8 +144,8 @@ Le cœur business DEL est maintenant représenté côté API par des routes expl
 
 ## Audit technique — refonte UI/UX
 
-- Ajout de composants UI locaux séparés entre DEL-web et DEL-cms, sans workspace ni package partagé.
+- Ajout de composants UI locaux séparés entre DEL-web-main et DEL-cms-main, sans workspace ni package partagé.
 - Ajout de mappings locaux de statuts dans chaque frontend (`src/lib/status.js`) afin d’éviter une dépendance commune.
 - Les appels API existants ont été conservés. Les tokens restent lus via `localStorage` uniquement côté client grâce aux gardes `typeof window` déjà présents.
 - La page CMS `/workflows` calcule un avancement simple à partir des listes existantes lorsque l’API workflow détaillée n’est pas disponible.
-- Builds validés pour DEL-web et DEL-cms. Le warning npm `Unknown env config "http-proxy"` provient de l’environnement npm et ne bloque pas la compilation.
+- Builds validés pour DEL-web-main et DEL-cms-main. Le warning npm `Unknown env config "http-proxy"` provient de l’environnement npm et ne bloque pas la compilation.

@@ -1,7 +1,7 @@
 # DEL-cms-main — Itération 2 Propositions & Contrats
 
 ## Objectif
-Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` pour les seuls modules Propositions et Contrats, sans modifier `DEL-cms`, `DEL-web` ou créer de workspace/package partagé.
+Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` pour les seuls modules Propositions et Contrats, sans modifier `DEL-cms-main`, `DEL-web-main` ou créer de workspace/package partagé.
 
 ## Pages connectées
 - Onglet / vue `Propositions` dans `DEL-cms-main` : liste API, filtre local, état loading/error/empty et détail proposition.
@@ -56,8 +56,8 @@ Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` po
 - `npm run dev --prefix DEL-cms-main`
 - `npm run dev --prefix DEL-api`
 - `curl http://localhost:5000/api/health`
-- `git diff -- DEL-cms`
-- `git diff -- DEL-web`
+- `git diff -- DEL-cms-main`
+- `git diff -- DEL-web-main`
 
 ## Prochaine itération recommandée
 Connecter les factures après validation du workflow proposition → contrat, puis brancher paiements manuels, documents contractuels et PDF brandés dans des itérations séparées.

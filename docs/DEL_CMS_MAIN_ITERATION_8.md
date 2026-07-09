@@ -1,7 +1,7 @@
 # DEL-cms-main — Itération 8 Notifications & Messages
 
 ## Objectif
-Connecter progressivement `DEL-cms-main` à `DEL-api` pour les modules Notifications et Messages uniquement, sans modifier l’ancien `DEL-cms`, l’ancien `DEL-web`, ni `DEL-web-main`, et sans workspace/package partagé.
+Connecter progressivement `DEL-cms-main` à `DEL-api` pour les modules Notifications et Messages uniquement, sans modifier l’ancien `DEL-cms-main`, l’ancien `DEL-web-main`, ni `DEL-web-main`, et sans workspace/package partagé.
 
 ## Notifications connectées
 - Vue `Notifications` ajoutée dans la navigation de `DEL-cms-main`.
@@ -95,8 +95,8 @@ curl http://localhost:5000/api/health
 ```
 
 ```bash
-git diff -- DEL-cms
-git diff -- DEL-web
+git diff -- DEL-cms-main
+git diff -- DEL-web-main
 git diff -- DEL-web-main
 ```
 

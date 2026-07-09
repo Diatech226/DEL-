@@ -69,8 +69,8 @@ Une carte `Paramètres plateforme` a été ajoutée au dashboard avec :
 
 ## Commandes de test
 - `npm run build --prefix DEL-cms-main`
-- `git diff -- DEL-cms`
-- `git diff -- DEL-web`
+- `git diff -- DEL-cms-main`
+- `git diff -- DEL-web-main`
 - `git diff -- DEL-web-main`
 
 ## Prochaine itération recommandée

@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Connecter progressivement `DEL-cms-main` à `DEL-api` pour les modules administratifs Audit et Exports uniquement, sans modifier l’ancien `DEL-cms`, l’ancien `DEL-web`, ni créer de workspace/package partagé.
+Connecter progressivement `DEL-cms-main` à `DEL-api` pour les modules administratifs Audit et Exports uniquement, sans modifier l’ancien `DEL-cms-main`, l’ancien `DEL-web-main`, ni créer de workspace/package partagé.
 
 ## Pages connectées
 
@@ -134,8 +134,8 @@ curl http://localhost:5000/api/health
 ```
 
 ```bash
-git diff -- DEL-cms
-git diff -- DEL-web
+git diff -- DEL-cms-main
+git diff -- DEL-web-main
 ```
 
 ## Prochaine itération recommandée

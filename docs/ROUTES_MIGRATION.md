@@ -93,13 +93,13 @@ Remplacer la navigation simulée du prototype `DEL-web-main` par des routes appl
 
 | Ancien état prototype | Redirection |
 | --- | --- |
-| `activeScreen = 'Accueil Premium - DEL-web'` | `/` |
-| `activeScreen = 'Liste des Engins - DEL-web'` | `/equipment` |
-| `activeScreen = 'Détail de l Engin - DEL-web'` | `/equipment/[id]` |
-| `activeScreen = 'Dashboard Propriétaire - DEL-web'` | `/dashboard` |
-| `activeScreen = 'Dashboard Entreprise - DEL-web'` | `/dashboard` |
-| `activeScreen = 'Factures - DEL-web'` | `/dashboard/invoices` |
-| `activeScreen = 'Suivi Missions - DEL-web'` | `/dashboard/missions` |
+| `activeScreen = 'Accueil Premium - DEL-web-main'` | `/` |
+| `activeScreen = 'Liste des Engins - DEL-web-main'` | `/equipment` |
+| `activeScreen = 'Détail de l Engin - DEL-web-main'` | `/equipment/[id]` |
+| `activeScreen = 'Dashboard Propriétaire - DEL-web-main'` | `/dashboard` |
+| `activeScreen = 'Dashboard Entreprise - DEL-web-main'` | `/dashboard` |
+| `activeScreen = 'Factures - DEL-web-main'` | `/dashboard/invoices` |
+| `activeScreen = 'Suivi Missions - DEL-web-main'` | `/dashboard/missions` |
 
 ## Modèle de fichier `routes.ts`
 

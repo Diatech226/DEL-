@@ -1,7 +1,7 @@
 # DEL-web-main — Itération 4 Factures & Paiements
 
 ## Objectif
-Connecter uniquement les modules utilisateur **Factures** et **Paiements** de `DEL-web-main` à `DEL-api`, sans modifier `DEL-web`, `DEL-cms` ni `DEL-cms-main`.
+Connecter uniquement les modules utilisateur **Factures** et **Paiements** de `DEL-web-main` à `DEL-api`, sans modifier `DEL-web-main`, `DEL-cms-main` ni `DEL-cms-main`.
 
 ## Factures connectées
 - `Factures.tsx` charge les factures liées à l'utilisateur via `GET /api/me/invoices`.
@@ -54,8 +54,8 @@ curl http://localhost:5000/api/health
 cd DEL-web-main && npm install
 cd DEL-web-main && npm run build
 cd DEL-web-main && npm run dev
-git diff -- DEL-web
-git diff -- DEL-cms
+git diff -- DEL-web-main
+git diff -- DEL-cms-main
 git diff -- DEL-cms-main
 ```
 

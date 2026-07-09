@@ -7,9 +7,9 @@
 - [ ] `MONGODB_URI` récupéré et stocké uniquement dans les variables du service API.
 - [ ] API déployée sur Render, Railway ou Fly.io.
 - [ ] Healthcheck API OK sur `GET /api/health`.
-- [ ] DEL-web déployé sur Vercel.
-- [ ] DEL-cms déployé sur Vercel.
-- [ ] `CORS_ORIGINS` mis à jour avec les URLs Vercel finales de DEL-web et DEL-cms.
+- [ ] DEL-web-main déployé sur Vercel.
+- [ ] DEL-cms-main déployé sur Vercel.
+- [ ] `CORS_ORIGINS` mis à jour avec les URLs Vercel finales de DEL-web-main et DEL-cms-main.
 
 ## Initialisation métier
 

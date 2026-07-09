@@ -1,7 +1,7 @@
 # DEL-cms-main — Itération 1 API
 
 ## Objectif
-Connecter une première tranche stable du nouveau CMS autonome `DEL-cms-main` à `DEL-api`, sans modifier l’ancien `DEL-cms` ni créer de workspace/package partagé.
+Connecter une première tranche stable du nouveau CMS autonome `DEL-cms-main` à `DEL-api`, sans modifier l’ancien `DEL-cms-main` ni créer de workspace/package partagé.
 
 ## Framework détecté
 - Vite SPA avec React 19 et TypeScript.
@@ -69,8 +69,8 @@ Aucun secret frontend n’est ajouté.
 - `npm install --prefix DEL-cms-main`
 - `npm run build --prefix DEL-cms-main`
 - `npm run dev --prefix DEL-cms-main`
-- `git diff -- DEL-cms`
-- `git diff -- DEL-web`
+- `git diff -- DEL-cms-main`
+- `git diff -- DEL-web-main`
 
 ## Limites
 - Pas de connexion des modules hors périmètre.

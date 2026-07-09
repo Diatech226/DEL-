@@ -1,7 +1,7 @@
 # DEL-cms-main — Itération 3 Factures & Paiements
 
 ## Objectif
-Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` uniquement pour les modules Factures et Paiements, sans modifier `DEL-cms`, `DEL-web`, `DEL-web-main`, ni créer de workspace ou package partagé.
+Connecter progressivement le nouveau CMS autonome `DEL-cms-main` à `DEL-api` uniquement pour les modules Factures et Paiements, sans modifier `DEL-cms-main`, `DEL-web-main`, `DEL-web-main`, ni créer de workspace ou package partagé.
 
 ## Pages connectées
 - Vue `Factures` : liste API, filtres locaux, états loading/error/empty et détail facture.
@@ -66,8 +66,8 @@ Les modules hors Factures/Paiements conservent leurs données ou comportements e
 - `npm run build --prefix DEL-cms-main`
 - `npm run dev --prefix DEL-api`
 - `curl http://localhost:5000/api/health`
-- `git diff -- DEL-cms`
-- `git diff -- DEL-web`
+- `git diff -- DEL-cms-main`
+- `git diff -- DEL-web-main`
 - `git diff -- DEL-web-main`
 
 ## Prochaine itération recommandée
