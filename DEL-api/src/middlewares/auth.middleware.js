@@ -11,7 +11,7 @@ async function requireAuth(req, res, next) {
     if (scheme !== 'Bearer' || !token) return unauthorized(res);
     const payload = verifyToken(token);
     const user = await User.findById(payload.userId);
-    if (!user || user.status === 'SUSPENDED') return unauthorized(res);
+    if (!user || ['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) return unauthorized(res);
     req.user = user;
     return next();
   } catch (error) {
@@ -36,7 +36,7 @@ async function optionalAuth(req, _res, next) {
     if (scheme === 'Bearer' && token) {
       const payload = verifyToken(token);
       const user = await User.findById(payload.userId);
-      if (user && user.status !== 'SUSPENDED') req.user = user;
+      if (user && !['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) req.user = user;
     }
   } catch (error) {
     // Token optionnel invalide : on continue en mode public.

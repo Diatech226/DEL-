@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true); setError(null);
       const me = await authService.getMe();
       const user = me?.user || me;
-      if (user?.role !== 'ADMIN') throw new ApiError('Ce compte n’a pas accès au CMS DEL.', 403);
+      if (user?.role !== 'ADMIN') throw new ApiError('Ce compte n’est pas autorisé à accéder au CMS DEL.', 403);
       setAdmin(user);
     } catch (err: any) {
       clearToken(); setLocalToken(null); setAdmin(null); setError(err?.message || 'Session invalide.');
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await authService.login({ email, password });
       const nextToken = data?.token || data?.accessToken;
       const user = data?.user || data?.admin;
-      if (user?.role && user.role !== 'ADMIN') throw new ApiError('Ce compte n’a pas accès au CMS DEL.', 403);
+      if (user?.role && user.role !== 'ADMIN') throw new ApiError('Ce compte n’est pas autorisé à accéder au CMS DEL.', 403);
       setLocalToken(nextToken || getToken());
       await refreshMe();
       return true;

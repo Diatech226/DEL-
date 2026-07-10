@@ -1,7 +1,10 @@
 const router = require('express').Router();
 const { requireAdmin } = require('../middlewares/auth.middleware');
 const c = require('../controllers/user.controller');
+router.use(requireAdmin);
 router.route('/').post(c.createUser).get(c.getUsers);
-router.patch('/:id/status', requireAdmin, c.updateUserStatus);
+router.post('/admin', c.createAdmin);
+router.patch('/:id/status', c.updateUserStatus);
+router.patch('/:id/reset-password', c.resetPassword);
 router.route('/:id').get(c.getUserById).patch(c.updateUser).delete(c.deleteUser);
 module.exports = router;
