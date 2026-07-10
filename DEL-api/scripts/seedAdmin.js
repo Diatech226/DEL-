@@ -1,22 +1,14 @@
-const { hashPassword } = require('../src/utils/password');
+require('dotenv').config();
+const mongoose = require('mongoose');
 const connectDB = require('../src/config/db');
-const env = require('../src/config/env');
-const User = require('../src/models/User');
+const { ensureAdminAccount } = require('../src/services/adminAccount.service');
+const { sanitizeUser } = require('../src/utils/sanitizeUser');
 
 async function run() {
+  const resetPassword = process.argv.includes('--reset-password');
   await connectDB();
-  if (!env.adminEmails.length) throw new Error('ADMIN_EMAILS est vide.');
-  const passwordHash = await hashPassword('changer-moi-123');
-  for (const email of env.adminEmails) {
-    const existing = await User.findOne({ email });
-    if (existing) {
-      existing.role = 'ADMIN'; existing.status = 'VERIFIED'; if (!existing.passwordHash) existing.passwordHash = passwordHash; await existing.save();
-      console.log(`Admin mis à jour: ${email}`);
-    } else {
-      await User.create({ fullName: `Admin DEL ${email}`, email, passwordHash, role: 'ADMIN', accountType: 'INDIVIDUAL', status: 'VERIFIED', preferredLanguage: 'fr' });
-      console.log(`Admin créé: ${email}`);
-    }
-  }
-  process.exit(0);
+  const result = await ensureAdminAccount({ resetPassword });
+  const safeUser = sanitizeUser(result.user);
+  console.log(JSON.stringify({ success: true, created: result.created, passwordReset: result.passwordReset, admin: { id: safeUser.id, email: safeUser.email, role: safeUser.role, status: safeUser.status, mustChangePassword: safeUser.mustChangePassword } }, null, 2));
 }
-run().catch((error) => { console.error(error); process.exit(1); });
+run().then(() => mongoose.connection.close()).catch(async (error) => { console.error(`Seed admin échoué: ${error.message}`); await mongoose.connection.close().catch(() => {}); process.exit(1); });

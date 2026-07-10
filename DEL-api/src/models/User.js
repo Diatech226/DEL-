@@ -5,9 +5,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
   phone: { type: String, trim: true, unique: true, sparse: true },
   passwordHash: { type: String, select: false },
-  role: { type: String, enum: ['OWNER', 'COMPANY', 'INVESTOR', 'TECHNICIAN', 'ADMIN'], required: true },
-  accountType: { type: String, enum: ['INDIVIDUAL', 'COMPANY'], default: 'INDIVIDUAL' },
-  status: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED'], default: 'PENDING' },
+  role: { type: String, enum: ['ADMIN', 'OWNER', 'COMPANY', 'INVESTOR', 'TECHNICIAN', 'USER'], required: true },
+  accountType: { type: String, enum: ['ADMIN', 'INDIVIDUAL', 'COMPANY'], default: 'INDIVIDUAL' },
+  status: { type: String, enum: ['ACTIVE', 'PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED', 'ARCHIVED'], default: 'PENDING' },
+  mustChangePassword: { type: Boolean, default: false },
   country: { type: String, trim: true },
   city: { type: String, trim: true },
   address: { type: String, trim: true },
@@ -19,9 +20,15 @@ const userSchema = new mongoose.Schema({
   verifiedAt: { type: Date },
 }, { timestamps: true });
 
+userSchema.index({ email: 1 }, { unique: true, sparse: true });
+
 userSchema.set('toJSON', {
+  virtuals: true,
   transform: (_doc, ret) => {
     delete ret.passwordHash;
+    delete ret.password;
+    delete ret.resetToken;
+    delete ret.resetTokenExpires;
     delete ret.__v;
     return ret;
   },

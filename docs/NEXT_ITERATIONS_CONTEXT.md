@@ -448,3 +448,7 @@ CMS Main (`DEL-cms-main`) :
 - Résumé financier minimal ajouté côté dashboard entreprise à partir des factures et paiements.
 - Paiement réel en ligne non connecté : il reste à venir après validation MVP.
 - Missions, documents, notifications, messages et maintenance restent non connectés dans cette itération.
+
+## Gestion des comptes administrateurs
+
+`DEL-api` dispose d’un service `ensureAdminAccount()` et d’un script `scripts/seedAdmin.js` pour créer ou corriger un compte administrateur depuis les variables d’environnement `ADMIN_*`. La réinitialisation du mot de passe est explicite via `npm run seed:admin:reset` ou temporairement `ADMIN_RESET_PASSWORD_ON_START=true`; ne pas exposer ces variables dans les frontends. Les réponses utilisateur doivent passer par `sanitizeUser()` pour éviter toute fuite de `passwordHash`.

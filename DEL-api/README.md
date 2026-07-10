@@ -142,3 +142,22 @@ Routes principales :
 Statuts clés : propositions `SENT`, `ACCEPTED`, `REJECTED`; workflow `PENDING_COMPANY`, `PENDING_OWNERS`, `READY_FOR_CONTRACT`, `CONTRACT_CREATED`, `REJECTED_BY_COMPANY`, `REJECTED_BY_OWNER`. Les demandes passent notamment par `PROPOSAL_SENT`, `CONTRACTED`, `ACTIVE`, `COMPLETED`, `CANCELLED`, `REJECTED`.
 
 Vérification rapide : `node scripts/checkWorkflowRoutes.js` vérifie les imports de routes et les cas de recalcul de workflow proposition.
+
+## Création du compte administrateur
+
+1. Copier `.env.example` vers `.env`.
+2. Définir côté `DEL-api` uniquement :
+   * `ADMIN_EMAIL`
+   * `ADMIN_PASSWORD`
+   * `ADMIN_FULL_NAME`
+3. Lancer `npm run seed:admin` pour créer le compte administrateur si nécessaire.
+4. Pour réinitialiser explicitement le hash du mot de passe, lancer `npm run seed:admin:reset`.
+
+Avertissements de sécurité :
+
+* Ne jamais committer `.env`.
+* Ne jamais utiliser le mot de passe exemple en production.
+* `ADMIN_PASSWORD` doit être long, unique, robuste et changé en production.
+* Ne pas laisser `ADMIN_RESET_PASSWORD_ON_START=true`; cette option réinitialise le hash au démarrage et doit être remise à `false` dans le `.env` après usage.
+* Changer le mot de passe temporaire après la première connexion lorsque `mustChangePassword` est actif.
+* Ne jamais exposer `ADMIN_EMAIL` ou `ADMIN_PASSWORD` dans `DEL-web-main` ou `DEL-cms-main`.
