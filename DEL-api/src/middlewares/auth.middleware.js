@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { verifyToken } = require('../utils/jwt');
+const { attachClerkAuth } = require('./clerkAuth.middleware');
 
 const unauthorized = (res) => res.status(401).json({ success: false, message: 'Non autorisé' });
 const forbidden = (res) => res.status(403).json({ success: false, message: 'Non autorisé' });
@@ -13,9 +14,31 @@ async function requireAuth(req, res, next) {
     const user = await User.findById(payload.userId);
     if (!user || ['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) return unauthorized(res);
     req.user = user;
+    req.authType = 'JWT';
     return next();
   } catch (error) {
     return unauthorized(res);
+  }
+}
+
+async function requireAnyAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const [scheme, token] = header.split(' ');
+  if (scheme !== 'Bearer' || !token) return unauthorized(res);
+  try {
+    const payload = verifyToken(token);
+    const user = await User.findById(payload.userId);
+    if (!user || ['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) return unauthorized(res);
+    req.user = user;
+    req.authType = 'JWT';
+    return next();
+  } catch (jwtError) {
+    try {
+      await attachClerkAuth(req, token);
+      return next();
+    } catch (clerkError) {
+      return unauthorized(res);
+    }
   }
 }
 
@@ -34,9 +57,13 @@ async function optionalAuth(req, _res, next) {
     const header = req.headers.authorization || '';
     const [scheme, token] = header.split(' ');
     if (scheme === 'Bearer' && token) {
-      const payload = verifyToken(token);
-      const user = await User.findById(payload.userId);
-      if (user && !['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) req.user = user;
+      try {
+        const payload = verifyToken(token);
+        const user = await User.findById(payload.userId);
+        if (user && !['SUSPENDED', 'REJECTED', 'ARCHIVED'].includes(user.status)) { req.user = user; req.authType = 'JWT'; }
+      } catch {
+        await attachClerkAuth(req, token);
+      }
     }
   } catch (error) {
     // Token optionnel invalide : on continue en mode public.
@@ -44,4 +71,4 @@ async function optionalAuth(req, _res, next) {
   return next();
 }
 
-module.exports = { requireAuth, optionalAuth, requireRole, requireAdmin };
+module.exports = { requireAuth, requireAnyAuth, optionalAuth, optionalAnyAuth: optionalAuth, requireRole, requireAdmin };

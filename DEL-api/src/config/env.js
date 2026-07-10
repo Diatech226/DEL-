@@ -27,7 +27,7 @@ const env = {
   port: process.env.PORT || 5000,
   nodeEnv,
   mongodbUri,
-  corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+  corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),

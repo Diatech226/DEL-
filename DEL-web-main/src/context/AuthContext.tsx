@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import * as auth from '../services/auth.service';
-import { clearToken, getErrorMessage, getToken, setToken, unwrapData } from '../lib/http';
-type Ctx={user:any;token:string|null;loading:boolean;error:string|null;isAuthenticated:boolean;login:(email:string,password:string)=>Promise<void>;register:(payload:any)=>Promise<void>;logout:()=>void;refreshMe:()=>Promise<void>};
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth as useClerkAuth, useClerk, useUser } from '@clerk/react';
+import { apiGet, apiPost, getErrorMessage, unwrapData } from '../lib/http';
+
+type Ctx={clerkUser:any;delUser:any;user:any;isLoaded:boolean;isSignedIn:boolean;role:string|null;loading:boolean;error:string|null;isAuthenticated:boolean;getDelToken:()=>Promise<string|null>;refreshDelUser:()=>Promise<void>;refreshMe:()=>Promise<void>;logout:()=>Promise<void>;login:(email:string,password:string)=>Promise<void>;register:(payload:any)=>Promise<void>};
 const AuthContext=createContext<Ctx|null>(null);
-export function AuthProvider({children}:{children:React.ReactNode}){const [user,setUser]=useState<any>(null);const [tokenState,setTokenState]=useState<string|null>(getToken());const [loading,setLoading]=useState(Boolean(getToken()));const [error,setError]=useState<string|null>(null);
-const refreshMe=async()=>{try{setLoading(true);setError(null);const me=unwrapData(await auth.getMe());setUser((me as any)?.user||me);}catch(e){if((e as any)?.status===401){clearToken();setTokenState(null);setUser(null);}setError(getErrorMessage(e));}finally{setLoading(false);}};
-useEffect(()=>{if(tokenState) void refreshMe(); else setLoading(false);},[]);
-const login=async(email:string,password:string)=>{setLoading(true);setError(null);try{const res=unwrapData(await auth.login({email,password}));const token=(res as any)?.token||(res as any)?.accessToken||(res as any)?.jwt;if(token){setToken(token);setTokenState(token);} await refreshMe();}catch(e){setError(getErrorMessage(e));throw e;}finally{setLoading(false);}};
-const register=async(payload:any)=>{setLoading(true);setError(null);try{const res=unwrapData(await auth.register(payload));const token=(res as any)?.token||(res as any)?.accessToken||(res as any)?.jwt;if(token){setToken(token);setTokenState(token);await refreshMe();}}catch(e){setError(getErrorMessage(e));throw e;}finally{setLoading(false);}};
-const logout=()=>{auth.logout();setTokenState(null);setUser(null);};
-const value=useMemo(()=>({user,token:tokenState,loading,error,isAuthenticated:Boolean(user&&tokenState),login,register,logout,refreshMe}),[user,tokenState,loading,error]);return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>}
+export function AuthProvider({children}:{children:React.ReactNode}){const { isLoaded, isSignedIn, getToken }=useClerkAuth();const { user: clerkUser }=useUser();const clerk=useClerk();const [delUser,setDelUser]=useState<any>(null);const [loading,setLoading]=useState(false);const [error,setError]=useState<string|null>(null);
+const getDelToken=useCallback(async()=> isSignedIn ? await getToken() : null,[getToken,isSignedIn]);
+const refreshDelUser=useCallback(async()=>{if(!isLoaded||!isSignedIn){setDelUser(null);return;}setLoading(true);setError(null);try{const token=await getToken();const res=unwrapData(await apiPost('/api/auth/clerk/sync', undefined, { token: token || undefined }));setDelUser((res as any)?.user||res);}catch(e){setError(getErrorMessage(e));setDelUser(null);}finally{setLoading(false);}},[getToken,isLoaded,isSignedIn]);
+useEffect(()=>{void refreshDelUser();},[refreshDelUser]);
+const logout=useCallback(async()=>{await clerk.signOut();setDelUser(null);},[clerk]);
+const unsupported=async()=>{throw new Error('DEL-web-main utilise Clerk pour la connexion. Utilisez les composants SignIn/SignUp Clerk.');};
+const value=useMemo(()=>({clerkUser,delUser,user:delUser,isLoaded,isSignedIn:Boolean(isSignedIn),role:delUser?.role||null,loading,error,isAuthenticated:Boolean(isSignedIn&&delUser),getDelToken,refreshDelUser,refreshMe:refreshDelUser,logout,login:unsupported,register:unsupported}),[clerkUser,delUser,isLoaded,isSignedIn,loading,error,getDelToken,refreshDelUser,logout]);return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>}
 export const useAuth=()=>{const ctx=useContext(AuthContext);if(!ctx)throw new Error('useAuth must be used within AuthProvider');return ctx;};

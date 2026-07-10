@@ -126,3 +126,7 @@ http://localhost:5173,http://localhost:5174
 ## Note légale MVP
 
 DEL MVP ne promet pas de rendement, dividende, financement, investissement fractionné, paiement réel automatisé ou signature électronique qualifiée. Ces sujets sont des évolutions futures à valider juridiquement et techniquement.
+
+## Authentification DEL
+
+Voir `docs/AUTH_ARCHITECTURE.md` et `docs/CLERK_SETUP.md`. `DEL-web-main` utilise Clerk; `DEL-cms-main` conserve le JWT interne admin DEL-api.

@@ -19,13 +19,14 @@ export function getErrorMessage(error: unknown) {
   if (e?.status && e.status >= 500) return 'Une erreur serveur est survenue.';
   return e?.message || 'Une erreur est survenue.';
 }
-export async function apiRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-  const token = getToken();
-  const headers = new Headers(options.headers);
+export type ApiRequestOptions = RequestInit & { token?: string | null };
+export async function apiRequest<T = unknown>(path: string, options: ApiRequestOptions = {}): Promise<ApiResponse<T>> {
+  const { token, ...fetchOptions } = options;
+  const headers = new Headers(fetchOptions.headers);
   if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
   try {
-    const response = await fetch(buildUrl(path), { ...options, headers });
+    const response = await fetch(buildUrl(path), { ...fetchOptions, headers });
     const text = await response.text();
     const payload = text ? JSON.parse(text) : {};
     if (!response.ok) {
@@ -40,8 +41,8 @@ export async function apiRequest<T = unknown>(path: string, options: RequestInit
     err.isNetworkError = true; err.payload = error; throw err;
   }
 }
-export const apiGet = <T=unknown>(path: string) => apiRequest<T>(path);
-export const apiPost = <T=unknown>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
-export const apiPatch = <T=unknown>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'PATCH', body: body === undefined ? undefined : JSON.stringify(body) });
-export const apiDelete = <T=unknown>(path: string) => apiRequest<T>(path, { method: 'DELETE' });
+export const apiGet = <T=unknown>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(path, options);
+export const apiPost = <T=unknown>(path: string, body?: unknown, options: ApiRequestOptions = {}) => apiRequest<T>(path, { ...options, method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
+export const apiPatch = <T=unknown>(path: string, body?: unknown, options: ApiRequestOptions = {}) => apiRequest<T>(path, { ...options, method: 'PATCH', body: body === undefined ? undefined : JSON.stringify(body) });
+export const apiDelete = <T=unknown>(path: string, options: ApiRequestOptions = {}) => apiRequest<T>(path, { ...options, method: 'DELETE' });
 export function unwrapData<T>(response: ApiResponse<T>): T { return (response?.data ?? response) as T; }

@@ -18,3 +18,7 @@ View your app in AI Studio: https://ai.studio/apps/d45bb76a-5de9-4feb-bba4-fb736
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Authentification Clerk
+
+Configurer `VITE_CLERK_PUBLISHABLE_KEY` dans `.env`. Google doit être activé dans le dashboard Clerk; aucun secret Clerk ou Google ne doit être placé dans ce frontend.

@@ -33,8 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true); setError(null);
       const data = await authService.login({ email, password });
-      const nextToken = data?.token || data?.accessToken;
-      const user = data?.user || data?.admin;
+      const authData = data?.data || data;
+      const nextToken = authData?.token || authData?.accessToken;
+      const user = authData?.user || authData?.admin;
       if (user?.role && user.role !== 'ADMIN') throw new ApiError('Ce compte n’est pas autorisé à accéder au CMS DEL.', 403);
       setLocalToken(nextToken || getToken());
       await refreshMe();
