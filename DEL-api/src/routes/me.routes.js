@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { requireAuth } = require('../middlewares/auth.middleware');
+const { requireAnyAuth } = require('../middlewares/auth.middleware');
 const Equipment = require('../models/Equipment');
 const EquipmentRequest = require('../models/EquipmentRequest');
 const Document = require('../models/Document');
@@ -19,7 +19,7 @@ const list = (res, data) => res.json({ success: true, count: data.length, data }
 const userNames = (user) => [user.fullName, user.email, user.phone].filter(Boolean);
 const inNames = (field, user) => ({ [field]: { $in: userNames(user) } });
 
-router.use(requireAuth);
+router.use(requireAnyAuth);
 
 async function getOwnerEquipmentIds(userId) {
   const equipment = await Equipment.find({ ownerUserId: userId }).select('_id');

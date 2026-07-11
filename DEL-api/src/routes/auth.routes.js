@@ -1,9 +1,12 @@
 const router = require('express').Router();
 const c = require('../controllers/auth.controller');
 const { requireAuth } = require('../middlewares/auth.middleware');
+const { requireClerkAuth } = require('../middlewares/clerkAuth.middleware');
 router.post('/register', c.register);
 router.post('/login', c.login);
 router.get('/me', requireAuth, c.getMe);
+router.post('/clerk/sync', requireClerkAuth, c.clerkSync);
+router.get('/clerk/me', requireClerkAuth, c.clerkMe);
 router.patch('/me', requireAuth, c.updateMe);
 router.patch('/change-password', requireAuth, c.changePassword);
 router.post('/logout', requireAuth, c.logoutPlaceholder);

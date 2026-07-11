@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/react';
 import { UserProfile } from '../types';
 import { 
   Bell, 
@@ -192,6 +193,14 @@ export default function Header({ user, activeRole, onRoleChange, onNavigate }: H
             )}
           </AnimatePresence>
         </div>
+
+        <SignedOut>
+          <SignInButton mode="modal"><button className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Connexion</button></SignInButton>
+          <SignUpButton mode="modal"><button className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-gray-950 hover:bg-amber-400">Inscription</button></SignUpButton>
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
 
         {/* User Profile Trigger */}
         <div className="relative">

@@ -5,6 +5,18 @@ const { createAuditLog } = require('../utils/audit');
 const { validatePasswordStrength } = require('../utils/passwordPolicy');
 const { sanitizeUser } = require('../utils/sanitizeUser');
 
+function logAdminLoginDiagnostic(info) {
+  if (process.env.NODE_ENV === 'production') return;
+  console.info('[auth:admin]', {
+    'Admin trouvé': info.found ? 'oui' : 'non',
+    'Rôle': info.role || 'autre',
+    'Statut': info.status || 'autre',
+    'passwordHash présent': info.hasPasswordHash ? 'oui' : 'non',
+    'Comparaison mot de passe': info.passwordMatch === undefined ? 'non testée' : (info.passwordMatch ? 'succès' : 'échec'),
+    'JWT généré': info.jwtGenerated ? 'oui' : 'non',
+  });
+}
+
 const PUBLIC_ROLES = ['OWNER', 'COMPANY', 'TECHNICIAN', 'USER'];
 const FORBIDDEN_PUBLIC_ROLES = ['ADMIN', 'SUPER_ADMIN', 'SYSTEM'];
 const BLOCKED_STATUSES = ['SUSPENDED', 'REJECTED', 'ARCHIVED'];
@@ -34,13 +46,21 @@ async function login(req, res) {
   if (!loginId || !password) return res.status(400).json({ success: false, message: 'Identifiant et mot de passe requis' });
   const ident = String(loginId).trim();
   const user = await User.findOne({ $or: [{ email: ident.toLowerCase() }, { phone: ident }] }).select('+passwordHash');
-  if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) return res.status(401).json({ success: false, message: 'Non autorisé' });
-  if (BLOCKED_STATUSES.includes(user.status)) return res.status(401).json({ success: false, message: 'Non autorisé' });
+  const isAdminAttempt = ident.toLowerCase() === String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  let passwordMatch = false;
+  if (user?.passwordHash) passwordMatch = await verifyPassword(password, user.passwordHash);
+  if (isAdminAttempt) logAdminLoginDiagnostic({ found: Boolean(user), role: user?.role, status: user?.status, hasPasswordHash: Boolean(user?.passwordHash), passwordMatch, jwtGenerated: false });
+  if (!user || !user.passwordHash || !passwordMatch) return res.status(401).json({ success: false, message: 'Non autorisé' });
+  if (user.status !== 'ACTIVE' || BLOCKED_STATUSES.includes(user.status)) return res.status(401).json({ success: false, message: 'Non autorisé' });
   user.lastLoginAt = new Date();
   await user.save();
   await createAuditLog({ req, actorUserId: user._id, actorName: user.fullName, actorRole: user.role, action: 'LOGIN', module: 'AUTH', entityType: 'USER', entityId: user._id, entityLabel: user.fullName, message: 'Connexion utilisateur' });
+  if (isAdminAttempt) logAdminLoginDiagnostic({ found: true, role: user.role, status: user.status, hasPasswordHash: true, passwordMatch: true, jwtGenerated: true });
   return sendAuth(res, user);
 }
+
+const clerkSync = (req, res) => res.json({ success: true, data: { user: sanitizeUser(req.user) } });
+const clerkMe = (req, res) => res.json({ success: true, data: { user: sanitizeUser(req.user) } });
 
 const getMe = (req, res) => res.json({ success: true, data: { user: sanitizeUser(req.user) } });
 async function updateMe(req, res) {
@@ -60,4 +80,4 @@ async function changePassword(req, res) {
   return res.json({ success: true, data: { user: sanitizeUser(user) }, message: 'Mot de passe mis à jour. Les jetons existants restent valides jusqu’à expiration.' });
 }
 const logoutPlaceholder = async (req, res) => { await createAuditLog({ req, action: 'LOGOUT', module: 'AUTH', entityType: 'USER', entityId: req.user?._id, entityLabel: req.user?.fullName, message: 'Déconnexion utilisateur' }); return res.json({ success: true, message: 'Déconnexion côté client' }); };
-module.exports = { register, login, getMe, updateMe, changePassword, logoutPlaceholder };
+module.exports = { register, login, clerkSync, clerkMe, getMe, updateMe, changePassword, logoutPlaceholder };

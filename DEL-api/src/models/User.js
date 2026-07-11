@@ -5,6 +5,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
   phone: { type: String, trim: true, unique: true, sparse: true },
   passwordHash: { type: String, select: false },
+  clerkUserId: { type: String, unique: true, sparse: true },
+  authProvider: { type: String, enum: ['LOCAL', 'CLERK'], default: 'LOCAL' },
   role: { type: String, enum: ['ADMIN', 'OWNER', 'COMPANY', 'INVESTOR', 'TECHNICIAN', 'USER'], required: true },
   accountType: { type: String, enum: ['ADMIN', 'INDIVIDUAL', 'COMPANY'], default: 'INDIVIDUAL' },
   status: { type: String, enum: ['ACTIVE', 'PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED', 'ARCHIVED'], default: 'PENDING' },
@@ -21,6 +23,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.index({ email: 1 }, { unique: true, sparse: true });
+userSchema.index({ clerkUserId: 1 }, { unique: true, sparse: true });
 
 userSchema.set('toJSON', {
   virtuals: true,

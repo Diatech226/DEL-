@@ -18,3 +18,7 @@ View your app in AI Studio: https://ai.studio/apps/4a6c9b5c-3f30-4e3e-b9b2-18764
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Authentification CMS
+
+Le CMS utilise uniquement le login admin interne DEL-api avec `ADMIN_EMAIL` / `ADMIN_PASSWORD` côté API. Il n’utilise pas Clerk.
