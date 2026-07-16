@@ -456,3 +456,13 @@ CMS Main (`DEL-cms-main`) :
 ## Auth iteration
 
 Deux auth séparées sont en place: Clerk pour DEL-web-main et JWT interne pour DEL-cms-main. Prochaine itération: finaliser onboarding OWNER/COMPANY/TECHNICIAN après création Clerk USER et tester Google sur l’instance Clerk réelle.
+
+## Correction intégration Clerk
+
+- `DEL-web-main` utilise `@clerk/react@5.54.0` verrouillé par `DEL-web-main/package-lock.json`.
+- L'intégration frontend est uniformisée sur l'API Clerk React v5 : `ClerkProvider`, `SignedIn`, `SignedOut`, `SignIn`, `SignUp`, `SignInButton`, `SignUpButton`, `UserButton`, `useAuth`, `useUser` et `useClerk`.
+- Les déclarations locales qui masquaient les exports réels de `@clerk/react` ont été supprimées de `src/vite-env.d.ts`.
+- Un alias Vite de compatibilité corrige l'export transitoire `loadClerkUiScript` attendu par `@clerk/react@5.54.0` avec le `@clerk/shared@3.47.8` installé dans cet environnement.
+- `AuthContext` continue d'exposer `delUser`, `clerkUser`, `role`, `isLoaded`, `isSignedIn`, `logout()`, `refreshDelUser()` et `getDelToken()`, puis appelle `POST /api/auth/clerk/sync` et `GET /api/auth/clerk/me` après connexion Clerk.
+- `VITE_CLERK_PUBLISHABLE_KEY` reste la seule clé Clerk frontend ; `CLERK_SECRET_KEY` est réservée à `DEL-api`.
+- Le favicon DEL est servi depuis `DEL-web-main/public/favicon.svg` et déclaré dans `DEL-web-main/index.html`.

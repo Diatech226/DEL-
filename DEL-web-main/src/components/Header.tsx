@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   user: UserProfile;
@@ -27,6 +28,7 @@ export default function Header({ user, activeRole, onRoleChange, onNavigate }: H
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { logout } = useAuth();
 
   const notifications = [
     { id: 1, text: "Rapport VGP expiré pour Komatsu PC210", type: "alert", time: "Il y a 2h" },
@@ -252,7 +254,7 @@ export default function Header({ user, activeRole, onRoleChange, onNavigate }: H
                   </div>
                   <div className="border-t border-gray-100 pt-1 mt-1">
                     <button 
-                      onClick={() => { onNavigate('Connexion / Inscription - DEL-web'); setShowProfileMenu(false); }}
+                      onClick={() => { void logout(); setShowProfileMenu(false); }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />

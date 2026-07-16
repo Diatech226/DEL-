@@ -1,9 +1,24 @@
 import { SignedIn, SignedOut, SignIn, SignUp, UserButton } from '@clerk/react';
 import { Construction } from 'lucide-react';
+import { useState } from 'react';
 
 interface ConnexionProps { onLoginSuccess: () => void; onNavigate: (screen: string) => void; }
 
+type AuthMode = 'sign-in' | 'sign-up';
+
+const clerkAppearance = {
+  elements: {
+    cardBox: 'shadow-none',
+    card: 'shadow-none',
+    footerActionLink: 'text-amber-600 hover:text-amber-700',
+    formButtonPrimary: 'bg-amber-500 hover:bg-amber-400 text-gray-950',
+    socialButtonsBlockButton: 'border-gray-200 hover:bg-gray-50',
+  },
+};
+
 export default function Connexion({ onLoginSuccess, onNavigate }: ConnexionProps) {
+  const [authMode, setAuthMode] = useState<AuthMode>('sign-in');
+
   return (
     <div className="flex-1 bg-gray-900 flex items-center justify-center p-6 relative overflow-hidden" id="screen-connexion">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.1),transparent_50%)]" />
@@ -14,11 +29,28 @@ export default function Connexion({ onLoginSuccess, onNavigate }: ConnexionProps
           <p className="text-xs text-gray-400">Authentification sécurisée par Clerk : email, inscription et Google si activé dans le dashboard Clerk.</p>
         </div>
         <SignedOut>
-          <div className="rounded-2xl bg-white p-2">
-            <SignIn routing="hash" signUpUrl="#/sign-up" appearance={{ elements: { cardBox: 'shadow-none', footerActionLink: 'text-amber-600' } }} />
+          <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-900 p-1">
+            <button
+              type="button"
+              onClick={() => setAuthMode('sign-in')}
+              className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${authMode === 'sign-in' ? 'bg-amber-500 text-gray-950' : 'text-gray-300 hover:bg-gray-800'}`}
+            >
+              Connexion
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthMode('sign-up')}
+              className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${authMode === 'sign-up' ? 'bg-amber-500 text-gray-950' : 'text-gray-300 hover:bg-gray-800'}`}
+            >
+              Inscription
+            </button>
           </div>
           <div className="rounded-2xl bg-white p-2">
-            <SignUp routing="hash" signInUrl="#/sign-in" appearance={{ elements: { cardBox: 'shadow-none', footerActionLink: 'text-amber-600' } }} />
+            {authMode === 'sign-in' ? (
+              <SignIn routing="hash" signUpUrl="#/sign-up" appearance={clerkAppearance} />
+            ) : (
+              <SignUp routing="hash" signInUrl="#/sign-in" appearance={clerkAppearance} />
+            )}
           </div>
         </SignedOut>
         <SignedIn>
