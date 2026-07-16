@@ -3,12 +3,15 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+const clerkSharedLoadScriptCompat = path.resolve(__dirname, 'src/lib/clerkLoadScriptCompat.ts');
+
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        '@clerk/shared/loadClerkJsScript': clerkSharedLoadScriptCompat,
       },
     },
     server: {
