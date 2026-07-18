@@ -22,8 +22,6 @@ const userSchema = new mongoose.Schema({
   verifiedAt: { type: Date },
 }, { timestamps: true });
 
-userSchema.index({ email: 1 }, { unique: true, sparse: true });
-userSchema.index({ clerkUserId: 1 }, { unique: true, sparse: true });
 
 userSchema.set('toJSON', {
   virtuals: true,

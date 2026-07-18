@@ -462,7 +462,18 @@ Deux auth séparées sont en place: Clerk pour DEL-web-main et JWT interne pour 
 - `DEL-web-main` utilise `@clerk/react@5.54.0` verrouillé par `DEL-web-main/package-lock.json`.
 - L'intégration frontend est uniformisée sur l'API Clerk React v5 : `ClerkProvider`, `SignedIn`, `SignedOut`, `SignIn`, `SignUp`, `SignInButton`, `SignUpButton`, `UserButton`, `useAuth`, `useUser` et `useClerk`.
 - Les déclarations locales qui masquaient les exports réels de `@clerk/react` ont été supprimées de `src/vite-env.d.ts`.
-- Un alias Vite de compatibilité corrige l'export transitoire `loadClerkUiScript` attendu par `@clerk/react@5.54.0` avec le `@clerk/shared@3.47.8` installé dans cet environnement.
+- L'ancien alias Vite de compatibilité vers Clerk a été supprimé afin de ne plus contourner les exports internes `@clerk/shared`.
 - `AuthContext` continue d'exposer `delUser`, `clerkUser`, `role`, `isLoaded`, `isSignedIn`, `logout()`, `refreshDelUser()` et `getDelToken()`, puis appelle `POST /api/auth/clerk/sync` et `GET /api/auth/clerk/me` après connexion Clerk.
 - `VITE_CLERK_PUBLISHABLE_KEY` reste la seule clé Clerk frontend ; `CLERK_SECRET_KEY` est réservée à `DEL-api`.
 - Le favicon DEL est servi depuis `DEL-web-main/public/favicon.svg` et déclaré dans `DEL-web-main/index.html`.
+
+
+## Mise à jour Clerk DEL-web-main — 2026-07-18
+
+- La couche `clerkLoadScriptCompat.ts` a été supprimée car elle importait un fichier interne de `@clerk/shared` via un chemin relatif vers `node_modules`.
+- `DEL-web-main/vite.config.ts` ne contient plus d'alias vers `@clerk/shared` ou `loadClerkJsScript`.
+- `DEL-web-main/src/main.tsx` utilise uniquement `ClerkProvider` depuis `@clerk/react`, avec `LanguageProvider` et `AuthProvider` placés sous le provider Clerk.
+- La version locale vérifiée est `@clerk/react@5.54.0` avec `@clerk/shared@3.47.8` en dépendance transitive.
+- `Show` n'est pas exporté par cette version installée ; les composants publics `SignedIn`/`SignedOut` restent utilisés pour préserver le build sans import interne.
+- Le modèle utilisateur API ne déclare plus deux fois les index uniques `email` et `clerkUserId`.
+- `.env.example` fournit maintenant un exemple `ADMIN_PASSWORD=ChangeMe2026!` conforme, avec `ADMIN_FORCE_PASSWORD_UPDATE=true`.
