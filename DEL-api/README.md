@@ -148,10 +148,13 @@ Vérification rapide : `node scripts/checkWorkflowRoutes.js` vérifie les import
 1. Copier `.env.example` vers `.env`.
 2. Définir côté `DEL-api` uniquement :
    * `ADMIN_EMAIL`
-   * `ADMIN_PASSWORD`
+   * `ADMIN_PASSWORD` avec un mot de passe conforme à la politique de sécurité (au moins une majuscule, un chiffre et un caractère spécial)
    * `ADMIN_FULL_NAME`
 3. Lancer `npm run seed:admin` pour créer le compte administrateur si nécessaire.
-4. Pour réinitialiser explicitement le hash du mot de passe, lancer `npm run seed:admin:reset`.
+4. Après avoir configuré un mot de passe conforme dans le `.env` local, réinitialiser explicitement le hash du mot de passe si nécessaire :
+   ```bash
+   npm run seed:admin:reset
+   ```
 
 Avertissements de sécurité :
 

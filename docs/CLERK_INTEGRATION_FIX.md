@@ -1,79 +1,60 @@
-# Correction intégration Clerk — DEL-web-main
+# Correction de l'intégration Clerk DEL-web-main
+
+## Cause exacte
+
+`DEL-web-main/src/lib/clerkLoadScriptCompat.ts` avait été ajouté comme couche de compatibilité pour contourner un changement d'export interne Clerk. Le fichier importait directement `../../node_modules/@clerk/shared/dist/runtime/loadClerkJsScript.mjs`, puis `DEL-web-main/vite.config.ts` exposait ce fichier via un alias Vite `@clerk/shared/loadClerkJsScript`.
+
+Cette approche était fragile car elle dépendait d'un fichier interne de `@clerk/shared` dans `node_modules`. Après la mise à jour effective de l'arbre Clerk, Vite ne pouvait plus résoudre ce chemin interne et échouait avec `Could not resolve "../../node_modules/@clerk/shared/dist/runtime/loadClerkJsScript.mjs"`.
+
+## Correction appliquée
+
+- Suppression de `DEL-web-main/src/lib/clerkLoadScriptCompat.ts`.
+- Suppression de l'alias Vite qui ciblait `@clerk/shared/loadClerkJsScript`.
+- Conservation d'un `ClerkProvider` standard dans `DEL-web-main/src/main.tsx`, sans `loadClerkJsScript` personnalisé.
+- Conservation des providers applicatifs existants sous `ClerkProvider` : `LanguageProvider` puis `AuthProvider`.
+- Vérification que le code source de `DEL-web-main/src` n'importe plus `@clerk/shared`, `node_modules/@clerk`, `loadClerkJsScript` ou `clerkLoadScriptCompat`.
 
 ## Version Clerk utilisée
 
-- Package frontend : `@clerk/react` version exacte installée `5.54.0`.
-- Package transitive installé : `@clerk/shared` `3.47.8`.
-- Le dépôt possède maintenant un `DEL-web-main/package-lock.json` afin de figer la résolution réellement testée par `npm install`.
+La version installée localement est :
 
-## Diagnostic
-
-Le code TypeScript déclarait manuellement des exports Clerk dans `src/vite-env.d.ts`, ce qui masquait les vrais types du package installé. La vérification runtime des exports Node de `@clerk/react@5.54.0` confirme que l'API retenue expose notamment `ClerkProvider`, `SignedIn`, `SignedOut`, `SignIn`, `SignUp`, `SignInButton`, `SignUpButton`, `UserButton`, `UserProfile`, `Protect`, `useAuth`, `useUser` et `useClerk`.
-
-Le build Vite révélait aussi une incompatibilité de bundle entre `@clerk/react@5.54.0` et le sous-module `@clerk/shared/loadClerkJsScript` installé : `@clerk/react` importe `loadClerkUiScript`, absent de `@clerk/shared@3.47.8`. Comme le registre npm est indisponible dans cet environnement (`403 Forbidden` sur `npm view`), le correctif conserve la version installée et ajoute un alias Vite de compatibilité qui exporte `loadClerkUiScript` comme alias de `loadClerkJsScript`.
-
-## Documentation Clerk correspondant à l'API
-
-La documentation officielle Clerk React documente cette API de composants préconstruits et hooks côté React :
-
-- `ClerkProvider` enveloppe l'application et reçoit la publishable key.
-- `SignedIn` / `SignedOut` rendent conditionnellement selon l'état de session.
-- `SignIn` / `SignUp` fournissent les formulaires email et les connexions sociales activées dans le dashboard Clerk, dont Google si configuré.
-- `SignInButton` / `SignUpButton` ouvrent les flows Clerk.
-- `UserButton` affiche le bouton utilisateur et ses actions, dont sign-out.
-- `useAuth`, `useUser` et `useClerk` exposent l'état de session, l'utilisateur Clerk et les actions client.
-
-## API utilisée dans DEL-web-main
-
-L'application utilise une seule API Clerk cohérente : les composants et hooks de `@clerk/react` v5.
-
-### Composants/hooks conservés
-
-- `ClerkProvider`
-- `SignedIn`
-- `SignedOut`
-- `SignIn`
-- `SignUp`
-- `SignInButton`
-- `SignUpButton`
-- `UserButton`
-- `useAuth`
-- `useUser`
-- `useClerk`
-
-### Composants supprimés ou évités
-
-- Aucune ancienne déclaration locale de module `@clerk/react` n'est conservée.
-- Aucun composant incompatible (`Show`, ancienne API custom ou mélange d'API) n'est utilisé dans `DEL-web-main/src`.
-
-## Corrections effectuées
-
-- Suppression des déclarations manuelles `@clerk/react` dans `src/vite-env.d.ts` pour utiliser les types réels du package installé.
-- Ajout de `package-lock.json` côté `DEL-web-main` pour verrouiller `@clerk/react@5.54.0`.
-- Ajout d'un alias Vite `@clerk/shared/loadClerkJsScript` vers `src/lib/clerkLoadScriptCompat.ts` pour résoudre l'export manquant `loadClerkUiScript` avec la dépendance transitive installée.
-- Correction du Header sans modifier le design : boutons Clerk pour connexion/inscription, `UserButton` et déconnexion via `useAuth().logout()`.
-- Correction de Connexion sans remplacer le design : tabs email connexion/inscription, composants `SignIn`/`SignUp`, Google via connexions sociales activées dans Clerk, `UserButton` si connecté.
-- Correction d'AuthContext : conservation de l'interface exposée, récupération token Clerk, appel de synchronisation puis lecture profil DEL.
-- Vérification du `ClerkProvider` dans `src/main.tsx` avec `VITE_CLERK_PUBLISHABLE_KEY` et erreur explicite si absente.
-- Ajout d'un favicon SVG DEL dans `public/favicon.svg` et déclaration dans `index.html` pour supprimer le 404 `/favicon.ico`.
-- Nettoyage du cache Vite local (`node_modules/.vite` et `.vite`).
-
-## Variables d'environnement frontend
-
-Variables attendues dans `DEL-web-main` :
-
-```env
-VITE_API_URL=http://localhost:5000
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_replace_me
+```text
+@clerk/react@5.54.0
+└── @clerk/shared@3.47.8
 ```
 
-`CLERK_SECRET_KEY` ne doit jamais être placée dans le frontend. Elle est uniquement côté `DEL-api`.
+`@clerk/shared` reste une dépendance transitive gérée par `@clerk/react`; elle n'est pas installée ni importée directement par le code source.
 
-## Endpoints API utilisés
+La tentative de `npm install @clerk/react@latest` a été bloquée par le registry dans l'environnement courant avec une erreur `403 Forbidden - GET https://registry.npmjs.org/@clerk%2freact`. L'installation existante cohérente a donc été conservée.
 
-Le frontend synchronise l'utilisateur DEL après connexion Clerk avec :
+## Imports publics Clerk utilisés
 
-- `POST /api/auth/clerk/sync`
-- `GET /api/auth/clerk/me`
+Les fichiers applicatifs utilisent uniquement les exports publics de `@clerk/react` :
 
-Ces routes existent côté `DEL-api` dans `src/routes/auth.routes.js` et sont protégées par `requireClerkAuth`, qui vérifie le token Clerk puis synchronise l'utilisateur DEL.
+- `ClerkProvider` dans `src/main.tsx`.
+- `SignedIn`, `SignedOut`, `SignInButton`, `SignUpButton`, `UserButton` dans `src/components/Header.tsx`.
+- `SignedIn`, `SignedOut`, `SignIn`, `SignUp`, `UserButton` dans `src/components/Connexion.tsx`.
+- `useAuth`, `useClerk`, `useUser` dans `src/context/AuthContext.tsx`.
+
+Note : avec `@clerk/react@5.54.0`, l'export `Show` n'est pas disponible dans le paquet installé. Les composants publics `SignedIn` et `SignedOut`, disponibles dans cette version, sont donc conservés pour préserver un build fonctionnel sans import interne.
+
+## Fichiers modifiés
+
+- `DEL-web-main/src/main.tsx`
+- `DEL-web-main/vite.config.ts`
+- `DEL-web-main/src/lib/clerkLoadScriptCompat.ts` supprimé
+- `DEL-api/src/models/User.js`
+- `DEL-api/.env.example`
+- `DEL-api/README.md`
+- `docs/CLERK_INTEGRATION_FIX.md`
+- `docs/NEXT_ITERATIONS_CONTEXT.md`
+
+## Résultat build
+
+`npm run build` dans `DEL-web-main` ne rencontre plus l'ancien chemin supprimé `src/lib/clerkLoadScriptCompat.ts` ni l'import relatif vers `node_modules`. Dans l'environnement courant, le build reste bloqué par une incohérence transitive dans les paquets installés : `@clerk/react@5.54.0` importe l'export `loadClerkUiScript`, absent de `@clerk/shared@3.47.8`.
+
+La correction conforme aux contraintes ne réintroduit pas d'alias Vite, de patch local ou d'import interne Clerk. Il faut installer une version cohérente de `@clerk/react` dès que le registry npm autorise à nouveau le téléchargement du paquet.
+
+## Résultat dev
+
+`npm run dev` dans `DEL-web-main` démarre Vite, puis l'optimisation de dépendances échoue sur la même incohérence transitive `loadClerkUiScript` entre les paquets Clerk installés. Aucun import direct vers `node_modules/@clerk` ou `@clerk/shared` n'est présent dans `DEL-web-main/src`.
